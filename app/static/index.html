@@ -350,7 +350,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
       <div class="who-sub" id="pstyle"></div>
       <div id="core"></div>
     </div>
-    <div class="sect"><h3>Candor ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
+    <div class="sect"><h3>Honesty ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
     <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
     <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div><div id="ancestry"></div></div>
     <div class="sect" id="vaultSect" hidden><h3>Legacy Vault <span>letters across generations</span></h3><div id="vault"></div></div>
@@ -522,7 +522,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
           '<div class="kv"><span>Risk, observed</span><span class="red">' + esc(p.risk_profile.observed || "-") + '</span></div>' +
           '<div class="kv"><span>Harm signals</span><span class="blue">Support path</span></div>';
       } else {
-        html = '<div class="kv" style="margin-top:12px"><span>Consented candor</span><span>' + p.consent.candor_level + ' / 5 (gentle)</span></div>' +
+        html = '<div class="kv" style="margin-top:12px"><span>Consented honesty</span><span>' + p.consent.candor_level + ' / 5 (gentle)</span></div>' +
           '<div class="kv"><span>Trusted person</span><span>' + esc((pr.support_contacts || ["not set"])[0]) + '</span></div>' +
           '<div class="kv"><span>Mode</span><span>Coach, not therapist</span></div>' +
           '<div class="kv"><span>Crisis handling</span><span class="blue">Safety protocol</span></div>';
@@ -800,7 +800,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
         '<label for="g-nw">Liquid net worth<input id="g-nw" type="number" min="1" value="500000" required></label>' +
         '<label for="g-cur">Currency<select id="g-cur"><option>USD</option><option>AED</option><option>INR</option></select></label>' +
         '<label for="g-risk">Risk appetite<select id="g-risk"><option>conservative</option><option selected>moderate</option><option>aggressive</option></select></label>' +
-        '<label for="g-candor">Candor you can take (1-5)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
+        '<label for="g-candor">Honesty you can take (1-5)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
         '<label for="g-temp">Voice<select id="g-temp">' + opts + '</select></label>' +
       '</div><div class="lbl" style="margin-top:22px">Holdings</div><div id="g-holds">' + row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash") + '</div>' +
       '<div class="gactions"><button class="btn primary" type="submit">Build my genome</button></div></form>');

@@ -256,7 +256,7 @@ main{padding:clamp(22px,4vw,52px);max-width:1060px;width:100%}
             <label for="p-temp">Default voice</label><select id="p-temp"></select>
             <label for="p-risk">Stated risk</label>
             <select id="p-risk"><option>conservative</option><option>moderate</option><option>aggressive</option></select>
-            <label for="p-candor">Candor level: <span id="candorval" class="mono"></span></label>
+            <label for="p-candor">Honesty level: <span id="candorval" class="mono"></span></label>
             <input id="p-candor" type="range" min="1" max="5" step="1" style="padding:0">
             <label for="p-style">How you like decisions put to you</label><input id="p-style" maxlength="200" placeholder="numbers first, no sugar">
           </div>
@@ -560,7 +560,7 @@ async function loadHistory(){
   led.innerHTML='<p class="meta">LOADING&hellip;</p>';
   try{
     var ins=await api('/v1/insights/'+S.uid);
-    ic.innerHTML='<h3>Candor ROI</h3><div class="statrow" style="margin-top:14px">'+
+    ic.innerHTML='<h3>Honesty ROI</h3><div class="statrow" style="margin-top:14px">'+
       [['ADVISED',fmt(ins.advised)],['DECIDED',fmt(ins.decided)],['FOLLOW RATE',ins.follow_rate==null?'-':Math.round(ins.follow_rate*100)+'%'],
        ['COST OF IGNORING',fmt(ins.cost_of_ignoring)],['GAINED BY FOLLOWING',fmt(ins.gained_by_following)]].map(function(x){
         return '<div class="stat"><b>'+x[1]+'</b><span class="meta">'+x[0]+'</span></div>'}).join('')+'</div>'+
