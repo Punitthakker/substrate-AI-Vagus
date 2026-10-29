@@ -1,0 +1,3918 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Substrate AI - Vagus Engine",
+  "description": "The emotional chromosome of AI. Vagal tone changes how truth is delivered. Never whether.",
+  "version": "0.8.0"
+ },
+ "paths": {
+  "/v1/health": {
+   "get": {
+    "summary": "Health",
+    "operationId": "health_v1_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/temperaments": {
+   "get": {
+    "summary": "List Temperaments",
+    "operationId": "list_temperaments_v1_temperaments_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/tissues": {
+   "get": {
+    "summary": "List Tissues",
+    "operationId": "list_tissues_v1_tissues_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/models": {
+   "get": {
+    "summary": "List Models",
+    "operationId": "list_models_v1_models_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/policy": {
+   "get": {
+    "summary": "Get Policy",
+    "operationId": "get_policy_v1_policy_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/person/{user_id}": {
+   "put": {
+    "summary": "Put Person",
+    "operationId": "put_person_v1_person__user_id__put",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Person"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "Get Person",
+    "operationId": "get_person_v1_person__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Delete Person",
+    "operationId": "delete_person_v1_person__user_id__delete",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/guest": {
+   "post": {
+    "summary": "Create Guest",
+    "description": "Try it on yourself: a sandboxed genome in any tissue, open without a key, never mixed with client data.",
+    "operationId": "create_guest_v1_guest_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GuestRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/advise": {
+   "post": {
+    "summary": "Advise",
+    "operationId": "advise_v1_advise_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AdviseRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/advise/compare": {
+   "post": {
+    "summary": "Compare",
+    "operationId": "compare_v1_advise_compare_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AdviseRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/markets/analyze": {
+   "post": {
+    "summary": "Markets Analyze",
+    "description": "Stateless bet arithmetic: price to probability, parlay legs, round robins, fees, Kelly, bankroll share.\nNo genome, no personal data. For platforms that want an honest pre-bet panel.",
+    "operationId": "markets_analyze_v1_markets_analyze_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BetMath"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/volatility/analyze": {
+   "post": {
+    "summary": "Volatility Analyze",
+    "description": "Stateless FX and gold volatility: GARCH/EWMA, ranges, stop-out odds, event combinatorics, trader biases.\nDirection is never forecast.",
+    "operationId": "volatility_analyze_v1_volatility_analyze_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VolRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/markets/polymarket/{slug}": {
+   "get": {
+    "summary": "Markets Polymarket",
+    "description": "Live price for a Polymarket market slug via the public Gamma API (best effort).",
+    "operationId": "markets_polymarket_v1_markets_polymarket__slug__get",
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "outcome",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "default": "Yes",
+       "title": "Outcome"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/outcome": {
+   "post": {
+    "summary": "Outcome",
+    "operationId": "outcome_v1_outcome_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutcomeRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/ledger/{user_id}": {
+   "get": {
+    "summary": "Ledger",
+    "operationId": "ledger_v1_ledger__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 50,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/insights/{user_id}": {
+   "get": {
+    "summary": "Insights",
+    "operationId": "insights_v1_insights__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/export/{user_id}": {
+   "get": {
+    "summary": "Export",
+    "operationId": "export_v1_export__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/export/verify": {
+   "post": {
+    "summary": "Verify",
+    "operationId": "verify_v1_export_verify_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "additionalProperties": true,
+        "type": "object",
+        "title": "Doc"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/invites": {
+   "post": {
+    "summary": "Create Invite",
+    "description": "Create a shareable test link. Admin/master key once the deployment is locked down.",
+    "operationId": "create_invite_v1_invites_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InviteCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Invites",
+    "operationId": "list_invites_v1_invites_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/invite/{code}": {
+   "get": {
+    "summary": "Invite Info",
+    "operationId": "invite_info_v1_invite__code__get",
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/invite/{code}/redeem": {
+   "post": {
+    "summary": "Redeem Invite",
+    "description": "Each invitee gets a private sandboxed genome in the invite's tissue, seeded from the demo profile.",
+    "operationId": "redeem_invite_v1_invite__code__redeem_post",
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Redeem"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/legacy/letter": {
+   "post": {
+    "summary": "Write Letter",
+    "description": "Seal a letter for an heir. It opens on a date, an age, or the moment they need it.",
+    "operationId": "write_letter_v1_legacy_letter_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LetterRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/legacy/{user_id}": {
+   "get": {
+    "summary": "Legacy Vault",
+    "description": "Letters to this person (sealed ones show only title and release) and letters they have written.",
+    "operationId": "legacy_vault_v1_legacy__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/legacy/{author}/{letter_id}": {
+   "delete": {
+    "summary": "Revoke Letter",
+    "operationId": "revoke_letter_v1_legacy__author___letter_id__delete",
+    "parameters": [
+     {
+      "name": "author",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Author"
+      }
+     },
+     {
+      "name": "letter_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Letter Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/memory/{user_id}": {
+   "get": {
+    "summary": "Memory View",
+    "description": "The genome as plain-language memories (Mem0, Letta, any agent memory) plus a Letta-style core block.",
+    "operationId": "memory_view_v1_memory__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/memory/{user_id}/mem0": {
+   "post": {
+    "summary": "Memory Push Mem0",
+    "operationId": "memory_push_mem0_v1_memory__user_id__mem0_post",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/pact": {
+   "post": {
+    "summary": "Make Pact",
+    "description": "The human makes a promise to their future self. Substrate holds them to it, kindly.",
+    "operationId": "make_pact_v1_pact_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PactRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/pact/{user_id}": {
+   "get": {
+    "summary": "List Pacts",
+    "operationId": "list_pacts_v1_pact__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/pact/{user_id}/{pact_id}": {
+   "delete": {
+    "summary": "Release Pact",
+    "description": "Release is always allowed, and always recorded.",
+    "operationId": "release_pact_v1_pact__user_id___pact_id__delete",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "pact_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Pact Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/progress/{user_id}": {
+   "get": {
+    "summary": "Get Progress",
+    "operationId": "get_progress_v1_progress__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/harness/layers": {
+   "get": {
+    "summary": "Harness Layers",
+    "operationId": "harness_layers_v1_harness_layers_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/chat/completions": {
+   "post": {
+    "summary": "Chat Completions",
+    "description": "OpenAI-compatible harness. Point any OpenAI SDK's base_url at Substrate.",
+    "operationId": "chat_completions_v1_chat_completions_post",
+    "parameters": [
+     {
+      "name": "x-substrate-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-User"
+      }
+     },
+     {
+      "name": "x-substrate-mode",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Mode"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/models/openai": {
+   "get": {
+    "summary": "Openai Models",
+    "description": "OpenAI-style model list so SDKs and tools can discover the harness.",
+    "operationId": "openai_models_v1_models_openai_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/inherit/{elder_id}": {
+   "post": {
+    "summary": "Inherit Genome",
+    "description": "Pass a genome down: the heir receives the elder's values and the lessons they paid for (per consent).",
+    "operationId": "inherit_genome_v1_inherit__elder_id__post",
+    "parameters": [
+     {
+      "name": "elder_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Elder Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InheritRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/inherit/{elder_id}/{heir_id}": {
+   "delete": {
+    "summary": "Revoke Inheritance",
+    "operationId": "revoke_inheritance_v1_inherit__elder_id___heir_id__delete",
+    "parameters": [
+     {
+      "name": "elder_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Elder Id"
+      }
+     },
+     {
+      "name": "heir_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Heir Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/graph/{user_id}": {
+   "get": {
+    "summary": "Genome Graph",
+    "operationId": "genome_graph_v1_graph__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/graph/{user_id}/graphiti": {
+   "get": {
+    "summary": "Graphiti Episodes",
+    "operationId": "graphiti_episodes_v1_graph__user_id__graphiti_get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/learn/stats": {
+   "get": {
+    "summary": "Learn Stats",
+    "description": "What the next training round would learn from (consented public genomes + self-distillation).",
+    "operationId": "learn_stats_v1_learn_stats_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/learn/export": {
+   "post": {
+    "summary": "Learn Export",
+    "operationId": "learn_export_v1_learn_export_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/metrics": {
+   "get": {
+    "summary": "Metrics",
+    "operationId": "metrics_v1_metrics_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/admin/tenants": {
+   "post": {
+    "summary": "Create Tenant",
+    "operationId": "create_tenant_v1_admin_tenants_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TenantRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "List Tenants",
+    "operationId": "list_tenants_v1_admin_tenants_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/tenant/webhook": {
+   "put": {
+    "summary": "Set Webhook",
+    "description": "Register this tenant's webhook. The signing secret is shown once.",
+    "operationId": "set_webhook_v1_tenant_webhook_put",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WebhookRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/admin/webhooks/log": {
+   "get": {
+    "summary": "Webhook Log",
+    "operationId": "webhook_log_v1_admin_webhooks_log_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/tenant/policy": {
+   "put": {
+    "summary": "Set Policy",
+    "operationId": "set_policy_v1_tenant_policy_put",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Policy"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/evals/run": {
+   "post": {
+    "summary": "Evals",
+    "operationId": "evals_v1_evals_run_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/demo/reset": {
+   "post": {
+    "summary": "Demo Reset",
+    "operationId": "demo_reset_v1_demo_reset_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/embed/keys": {
+   "post": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "Create Pk",
+    "description": "Create a publishable key (pk_live_...) for the browser SDK, locked to your origins. Tenant key required.",
+    "operationId": "create_pk_v1_embed_keys_post",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PkCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "List Pks",
+    "operationId": "list_pks_v1_embed_keys_get",
+    "parameters": [
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/embed/advise": {
+   "post": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "Embed Advise",
+    "description": "The browser SDK's single call: the honest pause before a click.",
+    "operationId": "embed_advise_v1_embed_advise_post",
+    "parameters": [
+     {
+      "name": "x-substrate-pk",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Pk"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EmbedAdvise"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/embed/outcome": {
+   "post": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "Embed Outcome",
+    "description": "Closes the loop from the widget: Cancel means followed, Proceed anyway means ignored.",
+    "operationId": "embed_outcome_v1_embed_outcome_post",
+    "parameters": [
+     {
+      "name": "x-substrate-pk",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Pk"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EmbedOutcome"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/embed/pact": {
+   "post": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "Embed Pact",
+    "operationId": "embed_pact_v1_embed_pact_post",
+    "parameters": [
+     {
+      "name": "x-substrate-pk",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Pk"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EmbedPact"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "AdviseRequest": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "title": "User Id"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     },
+     "thread": {
+      "items": {
+       "$ref": "#/components/schemas/Turn"
+      },
+      "type": "array",
+      "title": "Thread"
+     },
+     "stakes": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "low",
+         "medium",
+         "high"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stakes"
+     },
+     "temperament": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temperament"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id",
+     "message"
+    ],
+    "title": "AdviseRequest"
+   },
+   "Ancestor": {
+    "properties": {
+     "from_user": {
+      "type": "string",
+      "title": "From User"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "relation": {
+      "type": "string",
+      "title": "Relation",
+      "default": "family"
+     },
+     "vintage": {
+      "type": "string",
+      "title": "Vintage",
+      "default": ""
+     },
+     "scope": {
+      "type": "string",
+      "title": "Scope",
+      "default": "values"
+     },
+     "values": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Values"
+     },
+     "lessons": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Lessons"
+     },
+     "patterns": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Patterns"
+     },
+     "checksum": {
+      "type": "string",
+      "title": "Checksum",
+      "default": ""
+     },
+     "received": {
+      "type": "string",
+      "title": "Received",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "from_user",
+     "name"
+    ],
+    "title": "Ancestor",
+    "description": "What an heir received: the elder's values and the lessons they paid for. Never their money or messages."
+   },
+   "BetMath": {
+    "properties": {
+     "price": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMaximum": 1.0,
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price",
+      "description": "Single-market price 0-1 (62c = 0.62)"
+     },
+     "decimal_odds": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decimal Odds"
+     },
+     "american_odds": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "American Odds"
+     },
+     "belief": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Belief",
+      "description": "Your probability"
+     },
+     "stake": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stake"
+     },
+     "bankroll": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bankroll"
+     },
+     "fee": {
+      "type": "number",
+      "maximum": 0.2,
+      "minimum": 0.0,
+      "title": "Fee",
+      "default": 0.02
+     },
+     "kelly_fraction": {
+      "type": "number",
+      "maximum": 1.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Kelly Fraction",
+      "default": 0.25
+     },
+     "max_bet_fraction": {
+      "type": "number",
+      "maximum": 1.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Max Bet Fraction",
+      "default": 0.02
+     },
+     "legs": {
+      "items": {
+       "$ref": "#/components/schemas/Leg"
+      },
+      "type": "array",
+      "title": "Legs",
+      "description": "Parlay legs; probabilities multiply"
+     },
+     "round_robin": {
+      "anyOf": [
+       {
+        "prefixItems": [
+         {
+          "type": "integer"
+         },
+         {
+          "type": "integer"
+         }
+        ],
+        "type": "array",
+        "maxItems": 2,
+        "minItems": 2
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Round Robin",
+      "description": "(picks, size), e.g. (5, 2) -> C(5,2) bets"
+     }
+    },
+    "type": "object",
+    "title": "BetMath"
+   },
+   "Bias": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "title": "Type"
+     },
+     "evidence": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Evidence"
+     },
+     "last_seen": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Seen"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type"
+    ],
+    "title": "Bias"
+   },
+   "Consent": {
+    "properties": {
+     "candor_level": {
+      "type": "integer",
+      "maximum": 5.0,
+      "minimum": 1.0,
+      "title": "Candor Level",
+      "description": "1 gentle ... 5 brutal. Set by the human.",
+      "default": 3
+     },
+     "allow_training": {
+      "type": "boolean",
+      "title": "Allow Training",
+      "description": "Opt-in: may this genome's ledger train the Vagus model?",
+      "default": false
+     },
+     "inheritance": {
+      "$ref": "#/components/schemas/Inheritance"
+     }
+    },
+    "type": "object",
+    "title": "Consent"
+   },
+   "EmbedAdvise": {
+    "properties": {
+     "user": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "User",
+      "description": "Your platform's user id (hashed, never stored raw)"
+     },
+     "message": {
+      "type": "string",
+      "maxLength": 4000,
+      "title": "Message",
+      "description": "Free text from the user, if any",
+      "default": ""
+     },
+     "context": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Context",
+      "description": "What is on screen: stake, price, side, leverage, instrument..."
+     },
+     "tissue": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "wealth",
+         "venture",
+         "founder",
+         "wellbeing",
+         "markets",
+         "trading"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tissue"
+     },
+     "temperament": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temperament"
+     },
+     "thread": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "title": "Thread"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user"
+    ],
+    "title": "EmbedAdvise"
+   },
+   "EmbedOutcome": {
+    "properties": {
+     "user": {
+      "type": "string",
+      "title": "User"
+     },
+     "ledger_id": {
+      "type": "string",
+      "title": "Ledger Id"
+     },
+     "action": {
+      "type": "string",
+      "enum": [
+       "followed",
+       "ignored",
+       "partial"
+      ],
+      "title": "Action"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user",
+     "ledger_id",
+     "action"
+    ],
+    "title": "EmbedOutcome"
+   },
+   "EmbedPact": {
+    "properties": {
+     "user": {
+      "type": "string",
+      "title": "User"
+     },
+     "ledger_id": {
+      "type": "string",
+      "title": "Ledger Id",
+      "default": ""
+     },
+     "tissue": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "wealth",
+         "venture",
+         "founder",
+         "wellbeing",
+         "markets",
+         "trading"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tissue"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user"
+    ],
+    "title": "EmbedPact"
+   },
+   "Goal": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "priority": {
+      "type": "integer",
+      "title": "Priority",
+      "default": 1
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "Goal"
+   },
+   "GuestRequest": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Name",
+      "default": "Guest"
+     },
+     "domain": {
+      "type": "string",
+      "enum": [
+       "wealth",
+       "venture",
+       "founder",
+       "wellbeing",
+       "markets",
+       "trading"
+      ],
+      "title": "Domain",
+      "default": "wealth"
+     },
+     "liquid_net_worth": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1000000000000.0,
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Liquid Net Worth"
+     },
+     "currency": {
+      "type": "string",
+      "enum": [
+       "USD",
+       "AED",
+       "INR"
+      ],
+      "title": "Currency",
+      "default": "USD"
+     },
+     "risk": {
+      "type": "string",
+      "enum": [
+       "conservative",
+       "moderate",
+       "aggressive"
+      ],
+      "title": "Risk",
+      "default": "moderate"
+     },
+     "candor": {
+      "type": "integer",
+      "maximum": 5.0,
+      "minimum": 1.0,
+      "title": "Candor",
+      "default": 3
+     },
+     "temperament": {
+      "type": "string",
+      "title": "Temperament",
+      "default": "mentor"
+     },
+     "holdings": {
+      "items": {
+       "$ref": "#/components/schemas/Holding"
+      },
+      "type": "array",
+      "maxItems": 8,
+      "title": "Holdings"
+     },
+     "goals": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 4,
+      "title": "Goals"
+     },
+     "profile": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Profile"
+     }
+    },
+    "type": "object",
+    "title": "GuestRequest"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "Holding": {
+    "properties": {
+     "asset": {
+      "type": "string",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Asset"
+     },
+     "value": {
+      "type": "number",
+      "maximum": 1000000000000.0,
+      "minimum": 0.0,
+      "title": "Value"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "token",
+       "stock",
+       "fund",
+       "property",
+       "cash",
+       "bond",
+       "other"
+      ],
+      "title": "Kind",
+      "default": "other"
+     }
+    },
+    "type": "object",
+    "required": [
+     "asset",
+     "value"
+    ],
+    "title": "Holding"
+   },
+   "InheritRequest": {
+    "properties": {
+     "heir_id": {
+      "type": "string",
+      "title": "Heir Id"
+     },
+     "relation": {
+      "type": "string",
+      "maxLength": 30,
+      "title": "Relation",
+      "default": "family"
+     },
+     "sub": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sub",
+      "description": "A .sub document. Omit to inherit from the elder's live genome."
+     }
+    },
+    "type": "object",
+    "required": [
+     "heir_id"
+    ],
+    "title": "InheritRequest"
+   },
+   "Inheritance": {
+    "properties": {
+     "heirs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Heirs"
+     },
+     "scope": {
+      "type": "string",
+      "enum": [
+       "values",
+       "values+ledger",
+       "full"
+      ],
+      "title": "Scope",
+      "default": "values"
+     },
+     "revocable": {
+      "type": "boolean",
+      "const": true,
+      "title": "Revocable",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "Inheritance"
+   },
+   "InviteCreate": {
+    "properties": {
+     "tissue": {
+      "type": "string",
+      "enum": [
+       "wealth",
+       "venture",
+       "founder",
+       "wellbeing",
+       "markets",
+       "trading"
+      ],
+      "title": "Tissue",
+      "default": "wealth"
+     },
+     "label": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Label",
+      "default": "Substrate private preview"
+     },
+     "max_uses": {
+      "type": "integer",
+      "maximum": 10000.0,
+      "minimum": 1.0,
+      "title": "Max Uses",
+      "default": 25
+     },
+     "days": {
+      "type": "integer",
+      "maximum": 365.0,
+      "minimum": 1.0,
+      "title": "Days",
+      "default": 14
+     }
+    },
+    "type": "object",
+    "title": "InviteCreate"
+   },
+   "Leg": {
+    "properties": {
+     "price": {
+      "type": "number",
+      "exclusiveMaximum": 1.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Price",
+      "description": "Contract price 0-1, or 1/decimal odds"
+     },
+     "belief": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 1.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Belief"
+     }
+    },
+    "type": "object",
+    "required": [
+     "price"
+    ],
+    "title": "Leg"
+   },
+   "LetterRequest": {
+    "properties": {
+     "from_user": {
+      "type": "string",
+      "title": "From User"
+     },
+     "to_user": {
+      "type": "string",
+      "title": "To User"
+     },
+     "relation": {
+      "type": "string",
+      "maxLength": 30,
+      "title": "Relation",
+      "default": "family"
+     },
+     "title": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Title"
+     },
+     "body": {
+      "type": "string",
+      "maxLength": 8000,
+      "minLength": 1,
+      "title": "Body"
+     },
+     "release_type": {
+      "type": "string",
+      "enum": [
+       "date",
+       "age",
+       "moment",
+       "first"
+      ],
+      "title": "Release Type",
+      "default": "moment"
+     },
+     "release_value": {
+      "type": "string",
+      "maxLength": 40,
+      "title": "Release Value",
+      "default": "any-stop"
+     }
+    },
+    "type": "object",
+    "required": [
+     "from_user",
+     "to_user",
+     "title",
+     "body"
+    ],
+    "title": "LetterRequest"
+   },
+   "OutcomeRequest": {
+    "properties": {
+     "ledger_id": {
+      "type": "string",
+      "title": "Ledger Id"
+     },
+     "action": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "followed",
+         "ignored",
+         "partial"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Action"
+     },
+     "outcome_type": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "pnl",
+         "avoided-loss",
+         "qualitative"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Outcome Type"
+     },
+     "value_delta": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value Delta"
+     },
+     "horizon": {
+      "type": "string",
+      "title": "Horizon",
+      "default": "30d"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "ledger_id"
+    ],
+    "title": "OutcomeRequest"
+   },
+   "PactRequest": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "title": "User Id"
+     },
+     "ledger_id": {
+      "type": "string",
+      "title": "Ledger Id",
+      "default": ""
+     },
+     "hours": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 720.0,
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hours"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id"
+    ],
+    "title": "PactRequest"
+   },
+   "Person": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "title": "User Id",
+      "default": ""
+     },
+     "name": {
+      "type": "string",
+      "title": "Name",
+      "default": "Client"
+     },
+     "domain": {
+      "type": "string",
+      "enum": [
+       "wealth",
+       "venture",
+       "founder",
+       "wellbeing",
+       "markets",
+       "trading"
+      ],
+      "title": "Domain",
+      "default": "wealth"
+     },
+     "vintage": {
+      "type": "string",
+      "title": "Vintage",
+      "default": ""
+     },
+     "consent": {
+      "$ref": "#/components/schemas/Consent"
+     },
+     "temperament": {
+      "type": "string",
+      "title": "Temperament",
+      "default": "mentor"
+     },
+     "values": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Values"
+     },
+     "risk_profile": {
+      "$ref": "#/components/schemas/RiskProfile"
+     },
+     "liquid_net_worth": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Liquid Net Worth"
+     },
+     "currency": {
+      "type": "string",
+      "title": "Currency",
+      "default": "USD"
+     },
+     "positions": {
+      "items": {
+       "$ref": "#/components/schemas/Position"
+      },
+      "type": "array",
+      "title": "Positions"
+     },
+     "biases": {
+      "items": {
+       "$ref": "#/components/schemas/Bias"
+      },
+      "type": "array",
+      "title": "Biases"
+     },
+     "goals": {
+      "items": {
+       "$ref": "#/components/schemas/Goal"
+      },
+      "type": "array",
+      "title": "Goals"
+     },
+     "decision_style": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision Style"
+     },
+     "profile": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Profile",
+      "description": "Domain-specific facts: fund size, burn, support contacts..."
+     },
+     "adherence": {
+      "additionalProperties": {
+       "additionalProperties": {
+        "type": "integer"
+       },
+       "type": "object"
+      },
+      "type": "object",
+      "title": "Adherence"
+     },
+     "lessons": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Lessons"
+     },
+     "ancestry": {
+      "items": {
+       "$ref": "#/components/schemas/Ancestor"
+      },
+      "type": "array",
+      "title": "Ancestry"
+     },
+     "pacts": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Pacts"
+     }
+    },
+    "type": "object",
+    "title": "Person",
+    "description": "The genome: who this human is across months, not messages. User-owned, exportable, deletable."
+   },
+   "PkCreate": {
+    "properties": {
+     "origins": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Origins",
+      "description": "e.g. [\"app.mybank.com\", \"*.mybank.com\"]"
+     },
+     "tissue": {
+      "type": "string",
+      "enum": [
+       "wealth",
+       "venture",
+       "founder",
+       "wellbeing",
+       "markets",
+       "trading"
+      ],
+      "title": "Tissue",
+      "default": "wealth"
+     },
+     "label": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Label",
+      "default": "web"
+     }
+    },
+    "type": "object",
+    "required": [
+     "origins"
+    ],
+    "title": "PkCreate"
+   },
+   "Policy": {
+    "properties": {
+     "concentration_stop_pct": {
+      "type": "number",
+      "title": "Concentration Stop Pct",
+      "default": 25.0
+     },
+     "concentration_caution_pct": {
+      "type": "number",
+      "title": "Concentration Caution Pct",
+      "default": 10.0
+     },
+     "check_stop_pct_of_fund": {
+      "type": "number",
+      "title": "Check Stop Pct Of Fund",
+      "default": 10.0
+     },
+     "check_caution_pct_of_fund": {
+      "type": "number",
+      "title": "Check Caution Pct Of Fund",
+      "default": 5.0
+     },
+     "arr_multiple_caution": {
+      "type": "number",
+      "title": "Arr Multiple Caution",
+      "default": 40.0
+     },
+     "arr_multiple_stop": {
+      "type": "number",
+      "title": "Arr Multiple Stop",
+      "default": 100.0
+     },
+     "runway_stop_months": {
+      "type": "number",
+      "title": "Runway Stop Months",
+      "default": 6.0
+     },
+     "runway_caution_months": {
+      "type": "number",
+      "title": "Runway Caution Months",
+      "default": 12.0
+     },
+     "allowed_temperaments": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Allowed Temperaments"
+     },
+     "max_firmness": {
+      "type": "integer",
+      "maximum": 5.0,
+      "minimum": 1.0,
+      "title": "Max Firmness",
+      "default": 5
+     },
+     "domains": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Domains"
+     },
+     "crisis_region": {
+      "type": "string",
+      "title": "Crisis Region",
+      "default": "AE"
+     }
+    },
+    "type": "object",
+    "title": "Policy"
+   },
+   "Position": {
+    "properties": {
+     "asset": {
+      "type": "string",
+      "title": "Asset"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind",
+      "default": "other"
+     }
+    },
+    "type": "object",
+    "required": [
+     "asset",
+     "value"
+    ],
+    "title": "Position"
+   },
+   "Redeem": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 40,
+      "title": "Name",
+      "default": "Guest"
+     }
+    },
+    "type": "object",
+    "title": "Redeem"
+   },
+   "RiskProfile": {
+    "properties": {
+     "stated": {
+      "type": "string",
+      "enum": [
+       "conservative",
+       "moderate",
+       "aggressive"
+      ],
+      "title": "Stated",
+      "default": "moderate"
+     },
+     "observed": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "conservative",
+         "moderate",
+         "aggressive"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed"
+     }
+    },
+    "type": "object",
+    "title": "RiskProfile"
+   },
+   "TenantRequest": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 80,
+      "minLength": 2,
+      "title": "Name"
+     },
+     "policy": {
+      "$ref": "#/components/schemas/Policy"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "TenantRequest"
+   },
+   "Turn": {
+    "properties": {
+     "role": {
+      "type": "string",
+      "enum": [
+       "user",
+       "substrate"
+      ],
+      "title": "Role"
+     },
+     "content": {
+      "type": "string",
+      "title": "Content"
+     }
+    },
+    "type": "object",
+    "required": [
+     "role",
+     "content"
+    ],
+    "title": "Turn"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "VolRequest": {
+    "properties": {
+     "pair": {
+      "type": "string",
+      "maxLength": 7,
+      "title": "Pair",
+      "default": "XAUUSD"
+     },
+     "price": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Price"
+     },
+     "prices": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "maxItems": 5000,
+      "title": "Prices"
+     },
+     "horizon_days": {
+      "type": "number",
+      "maximum": 252.0,
+      "exclusiveMinimum": 0.0,
+      "title": "Horizon Days",
+      "default": 5
+     },
+     "leverage": {
+      "type": "number",
+      "maximum": 1000.0,
+      "minimum": 1.0,
+      "title": "Leverage",
+      "default": 1
+     },
+     "stop_pct": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 50.0,
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stop Pct"
+     },
+     "notional": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notional"
+     },
+     "events": {
+      "anyOf": [
+       {
+        "items": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "type": "array",
+        "maxItems": 8
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Events"
+     },
+     "event_week": {
+      "type": "boolean",
+      "title": "Event Week",
+      "default": false
+     },
+     "live": {
+      "type": "boolean",
+      "title": "Live",
+      "default": false
+     },
+     "text": {
+      "type": "string",
+      "maxLength": 4000,
+      "title": "Text",
+      "description": "Optional trader message for the behavioural read",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "title": "VolRequest"
+   },
+   "WebhookRequest": {
+    "properties": {
+     "url": {
+      "type": "string",
+      "maxLength": 500,
+      "pattern": "^https://",
+      "title": "Url"
+     },
+     "events": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Events"
+     }
+    },
+    "type": "object",
+    "required": [
+     "url"
+    ],
+    "title": "WebhookRequest"
+   }
+  }
+ }
+}

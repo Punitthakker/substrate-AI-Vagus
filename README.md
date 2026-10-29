@@ -22,6 +22,14 @@ Confidential. Patent pending. Do not distribute.
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
 
+## New in v0.8: the embedded SDK
+
+- **No-code Embed SDK** (`/sdk.js`): one script tag; `data-substrate-check` on any Buy, Place bet or Confirm button gives an honest pause before the click, closes the loop automatically (Cancel = followed, Proceed anyway = ignored), offers pacts, fails open; plus a chat widget and a `<substrate-check>` web component; shadow-DOM isolated, themed to the host brand
+- **Publishable keys** (`pk_live_...`) locked to the platform's origins; end users mapped to private hashed genomes per tissue; tenant-owned
+- **Developer page** (`/developers`): no-code builder with live preview (prediction market, gold ticket, wealth app) and code for HTML, JS, Python, OpenAI SDK, cURL, MCP
+- **Python SDK** (`sdk/python`, zero dependencies), JS client, OpenAPI 3 spec (`docs/openapi.json`, live at `/openapi.json`)
+- Tests 52, evals 118/118
+
 ## New in v0.7
 
 - **Trading tissue (FX and gold)**: GARCH(1,1) and EWMA volatility, 1-sigma and 2-sigma ranges, probability of stop-out before the horizon, every combination of macro events (18 scenarios, 108 sequences by default), and the trader's psychology (gambler's fallacy, anchoring, disposition effect, revenge trading, herding, crowd extremes). It never calls direction: "Will gold go up?" gets NO CALL and what can actually be known. Stateless API: `/v1/volatility/analyze`

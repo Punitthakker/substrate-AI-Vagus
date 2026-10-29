@@ -1,7 +1,12 @@
-# Integrations: eight ways to add Substrate
+# Integrations: nine ways to add Substrate
+
+**Start here for platforms:** the no-code Embed SDK. One script tag, then `data-substrate-check` on any button.
+Live builder and preview at `/developers`; details in [sdk/README.md](../sdk/README.md).
+
 
 | # | Way in | Where | Best for |
 |---|---|---|---|
+| 0 | **Embed SDK (no code)** | `<script src=".../sdk.js" data-pk="pk_live_...">` | wealth apps, prediction markets, brokers, sportsbooks |
 | 1 | REST API | `POST /v1/advise` | banks and platforms building their own UI |
 | 2 | OpenAI-compatible harness | `POST /v1/chat/completions` | any app already on the OpenAI SDK: change one URL |
 | 3 | Python decorator | `substrate/wrap.py` (`@vagus`) | wrapping an existing bot function |

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Substrate for Developers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Unbounded:wght@800;900&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0A08;--panel:#12110E;--fg:#EFE9DF;--dim:rgba(239,233,223,.64);--faint:rgba(239,233,223,.36);--hair:rgba(239,233,223,.13);--soft:rgba(239,233,223,.05);
+  --rbc:#F43B1E;--wbc:#5B86FF;--grn:#3DDC84;--amb:#F2B33D;color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#EFE9DF;--panel:#F7F3EC;--fg:#0B0A08;--dim:rgba(11,10,8,.66);--faint:rgba(11,10,8,.38);--hair:rgba(11,10,8,.13);--soft:rgba(11,10,8,.04);--wbc:#2B50D9;--grn:#1D9E5C;--amb:#B7790F;color-scheme:light}}
+:root[data-theme="light"]{--bg:#EFE9DF;--panel:#F7F3EC;--fg:#0B0A08;--dim:rgba(11,10,8,.66);--faint:rgba(11,10,8,.38);--hair:rgba(11,10,8,.13);--soft:rgba(11,10,8,.04);--wbc:#2B50D9;--grn:#1D9E5C;--amb:#B7790F;color-scheme:light}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 'Space Grotesk',ui-sans-serif,system-ui,sans-serif}
+a{color:var(--wbc)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--hair)}
+.wm{font:900 19px 'Unbounded',sans-serif;letter-spacing:-.5px;text-decoration:none;color:var(--fg)}
+.wm .b{color:var(--wbc)}.wm .r{color:var(--rbc)}.wm .g{color:var(--grn)}
+nav{margin-left:auto;display:flex;gap:16px;font-size:12px;letter-spacing:2px;text-transform:uppercase}
+nav a{color:var(--dim);text-decoration:none}
+.hero{padding:64px 0 36px}
+.lbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dim)}
+h1{font:800 clamp(34px,5.4vw,64px)/1.03 'Unbounded',sans-serif;letter-spacing:-1.5px;margin:14px 0 18px}
+h1 .si,h2 .si{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--rbc)}
+.lede{max-width:720px;color:var(--dim);font-size:17px}
+h2{font:800 24px/1.2 'Unbounded',sans-serif;letter-spacing:-.4px;margin:0 0 10px}
+section{padding:40px 0;border-top:1px solid var(--hair)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:18px;padding:20px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opts label{display:grid;gap:5px;font-size:12px;color:var(--dim)}
+select,input{background:var(--soft);border:1px solid var(--hair);color:var(--fg);border-radius:10px;padding:10px 11px;font:inherit;font-size:14px;width:100%}
+input[type=color]{padding:3px;height:42px}
+pre{background:var(--soft);border:1px solid var(--hair);border-radius:12px;padding:14px;overflow:auto;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;margin-top:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.btn{font:600 14px inherit;border-radius:12px;padding:11px 16px;cursor:pointer;border:1px solid var(--hair);background:var(--soft);color:var(--fg)}
+.btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs{display:flex;gap:4px;background:var(--soft);border:1px solid var(--hair);border-radius:999px;padding:3px;width:max-content;max-width:100%;overflow:auto}
+.tabs button{border:0;background:none;color:var(--dim);border-radius:999px;padding:7px 14px;font:600 11px inherit;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--fg);color:var(--bg)}
+.demo{margin-top:14px;display:grid;gap:12px}
+.ticket{border:1px solid var(--hair);border-radius:16px;padding:16px;background:var(--bg)}
+.ticket h4{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-weight:500;margin-bottom:10px}
+.ticket .f{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ticket .f label{display:grid;gap:3px;font-size:11px;color:var(--faint)}
+.ticket .go{margin-top:12px;width:100%;background:var(--rbc);color:#0B0A08;border:0;font-weight:700;border-radius:12px;padding:12px;cursor:pointer;font-size:14px}
+.log{font:12px ui-monospace,monospace;color:var(--grn);min-height:20px;margin-top:8px;white-space:pre-wrap}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.feat div{border:1px solid var(--hair);border-radius:14px;padding:14px}
+.feat b{display:block;margin-bottom:4px}.feat p{color:var(--dim);font-size:13.5px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+td,th{border-top:1px solid var(--hair);padding:9px 6px;text-align:left;vertical-align:top}
+th{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-weight:500}
+td code{font-size:12.5px}
+footer{padding:30px 0 50px;color:var(--faint);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="wm" href="/">S<span class="b">U</span>BSTR<span class="r">A</span>TE<span class="g">.</span></a>
+  <nav><a href="#builder">Builder</a><a href="#api">API</a><a href="/docs">Reference</a><a href="/">Console</a></nav>
+</header>
+
+<div class="hero">
+  <div class="lbl">Substrate SDK · emotional AI for any platform</div>
+  <h1>One script tag.<br>An honest pause before <span class="si">every click.</span></h1>
+  <p class="lede">Add Substrate to a wealth app, a prediction market, a broker or a sportsbook without writing backend code. Mark any button with <code>data-substrate-check</code> and Substrate reads the order, the person and the moment, then shows the truth before the click goes through. Kindly, in your brand, on the record.</p>
+</div>
+
+<section id="builder">
+  <div class="grid">
+    <div class="card">
+      <h2>No-code builder</h2>
+      <p class="lede" style="font-size:14px">Choose, preview on the right, copy the snippet.</p>
+      <div class="opts" style="margin-top:16px">
+        <label>Use case<select id="o-tissue"><option value="markets">Prediction markets / betting</option><option value="trading">FX and gold trading</option><option value="wealth">Wealth management</option><option value="venture">Venture / IC</option><option value="founder">Founder spend</option><option value="wellbeing">Wellbeing / coaching</option></select></label>
+        <label>Interrupt on<select id="o-gate"><option value="caution">Caution and stop</option><option value="stop">Stop only</option><option value="all">Every check</option></select></label>
+        <label>Theme<select id="o-theme"><option value="dark">Dark</option><option value="light">Light</option><option value="auto">Match the visitor</option></select></label>
+        <label>Brand accent<input id="o-accent" type="color" value="#F43B1E"></label>
+        <label>Voice<select id="o-voice"><option value="">Platform default</option><option>mentor</option><option>comfort</option><option>surgeon</option><option>boss</option><option>grandmother</option><option>father</option><option>partner</option><option>kid</option></select></label>
+        <label>If Substrate is unreachable<select id="o-fail"><option value="open">Let the click through</option><option value="closed">Block the click</option></select></label>
+      </div>
+      <pre id="snippet"></pre>
+      <div class="row"><button class="btn pri" id="copy">Copy snippet</button><span class="lbl" id="copied"></span></div>
+    </div>
+    <div class="card">
+      <h2>Live preview</h2>
+      <div class="tabs" role="tablist" id="ptabs">
+        <button role="tab" aria-selected="true" data-k="markets">Prediction market</button>
+        <button role="tab" aria-selected="false" data-k="trading">Gold ticket</button>
+        <button role="tab" aria-selected="false" data-k="wealth">Wealth app</button>
+      </div>
+      <div class="demo" id="demo"></div>
+      <div class="log" id="evlog" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What the SDK does</h2>
+  <div class="feat">
+    <div><b>Gate any button</b><p><code>data-substrate-check</code> on Buy, Place bet or Confirm. Reads attributes or the surrounding form. Re-fires the click only if the person proceeds.</p></div>
+    <div><b>Closes the loop itself</b><p>Cancel records "followed", Proceed anyway records "ignored". The genome learns with zero extra integration.</p></div>
+    <div><b>Pacts in one tap</b><p>"Hold me to it until 9am". If they come back early, Substrate quotes their own promise.</p></div>
+    <div><b>Safe by default</b><p>Publishable keys locked to your domains, hashed user ids, per-IP limits, fail-open, shadow DOM isolation, text only.</p></div>
+    <div><b>Chat widget</b><p><code>data-mode="check,widget"</code> adds a floating heart: an honest advisor that remembers each user.</p></div>
+    <div><b>Events for your app</b><p><code>substrate:verdict</code>, <code>substrate:proceed</code>, <code>substrate:cancel</code>, <code>substrate:pact</code> on <code>window</code>.</p></div>
+  </div>
+</section>
+
+<section id="api">
+  <h2>Open API</h2>
+  <p class="lede" style="font-size:14px">Full OpenAPI 3 spec at <a href="/openapi.json">/openapi.json</a>, interactive reference at <a href="/docs">/docs</a>.</p>
+  <div class="tabs" role="tablist" id="ctabs" style="margin-top:16px">
+    <button role="tab" aria-selected="true" data-k="html">HTML</button><button role="tab" aria-selected="false" data-k="js">JavaScript</button>
+    <button role="tab" aria-selected="false" data-k="py">Python</button><button role="tab" aria-selected="false" data-k="openai">OpenAI SDK</button>
+    <button role="tab" aria-selected="false" data-k="curl">cURL</button><button role="tab" aria-selected="false" data-k="mcp">MCP</button>
+  </div>
+  <pre id="code"></pre>
+  <table>
+    <tr><th>Endpoint</th><th>Key</th><th>What it does</th></tr>
+    <tr><td><code>POST /v1/embed/advise</code></td><td>pk</td><td>The honest pause: order context plus the user's note in, verdict, reasons, forecasts, pact offer out</td></tr>
+    <tr><td><code>POST /v1/embed/outcome</code></td><td>pk</td><td>Followed or ignored, from the widget</td></tr>
+    <tr><td><code>POST /v1/embed/pact</code></td><td>pk</td><td>Make a precommitment</td></tr>
+    <tr><td><code>POST /v1/embed/keys</code></td><td>tenant</td><td>Create a publishable key locked to your origins</td></tr>
+    <tr><td><code>POST /v1/advise</code></td><td>tenant</td><td>Full engine response for server-side use</td></tr>
+    <tr><td><code>POST /v1/chat/completions</code></td><td>tenant</td><td>OpenAI-compatible harness, substrate or guard mode</td></tr>
+    <tr><td><code>POST /v1/markets/analyze</code></td><td>none</td><td>Stateless bet maths: parlays, round robins, Kelly</td></tr>
+    <tr><td><code>POST /v1/volatility/analyze</code></td><td>none</td><td>FX and gold volatility, stop-out odds, event combinatorics, trader biases</td></tr>
+    <tr><td><code>PUT /v1/tenant/webhook</code></td><td>tenant</td><td>Signed escalation, safety and pact events to your systems</td></tr>
+  </table>
+</section>
+
+<footer>Substrate AI · Confidential · Patent pending · Vagal tone changes how truth is delivered. Never whether.</footer>
+</div>
+
+<script src="/sdk.js" data-pk="pk_demo" data-user="dev-preview" data-tissue="markets"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var host = location.origin;
+  var DEMOS = {
+    markets: '<div class="ticket"><h4>Will the Fed cut in December?</h4><form onsubmit="event.preventDefault();window.__placed(\'Bet placed\')"><div class="f"><label>Side<select name="side"><option>YES</option><option>NO</option></select></label><label>Price (c)<input name="price" value="62"></label><label>Stake ($)<input name="stake" value="5000"></label><label>Your odds (%)<input name="belief" value="80"></label><label style="grid-column:span 2">How do you feel?<input name="note" value="Down this week, need a win tonight"></label></div><button class="go" type="submit" data-substrate-check data-substrate-tissue="markets" data-substrate-market="Fed cuts in December">Place bet</button></form></div>',
+    trading: '<div class="ticket"><h4>XAU/USD · market order</h4><form onsubmit="event.preventDefault();window.__placed(\'Order sent\')"><div class="f"><label>Side<select name="side"><option>long</option><option>short</option></select></label><label>Leverage<input name="leverage" value="50"></label><label>Size ($)<input name="amount" value="100000"></label><label>Horizon<input name="horizon" value="overnight"></label><label style="grid-column:span 2">Note<input name="note" value="Gold fell 5 days in a row, it must bounce"></label></div><input type="hidden" name="instrument" value="XAUUSD"><button class="go" type="submit" data-substrate-check data-substrate-tissue="trading">Buy</button></form></div>',
+    wealth: '<div class="ticket"><h4>Buy MOONX token</h4><form onsubmit="event.preventDefault();window.__placed(\'Purchase confirmed\')"><div class="f"><label>Asset<input name="asset" value="MOONX"></label><label>Amount ($)<input name="amount" value="200000"></label><label>Funding<select name="borrowed"><option value="">Cash</option><option value="1">Borrowed</option></select></label><label style="grid-column:span 3">Note<input name="note" value="Everyone is buying before the listing, good idea right?"></label></div><button class="go" type="submit" data-substrate-check data-substrate-tissue="wealth">Confirm purchase</button></form></div>'
+  };
+  window.__placed = function(t){ log("host app: " + t + " (the click went through)"); };
+  function log(t){ $("evlog").textContent = t + "\n" + $("evlog").textContent.split("\n").slice(0, 4).join("\n"); }
+  ["verdict","proceed","cancel","pact","error"].forEach(function(n){
+    window.addEventListener("substrate:" + n, function(e){ var d = e.detail || {}; var v = d.verdict || d; log("substrate:" + n + (v && v.label ? " · " + v.label : "") + (d.action ? " · " + d.action : "")); });
+  });
+  function tabs(id, fn){ var el = $(id); Array.prototype.forEach.call(el.children, function(b){ b.onclick = function(){ Array.prototype.forEach.call(el.children, function(x){ x.setAttribute("aria-selected", x === b); }); fn(b.dataset.k); }; }); }
+  tabs("ptabs", function(k){ $("demo").innerHTML = DEMOS[k]; });
+  $("demo").innerHTML = DEMOS.markets;
+
+  function opts(){ return {tissue: $("o-tissue").value, gate: $("o-gate").value, theme: $("o-theme").value, accent: $("o-accent").value, temperament: $("o-voice").value, fail: $("o-fail").value}; }
+  function snippet(){
+    var o = opts();
+    var s = '<script src="' + host + '/sdk.js"\n  data-pk="pk_live_YOUR_KEY" data-user="{{ your user id }}"\n  data-tissue="' + o.tissue + '" data-gate="' + o.gate + '" data-theme="' + o.theme + '"\n  data-accent="' + o.accent + '"' + (o.temperament ? ' data-temperament="' + o.temperament + '"' : '') + ' data-fail="' + o.fail + '"><\/script>\n\n' +
+      '<!-- then, on any button: -->\n<button data-substrate-check' + ({markets:' data-substrate-stake="500" data-substrate-price="0.62" data-substrate-side="YES"', trading:' data-substrate-instrument="XAUUSD" data-substrate-leverage="50" data-substrate-amount="100000"', wealth:' data-substrate-asset="MOONX" data-substrate-amount="200000"'}[o.tissue] || '') + '>Confirm</button>';
+    $("snippet").textContent = s;
+    if (window.Substrate) window.Substrate.init(o);
+  }
+  ["o-tissue","o-gate","o-theme","o-accent","o-voice","o-fail"].forEach(function(id){ $(id).addEventListener("input", snippet); });
+  snippet();
+  $("copy").onclick = function(){ try { navigator.clipboard.writeText($("snippet").textContent); $("copied").textContent = "Copied"; } catch(e) { $("copied").textContent = "Select and copy"; } };
+
+  var CODE = {
+    html: $("snippet").textContent,
+    js: 'const v = await Substrate.check(\n  { stake: 500, price: 0.62, side: "YES", market: "Fed cuts in December" },\n  "need a win tonight"            // the user\'s own words, if you have them\n);\nif (v.proceed) placeBet();\n\nSubstrate.on("cancel", e => analytics.track("honest_pause_saved", e.verdict));',
+    py: 'from substrate_sdk import Substrate\n\ns = Substrate("' + host + '", api_key="sk_sub_...")\nr = s.advise("client-42", "Another $200k into this token, good idea right?")\nprint(r["label"], r["verdict"]["headline"])\n\nvol = s.volatility(pair="XAUUSD", horizon_days=5, leverage=50, event_week=True)\nprint(vol["margin"]["p_stop_out"])',
+    openai: 'from openai import OpenAI\nclient = OpenAI(base_url="' + host + '/v1", api_key="sk_sub_...",\n                default_headers={"x-substrate-user": "client-42", "x-substrate-mode": "guard"})\nr = client.chat.completions.create(model="substrate-markets",\n        messages=[{"role": "user", "content": "6-leg parlay, each leg 70%, $1,000. Lock!"}])',
+    curl: 'curl -X POST ' + host + '/v1/embed/advise \\\n  -H "x-substrate-pk: pk_demo" -H "content-type: application/json" \\\n  -d \'{"user":"u-123","tissue":"markets","context":{"stake":5000,"price":0.62,"side":"YES","belief":0.8},"message":"need a win"}\'',
+    mcp: '{"mcpServers": {"substrate": {"command": "python3",\n  "args": ["integrations/mcp/substrate_mcp.py"],\n  "env": {"SUBSTRATE_URL": "' + host + '", "SUBSTRATE_USER": "client-42"}}}}'
+  };
+  $("code").textContent = CODE.html;
+  tabs("ctabs", function(k){ $("code").textContent = k === "html" ? $("snippet").textContent : CODE[k]; });
+})();
+</script>
+</body>
+</html>

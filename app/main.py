@@ -704,6 +704,144 @@ def console():
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
+# ---------------------------------------------------------------- embedded SDK (publishable keys)
+
+TISSUE = Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"]
+
+
+class PkCreate(BaseModel):
+    origins: list[str] = Field(..., min_length=1, max_length=20, description='e.g. ["app.mybank.com", "*.mybank.com"]')
+    tissue: TISSUE = "wealth"
+    label: str = Field("web", max_length=60)
+
+
+@app.post("/v1/embed/keys", tags=["embed"])
+def create_pk(req: PkCreate, c: Ctx = Depends(ctx)):
+    """Create a publishable key (pk_live_...) for the browser SDK, locked to your origins. Tenant key required."""
+    if c.role != "tenant":
+        raise HTTPException(403, "Tenant key required. Admins create a tenant first via /v1/admin/tenants.")
+    from substrate import embed
+    pk = embed.create(store, c.tenant["id"], req.origins, req.tissue, req.label)
+    return {"pk": pk, "origins": req.origins, "tissue": req.tissue,
+            "snippet": f'<script src="https://YOUR-SUBSTRATE-HOST/sdk.js" data-pk="{pk}" data-user="YOUR_USER_ID"></script>'}
+
+
+@app.get("/v1/embed/keys", tags=["embed"])
+def list_pks(c: Ctx = Depends(ctx)):
+    if c.role != "tenant":
+        raise HTTPException(403, "Tenant key required.")
+    from substrate import embed
+    return embed.list_for(store, c.tenant["id"])
+
+
+def _pk_ctx(request: Request, pk: str | None, tissue_hint: str | None) -> tuple[str, str, Policy]:
+    """Resolve a publishable key to (tenant id, tissue, policy), enforcing origins."""
+    from substrate import embed
+    if not pk:
+        raise HTTPException(401, "Missing x-substrate-pk header.")
+    if pk == embed.DEMO_PK:
+        if locked_down() and not os.environ.get("SUBSTRATE_DEMO_PK"):
+            raise HTTPException(403, "pk_demo is disabled on this deployment.")
+        return "demo", tissue_hint or "wealth", DEFAULT
+    k = embed.lookup(store, pk)
+    if not k:
+        raise HTTPException(401, "Unknown or revoked publishable key.")
+    if not embed.origin_ok(k["origins"], request.headers.get("origin")):
+        raise HTTPException(403, "Origin not allowed for this key.")
+    return k["tenant_id"], k["tissue"], _policy_of(k["tenant_id"])
+
+
+class EmbedAdvise(BaseModel):
+    user: str = Field(..., min_length=1, max_length=200, description="Your platform's user id (hashed, never stored raw)")
+    message: str = Field("", max_length=4000, description="Free text from the user, if any")
+    context: dict = Field(default_factory=dict, description="What is on screen: stake, price, side, leverage, instrument...")
+    tissue: Optional[TISSUE] = None
+    temperament: Optional[str] = None
+    thread: list[dict] = Field(default_factory=list, max_length=20)
+
+
+def _embed_user(tenant: str, tissue: str, external: str) -> str:
+    from substrate import embed
+    uid = embed.user_id(tenant, external, tissue)
+    if not store.get_person(uid):
+        base = store.get_person(DEMO_USERS.get(tissue, "")) if tenant == "demo" else None
+        p = base.model_copy(deep=True) if base else Person(domain=tissue)
+        p.user_id, p.name, p.domain = uid, "Member", tissue
+        p.lessons, p.adherence, p.ancestry, p.pacts = [], {}, [], []
+        p.biases = [b.model_copy(update={"evidence": []}) for b in p.biases] if base else []
+        p.consent.allow_training, p.consent.inheritance.heirs = False, []
+        if "support_contacts" in p.profile:
+            p.profile["support_contacts"] = []
+        store.put_person(p)
+        if tenant != "demo":
+            store.set_owner(uid, tenant)
+    return uid
+
+
+@app.post("/v1/embed/advise", tags=["embed"])
+def embed_advise(req: EmbedAdvise, request: Request, x_substrate_pk: Optional[str] = Header(None)):
+    """The browser SDK's single call: the honest pause before a click."""
+    from substrate import embed
+    from substrate.schemas import Turn
+    tenant, tissue, policy = _pk_ctx(request, x_substrate_pk, req.tissue)
+    if req.tissue and req.tissue != tissue:
+        if tenant != "demo" and req.tissue not in policy.domains:
+            raise HTTPException(403, f"Tissue '{req.tissue}' is not enabled for this tenant.")
+        tissue = req.tissue
+    uid = _embed_user(tenant, tissue, req.user)
+    msg = embed.context_message(tissue, req.context, req.message) if req.context else (req.message or "Checking this.")
+    thread = [Turn(role="user" if t.get("role") == "user" else "substrate", content=str(t.get("content", ""))[:4000])
+              for t in req.thread if t.get("content")]
+    r = engine.advise(AdviseRequest(user_id=uid, message=msg, thread=thread, temperament=req.temperament), policy=policy)
+    webhooks.from_advice(store, r)
+    return {**embed.compact(r), "read_as": msg}
+
+
+class EmbedOutcome(BaseModel):
+    user: str
+    ledger_id: str
+    action: Literal["followed", "ignored", "partial"]
+
+
+@app.post("/v1/embed/outcome", tags=["embed"])
+def embed_outcome(req: EmbedOutcome, request: Request, x_substrate_pk: Optional[str] = Header(None)):
+    """Closes the loop from the widget: Cancel means followed, Proceed anyway means ignored."""
+    from substrate import embed
+    tenant, tissue, _ = _pk_ctx(request, x_substrate_pk, None)
+    ev = store.get_event(req.ledger_id)
+    if not ev or ev["user_id"] not in {embed.user_id(tenant, req.user, t) for t in domains.TISSUES}:
+        raise HTTPException(404, "No such advice for this user.")
+    engine.record_outcome(OutcomeRequest(ledger_id=req.ledger_id, action=req.action))
+    return {"ok": True}
+
+
+class EmbedPact(BaseModel):
+    user: str
+    ledger_id: str = ""
+    tissue: Optional[TISSUE] = None
+
+
+@app.post("/v1/embed/pact", tags=["embed"])
+def embed_pact(req: EmbedPact, request: Request, x_substrate_pk: Optional[str] = Header(None)):
+    from substrate import embed, pacts
+    tenant, tissue, _ = _pk_ctx(request, x_substrate_pk, req.tissue)
+    person = store.get_person(embed.user_id(tenant, req.user, req.tissue or tissue))
+    if not person:
+        raise HTTPException(404, "Unknown user.")
+    p = pacts.make(store, person, req.ledger_id, person.domain)
+    return {"ok": True, "pact": p, "local_until": pacts.local_hhmm(person, p.until)}
+
+
+@app.get("/sdk.js", include_in_schema=False)
+def sdk_js():
+    return FileResponse(STATIC / "sdk.js", media_type="application/javascript")
+
+
+@app.get("/developers", include_in_schema=False)
+def developers():
+    return FileResponse(STATIC / "developers.html")
+
+
 @app.get("/embed.js", include_in_schema=False)
 def embed():
     return FileResponse(STATIC / "embed.js", media_type="application/javascript")
