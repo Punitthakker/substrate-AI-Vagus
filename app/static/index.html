@@ -172,6 +172,23 @@ pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);bo
 .hold input,.hold select{background:var(--soft);border:1px solid var(--hair);border-radius:10px;padding:10px;color:var(--fg);font:inherit;min-width:0}
 .gactions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap} .gactions .btn{padding:12px 18px}
 
+/* limbic */
+.emo{display:grid;grid-template-columns:78px 1fr 34px;gap:8px;align-items:center;font-size:11px;color:var(--dim);padding:2px 0}
+.emo .b{height:6px;background:var(--hair);border-radius:99px;overflow:hidden}
+.emo .b i{display:block;height:100%;border-radius:99px;transition:width .5s}
+.emo span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.circ{position:relative;height:120px;border:1px solid var(--hair);border-radius:12px;margin-top:10px;overflow:hidden}
+.circ:before,.circ:after{content:"";position:absolute;background:var(--hair)}
+.circ:before{left:50%;top:0;bottom:0;width:1px}.circ:after{top:50%;left:0;right:0;height:1px}
+.circ .q{position:absolute;font-size:9px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase}
+.circ .dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--rbc);transform:translate(-50%,-50%);box-shadow:0 0 0 6px color-mix(in srgb,var(--rbc) 25%,transparent);transition:left .6s,top .6s}
+.circ .trail{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--faint);transform:translate(-50%,-50%)}
+.needs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.need{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid var(--hair);color:var(--dim)}
+.need.approval{border-color:var(--rbc);color:var(--rbc)}
+canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;margin-top:16px;border:1px solid var(--hair);border-radius:16px;background:var(--panel)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 @media (max-width:1150px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:72vh} }
 @media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:82vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -216,6 +233,11 @@ pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);bo
 
   <aside class="col right" aria-label="Nerve center">
     <div class="sect"><h3>Inferred state <span>text only</span></h3><div class="states" id="states"></div><div class="sig" id="sig">Waiting for a signal.</div></div>
+    <div class="sect"><h3>Limbic layer <span id="arc">8 emotions · text only</span></h3>
+      <div id="emos"></div>
+      <div class="circ" id="circ"><span class="q" style="right:6px;top:4px">excited</span><span class="q" style="left:6px;top:4px">distressed</span><span class="q" style="left:6px;bottom:4px">low</span><span class="q" style="right:6px;bottom:4px">content</span><i class="dot" id="dot" style="left:50%;top:50%"></i></div>
+      <div class="needs" id="needs"></div>
+    </div>
     <div class="sect"><h3>Vagal tone <span id="toneN">-</span></h3><div class="tone" id="tone"></div><div class="tone-l"><span>GENTLE</span><span>FIRM</span></div><div class="sig" id="toneNotes"></div></div>
     <div class="sect"><h3>Verdict <span id="model"></span></h3><div class="verdict"><div class="pol" id="pol">-</div><div class="vh" id="vh">No decision yet.</div><div class="floor" id="floor"></div><div class="council" id="council"></div></div></div>
     <div class="sect"><h3>Prediction <span>will they follow it?</span></h3>
@@ -230,6 +252,7 @@ pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);bo
       <button class="btn primary" id="compareBtn">Many voices, 1 truth</button>
       <button class="btn" id="evalBtn">Run all evals</button>
       <button class="btn" id="exportBtn">Export .sub genome</button>
+      <button class="btn" id="graphBtn">Genome graph</button>
       <button class="btn" id="resetBtn">Reset demo</button>
     </div></div>
     <div class="sect"><h3>Vagus Ledger <span class="verified" id="verified"></span></h3><div class="chain" id="chain"></div></div>
@@ -367,8 +390,22 @@ pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);bo
     ["sig","toneNotes","floor","council","drivers","forecasts","esc"].forEach(function(id){ $(id).innerHTML = ""; });
     $("sig").textContent = "Waiting for a signal."; $("toneN").textContent = "-"; $("pol").className = "pol"; $("pol").textContent = "-";
     $("vh").textContent = "No decision yet."; $("model").textContent = ""; $("pf").textContent = "-"; $("pfg").style.width = "0";
+    renderLimbic(null);
+  }
+  var EMO_COL = {joy:"var(--grn)",trust:"var(--wbc)",fear:"var(--amb)",surprise:"var(--safe)",sadness:"var(--wbc)",disgust:"var(--faint)",anger:"var(--rbc)",anticipation:"var(--amb)"};
+  function renderLimbic(L){
+    var keys = ["joy","trust","fear","surprise","sadness","disgust","anger","anticipation"];
+    $("emos").innerHTML = keys.map(function(k){ var v = L ? (L.emotions[k] || 0) : 0;
+      return '<div class="emo"><span>' + k + '</span><span class="b"><i style="width:' + Math.round(v*100) + '%;background:' + EMO_COL[k] + '"></i></span><span>' + (v ? Math.round(v*100) + '%' : '') + '</span></div>'; }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll("#circ .trail"), function(t){ t.remove(); });
+    if (!L) { $("dot").style.left = "50%"; $("dot").style.top = "50%"; $("needs").innerHTML = ""; $("arc").textContent = "8 emotions · text only"; return; }
+    (L.arc_valences || []).slice(0,-1).forEach(function(v){ var t = document.createElement("i"); t.className = "trail"; t.style.left = (50 + v*45) + "%"; t.style.top = "50%"; $("circ").appendChild(t); });
+    $("dot").style.left = (50 + L.valence*45) + "%"; $("dot").style.top = (50 - L.arousal*42) + "%";
+    $("needs").innerHTML = (L.needs || []).map(function(n){ return '<span class="need ' + n + '">needs ' + (n === "approval" ? "approval (held)" : n) + '</span>'; }).join("") + (L.dominant ? '<span class="need">' + esc(L.quadrant) + ' · ' + esc(L.dominant) + '</span>' : '');
+    $("arc").textContent = "arc: " + L.arc + " · " + L.model;
   }
   function renderNerve(r){
+    renderLimbic(r.limbic);
     Array.prototype.forEach.call(document.querySelectorAll(".st"), function(el){ el.classList.toggle("on", el.dataset.s === r.state); });
     var s = r.signals, bits = [];
     if (s.euphoric.length) bits.push("euphoria: " + s.euphoric.slice(0,3).join(", "));
@@ -506,7 +543,45 @@ pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);bo
         '<h2 style="margin-top:34px;font-size:22px">Multi-tenant by design</h2>' +
         '<p class="sub">Each bank, fund or platform gets its own key, its own isolated genomes and its own policy: stricter limits, permitted voices, maximum tone, enabled tissues. Policy can tighten Substrate. It can never switch off the Honesty Floor or the Safety Protocol.</p>' +
         '<pre class="code">' + esc(JSON.stringify(pol, null, 2)) + '</pre>' +
+        '<h2 style="margin-top:34px;font-size:22px">It keeps learning</h2><p class="sub" id="learnSub">Loading the next training round...</p><div class="stats" id="learnStats"></div>' +
         '<pre class="code">curl -X POST $SUBSTRATE/v1/advise -H "x-substrate-key: sk_sub_..." \\\n  -d \'{"user_id":"client-42","message":"Another $200k into this token?"}\'</pre>';
+      api("/v1/learn/stats").then(function(L){
+        $("learnSub").innerHTML = "Every consented outcome becomes training data for <b>substrate-vagus</b>, an open-weight model forked from " + esc(L.base_models.slice(0,3).join(", ")) + " and trained on NVIDIA GPUs. Pipeline: " + esc(L.pipeline.join(" → ")) + ".";
+        var st = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };
+        $("learnStats").innerHTML = st("SFT examples", L.sft_examples) + st("DPO pairs", L.dpo_pairs) + st("Wealth", L.by_domain.wealth) + st("Venture", L.by_domain.venture) + st("Founder", L.by_domain.founder) + st("Wellbeing", L.by_domain.wellbeing);
+      });
+    });
+  };
+
+  var NODE_COL = {person:"--fg",value:"--faint",goal:"--wbc",pattern:"--rbc",decision:"--amb",action:"--wbc",outcome:"--grn",lesson:"--safe"};
+  $("graphBtn").onclick = function(){
+    overlay('<div class="lbl">Genome graph · person model as a living network</div><h2>The <span class="si red">nervous system</span> of one human.</h2><p class="sub">Values, goals and patterns, wired to every decision, what they did, what it cost, and what it taught. Production streams the same facts into a temporal knowledge graph (Graphiti on Neo4j).</p><canvas class="graph" id="gcv"></canvas><div class="legend" id="glg"></div>');
+    api("/v1/graph/" + S.user).then(function(g){
+      var cs = getComputedStyle(document.documentElement), col = function(t){ return cs.getPropertyValue(NODE_COL[t] || "--fg").trim(); };
+      $("glg").innerHTML = Object.keys(NODE_COL).map(function(t){ return '<span><i style="background:' + col(t) + '"></i>' + t + '</span>'; }).join("");
+      var cv = $("gcv"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+      cv.width = W*dpr; cv.height = H*dpr; var ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+      var idx = {}; g.nodes.forEach(function(n, i){ idx[n.id] = n; var a = i/g.nodes.length*6.283; n.x = W/2 + Math.cos(a)*W*0.3; n.y = H/2 + Math.sin(a)*H*0.3; n.vx = n.vy = 0; n.r = 5 + n.weight*3.2; });
+      var E = g.edges.filter(function(e){ return idx[e.source] && idx[e.target]; });
+      var t0 = performance.now(), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      function step(){
+        for (var i=0;i<g.nodes.length;i++){ var a=g.nodes[i]; for (var j=i+1;j<g.nodes.length;j++){ var b=g.nodes[j], dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy+0.01, f=7000/d2; a.vx+=dx*f/Math.sqrt(d2); a.vy+=dy*f/Math.sqrt(d2); b.vx-=dx*f/Math.sqrt(d2); b.vy-=dy*f/Math.sqrt(d2); } }
+        E.forEach(function(e){ var a=idx[e.source], b=idx[e.target], dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)||1, f=(d-150)*0.018; a.vx+=dx/d*f; a.vy+=dy/d*f; b.vx-=dx/d*f; b.vy-=dy/d*f; });
+        g.nodes.forEach(function(n){ n.vx+=(W/2-n.x)*0.0025; n.vy+=(H/2-n.y)*0.0025; n.vx*=0.82; n.vy*=0.82; n.x=Math.max(30,Math.min(W-30,n.x+n.vx)); n.y=Math.max(24,Math.min(H-24,n.y+n.vy)); });
+      }
+      function draw(t){
+        ctx.clearRect(0,0,W,H);
+        var pulse = (Math.sin(t/380)+1)/2;
+        E.forEach(function(e){ var a=idx[e.source], b=idx[e.target]; ctx.strokeStyle=col(b.type); ctx.globalAlpha=0.28+(e.type==="led-to"||e.type==="evidenced-by"?0.4:0); ctx.lineWidth=e.type==="evidenced-by"?2:1; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          if (!still){ var k=((t/1400)+(a.x%1))%1; ctx.globalAlpha=0.9; ctx.fillStyle=col(b.type); ctx.beginPath(); ctx.arc(a.x+(b.x-a.x)*k, a.y+(b.y-a.y)*k, 1.8, 0, 6.283); ctx.fill(); } });
+        ctx.globalAlpha=1;
+        g.nodes.forEach(function(n){ ctx.fillStyle=(n.type==="outcome"&&n.delta<0)?cs.getPropertyValue("--rbc").trim():col(n.type); ctx.beginPath(); ctx.arc(n.x,n.y,n.r*(n.type==="person"?1+pulse*0.12:1),0,6.283); ctx.fill();
+          ctx.fillStyle=cs.getPropertyValue("--fg").trim(); ctx.font=(n.type==="person"?"600 13px ":"11px ")+"Space Grotesk, sans-serif"; ctx.textAlign="center";
+          var lab=n.label.length>34?n.label.slice(0,32)+"…":n.label; ctx.fillText(lab, n.x, n.y-n.r-6); });
+      }
+      function loop(t){ if ($("ov").hidden) return; if (t-t0<6000) step(); draw(t); requestAnimationFrame(loop); }
+      for (var k=0;k<120;k++) step();
+      requestAnimationFrame(loop);
     });
   };
 

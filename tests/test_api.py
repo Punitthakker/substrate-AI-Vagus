@@ -62,3 +62,11 @@ def test_models_and_tissues_catalogue():
     ms = c.get("/v1/models").json()["models"]
     assert {"anthropic", "nvidia", "gemini", "ollama", "vllm"} <= {m["key"] for m in ms}
     assert {t["key"] for t in c.get("/v1/tissues").json()} == {"wealth", "venture", "founder", "wellbeing"}
+
+
+def test_graph_and_learning_endpoints():
+    g = c.get("/v1/graph/demo-kapoor").json()
+    assert g["nodes"] and g["edges"]
+    L = c.get("/v1/learn/stats").json()
+    assert L["sft_examples"] > 0 and "nvidia" in " ".join(L["base_models"]).lower()
+    assert c.post("/v1/learn/export").status_code == 403          # dataset export is admin-only

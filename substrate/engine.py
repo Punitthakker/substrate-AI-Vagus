@@ -5,7 +5,7 @@ vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> predic
 """
 from __future__ import annotations
 
-from . import domains, temperaments
+from . import domains, limbic, temperaments
 from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
@@ -47,6 +47,7 @@ class VagusEngine:
         thread_text = "\n".join(t.content for t in req.thread if t.role == "user")
         signals = read_signals(req.message)
         state = infer_state(signals)
+        lm = limbic.read(req.message, [t.content for t in req.thread if t.role == "user"])
 
         if is_crisis(req.message):
             # ---------------- the Safety Protocol: above every tissue, persona and policy
@@ -64,11 +65,15 @@ class VagusEngine:
             stakes = req.stakes or infer_stakes(facts, person)
             t = self._temperament(req.temperament, person, tissue, policy)
             firmness, tone_notes = vagal_tone_explained(person, state, stakes, t.firmness_bias)
+            if "approval" in lm.needs and verdict.polarity.severity >= 1 and firmness < 3:
+                firmness = 3
+                tone_notes.append("Approval-seeking detected: tone held at 3 so the truth isn't traded for comfort.")
             cap = min(tissue.max_firmness, policy.max_firmness)
             if firmness > cap:
                 firmness = cap
                 tone_notes.append(f"Capped at {cap} for the {tissue.name} tissue.")
-            message = deliver(verdict, t, firmness, state, tissue.voice.get(t.key))
+            message = deliver(verdict, t, firmness, state, tissue.voice.get(t.key),
+                              limbic.empathy_lines(lm, verdict.polarity.value))
             forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
 
         prediction = predict(person, state, firmness, facts, verdict, forecasts)
@@ -76,13 +81,16 @@ class VagusEngine:
                    "headline": verdict.headline, "reasons": [] if facts.safety else verdict.reasons,
                    "model": verdict.model, "floor_applied": verdict.floor_applied, "state": state.value,
                    "firmness": firmness, "temperament": tkey, "stakes": stakes, "flags": facts.flags,
-                   "p_follow": prediction.p_follow, "safety": facts.safety}
+                   "p_follow": prediction.p_follow, "safety": facts.safety,
+                   "limbic": None if facts.safety else {"dominant": lm.dominant, "valence": lm.valence,
+                                                        "arousal": lm.arousal, "needs": lm.needs},
+                   "delivered": None if facts.safety else message}
         ev = self.store.append(req.user_id, "advice", payload) if record else \
             {"id": "preview", "hash": "-", "prev_hash": self.store.head(req.user_id)}
 
         return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
-                              facts=facts, verdict=verdict, prediction=prediction, message=message,
+                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:
@@ -103,7 +111,8 @@ class VagusEngine:
             firmness = min(firmness, tissue.max_firmness, policy.max_firmness)
             out.append({"temperament": key, "name": t.name, "likability": t.likability, "firmness": firmness,
                         "polarity": base.verdict.polarity.value, "headline": base.verdict.headline,
-                        "message": deliver(base.verdict, t, firmness, base.state, tissue.voice.get(key))})
+                        "message": deliver(base.verdict, t, firmness, base.state, tissue.voice.get(key),
+                                           limbic.empathy_lines(base.limbic, base.verdict.polarity.value) if base.limbic else None)})
         return {"verdict": base.verdict.model_dump(), "state": base.state.value, "safety": False, "voices": out,
                 "invariant": len({v["headline"] for v in out}) == 1}
 

@@ -133,3 +133,30 @@ def test_prediction_and_insights(eng):
     assert any("VaR" in f.note for f in r.prediction.forecasts)
     i = insights(eng.store.get_person(DEMO_USER), eng.store.history(DEMO_USER))
     assert i["cost_of_ignoring"] == 46000 and i["gained_by_following"] == 4800
+
+
+def test_limbic_reads_emotion_and_need(eng):
+    r = eng.advise(AdviseRequest(user_id=DEMO_USER, message="This is amazing!! Another $200k into this token, good idea right?"), record=False)
+    assert r.limbic.dominant == "joy" and "approval" in r.limbic.needs
+    assert "asking me to agree" in r.message and r.verdict.polarity == Polarity.stop
+
+
+def test_training_dataset_is_consented_weighted_and_safe(eng):
+    from substrate.learn import build
+    from substrate.schemas import Person as P
+    eng.store.put_person(P(user_id="no-consent", name="Private Client"))   # no allow_training
+    d = build(eng.store)
+    assert d["stats"]["sft_examples"] > 100 and d["stats"]["dpo_pairs"] == d["stats"]["sft_examples"]
+    assert d["stats"]["skipped"]["no_consent"] >= 1
+    firmer = [x for x in d["sft"] if "firmer" in x["meta"].get("why", "")]
+    assert firmer and all(x["weight"] >= 1.5 for x in firmer)
+    for row in d["sft"]:                     # no real crisis message ever enters training
+        assert "withheld" not in row["messages"][-2]["content"]
+
+
+def test_genome_graph(eng):
+    from substrate.graph import build_graph, to_graphiti_episodes
+    g = build_graph(eng.store, DEMO_USER)
+    assert g["counts"]["pattern"] >= 2 and g["counts"]["outcome"] >= 1
+    assert any(e["type"] == "evidenced-by" for e in g["edges"])
+    assert len(to_graphiti_episodes(eng.store, DEMO_USER)) >= 3

@@ -9,7 +9,8 @@ from .schemas import State, Verdict
 from .temperaments import Temperament
 
 
-def deliver(v: Verdict, t: Temperament, firmness: int, state: State, overrides: dict | None = None) -> str:
+def deliver(v: Verdict, t: Temperament, firmness: int, state: State, overrides: dict | None = None,
+            ack: list[str] | None = None) -> str:
     o = overrides or {}
     pol = v.polarity.value
     open_ = o.get("open", {}).get(pol, t.open.get(pol, ""))
@@ -23,7 +24,13 @@ def deliver(v: Verdict, t: Temperament, firmness: int, state: State, overrides: 
         parts.append(empathy)
     if state == State.defensive and pushback:
         parts.append(pushback)
+    feel = list(ack or [])
+    if parts and feel and len(feel) > 1:
+        feel = feel[1:]            # the temperament already acknowledged the feeling; keep only the need
+    elif parts and feel and not any(feel[0].startswith(x) for x in ("You're asking", "It's your call", "You're not wrong")):
+        feel = []
     if firmness <= 2 and state != State.defensive:
+        parts.extend(feel)
         # gentle landing: warmth first, then the truth
         if open_:
             parts.append(open_)
@@ -31,6 +38,7 @@ def deliver(v: Verdict, t: Temperament, firmness: int, state: State, overrides: 
     else:
         # firm landing: the truth first, then the voice
         parts.append(f"**{v.headline}**")
+        parts.extend(feel)
         if open_:
             parts.append(open_)
     if v.reasons:

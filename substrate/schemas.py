@@ -6,6 +6,8 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from .limbic import Limbic
+
 
 class State(str, Enum):
     calm = "calm"
@@ -36,6 +38,7 @@ class Inheritance(BaseModel):
 
 class Consent(BaseModel):
     candor_level: int = Field(3, ge=1, le=5, description="1 gentle ... 5 brutal. Set by the human.")
+    allow_training: bool = Field(False, description="Opt-in: may this genome's ledger train the Vagus model?")
     inheritance: Inheritance = Field(default_factory=Inheritance)
 
 
@@ -168,6 +171,7 @@ class AdviseResponse(BaseModel):
     facts: Facts
     verdict: Verdict
     prediction: Optional[Prediction] = None
+    limbic: Optional[Limbic] = None
     message: str
     hash: str
     prev_hash: str

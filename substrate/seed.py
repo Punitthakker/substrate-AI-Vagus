@@ -12,7 +12,7 @@ def _people() -> dict[str, Person]:
     return {
         "demo-kapoor": Person(
             user_id="demo-kapoor", name="Aarav Kapoor", domain="wealth", vintage="2026-10-29",
-            consent=Consent(candor_level=4, inheritance=Inheritance(heirs=["kapoor-heir-01"], scope="values+ledger")),
+            consent=Consent(candor_level=4, allow_training=True, inheritance=Inheritance(heirs=["kapoor-heir-01"], scope="values+ledger")),
             temperament="mentor", values=["family security", "children's education", "long-horizon compounding"],
             risk_profile=RiskProfile(stated="moderate", observed="aggressive"), liquid_net_worth=1_200_000,
             positions=[Position(asset="Global Equity Index Fund", value=480_000, kind="fund"),
@@ -29,7 +29,7 @@ def _people() -> dict[str, Person]:
                      "2026-10-01: followed a PROCEED into the index fund. +$4.8k and compounding."]),
         "demo-haddad": Person(
             user_id="demo-haddad", name="Layla Haddad", domain="venture", vintage="2026-10-29",
-            consent=Consent(candor_level=4), temperament="surgeon",
+            consent=Consent(candor_level=4, allow_training=True), temperament="surgeon",
             values=["thesis discipline", "founder quality", "LP trust"],
             risk_profile=RiskProfile(stated="moderate", observed="aggressive"),
             profile={"fund_name": "Falcon Seed Fund I", "fund_size": 80_000_000, "deployed": 31_000_000,
@@ -42,7 +42,7 @@ def _people() -> dict[str, Person]:
             lessons=["2026-08-30: ignored a PASS (Pass on the hot AI round at 90x ARR) and marked down $1.2M."]),
         "demo-mehra": Person(
             user_id="demo-mehra", name="Rohan Mehra", domain="founder", vintage="2026-10-29",
-            consent=Consent(candor_level=4), temperament="father",
+            consent=Consent(candor_level=4, allow_training=True), temperament="father",
             values=["customer obsession", "default alive", "team first"],
             profile={"company": "Ledgerly (B2B SaaS)", "cash_in_bank": 2_400_000, "monthly_burn": 210_000,
                      "mrr": 85_000, "mrr_growth": 0.06},
@@ -53,7 +53,7 @@ def _people() -> dict[str, Person]:
             lessons=["2026-05-02: ignored a NOT YET on 6 sales hires. Runway fell from 15 to 11 months."]),
         "demo-sara": Person(
             user_id="demo-sara", name="Sara Nasser", domain="wellbeing", vintage="2026-10-29",
-            consent=Consent(candor_level=2), temperament="comfort",
+            consent=Consent(candor_level=2, allow_training=True), temperament="comfort",
             values=["family", "health", "being kind to herself"],
             profile={"support_contacts": ["your sister Mira"], "region": "AE"},
             biases=[Bias(type="late-night rumination", evidence=[], last_seen="2026-10-20"),

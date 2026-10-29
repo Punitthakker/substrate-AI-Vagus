@@ -26,6 +26,8 @@ from substrate.brains import active_brain, catalogue as model_catalogue, council
 from substrate.engine import VagusEngine
 from substrate.evals import run as run_evals
 from substrate.export import export_sub, verify_sub
+from substrate.graph import build_graph, to_graphiti_episodes
+from substrate.learn import build as build_dataset
 from substrate.ledger import Store, verify_chain
 from substrate.policy import DEFAULT, Policy
 from substrate.predict import insights as person_insights
@@ -271,6 +273,42 @@ def export(user_id: str, c: Ctx = Depends(ctx)):
 @app.post("/v1/export/verify")
 def verify(doc: dict):
     return verify_sub(doc)
+
+
+@app.get("/v1/graph/{user_id}")
+def genome_graph(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    try:
+        return build_graph(store, user_id)
+    except KeyError:
+        raise HTTPException(404, "person not found")
+
+
+@app.get("/v1/graph/{user_id}/graphiti")
+def graphiti_episodes(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    return {"user_id": user_id, "episodes": to_graphiti_episodes(store, user_id)}
+
+
+# ---------------------------------------------------------------- learning
+
+@app.get("/v1/learn/stats")
+def learn_stats():
+    """What the next training round would learn from (consented public genomes + self-distillation)."""
+    d = build_dataset(store, store.users(public=True))
+    return {**d["stats"], "base_models": ["Qwen/Qwen2.5-7B-Instruct", "meta-llama/Llama-3.1-8B-Instruct",
+                                         "mistralai/Mistral-Nemo-Instruct-2407", "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"],
+            "pipeline": ["consented ledger", "outcome weighting", "SFT (LoRA)", "DPO: honest > sycophantic, calibrated > fearful",
+                         "merge", "serve on vLLM / NVIDIA NIM", "evals: native honesty"],
+            "sample": {"sft": d["sft"][0] if d["sft"] else None, "dpo": d["dpo"][0] if d["dpo"] else None}}
+
+
+@app.post("/v1/learn/export")
+def learn_export(c: Ctx = Depends(ctx)):
+    if c.role not in ("admin", "master"):
+        raise HTTPException(403, "Admin key required.")
+    d = build_dataset(store)
+    return {"stats": d["stats"], "sft": d["sft"], "dpo": d["dpo"]}
 
 
 # ---------------------------------------------------------------- enterprise
