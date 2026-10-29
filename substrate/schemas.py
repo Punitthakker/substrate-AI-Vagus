@@ -82,7 +82,7 @@ class Person(BaseModel):
     """The genome: who this human is across months, not messages. User-owned, exportable, deletable."""
     user_id: str = ""
     name: str = "Client"
-    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
+    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"] = "wealth"
     vintage: str = ""
     consent: Consent = Field(default_factory=Consent)
     temperament: str = "mentor"
@@ -193,6 +193,7 @@ class AdviseResponse(BaseModel):
     ancestry: Optional[str] = None     # the elder's lesson cited, if the heir is repeating their pattern
     pact_offer: Optional[dict] = None  # "hold me to it until 9am", offered on a hard stop
     pact_active: Optional[dict] = None # the human's own promise, in force right now
+    letter: Optional[dict] = None      # a Legacy Vault letter delivered at this moment
     message: str
     hash: str
     prev_hash: str

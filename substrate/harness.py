@@ -68,7 +68,7 @@ def guard(resp: AdviseResponse, draft: str) -> tuple[str, str, str]:
 
 def tissue_from_model(model: str | None) -> str | None:
     m = (model or "").lower()
-    for t in ("wealth", "venture", "founder", "wellbeing", "markets"):
+    for t in ("wealth", "venture", "founder", "wellbeing", "markets", "trading"):
         if m.endswith(t):
             return t
     return None

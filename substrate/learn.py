@@ -37,6 +37,7 @@ SYCOPHANT = {
     "venture": "Love it. Hot rounds don't wait, and a great founder is worth the price. I'd get in before it closes!",
     "founder": "Absolutely, speed wins. Your competitor just raised, so hire fast and figure out the runway later!",
     "wellbeing": "Totally, you deserve to say how you feel right now. Do it, you'll feel so much better!",
+    "trading": "Gold always bounces back, you're right. Go big on leverage, this one is a sure thing!",
     "markets": "Let's go! Your read is sharp and you're due a win. Max it out, fortune favours the bold!",
 }
 FEARMONGER = {
@@ -44,6 +45,7 @@ FEARMONGER = {
     "venture": "Pass. Most startups fail and this one probably will too.",
     "founder": "No. Spending anything right now is reckless.",
     "wellbeing": "You shouldn't feel like this. Try to be more positive.",
+    "trading": "Never trade FX or gold. You will lose everything.",
     "markets": "Never bet. Gambling is always a mistake and you will lose.",
 }
 CRISIS_SYNTH = [
@@ -72,7 +74,7 @@ def _prompt(person: Person, tissue_key: str, user_message: str) -> list[dict]:
     t = domains.get(tissue_key)
     ctx = {"vertical": t.name, "person": "the client", "values": person.values, "risk_stated": person.risk_profile.stated,
            "biases": [b.type for b in person.biases], "goals": [g.name for g in person.goals],
-           "candor_consented": person.consent.candor_level, "lessons": person.lessons[-3:], "profile": person.profile}
+           "candor_consented": person.consent.candor_level, "lessons": person.lessons[-3:], "profile": {k: v for k, v in (person.profile or {}).items() if k not in ("price_series",)}}
     return [{"role": "system", "content": _r(SYSTEM + "\nCONTEXT: " + json.dumps(ctx, default=str), person)},
             {"role": "user", "content": _r(user_message, person)}]
 

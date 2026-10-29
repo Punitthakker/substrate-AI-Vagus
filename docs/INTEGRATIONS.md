@@ -11,7 +11,8 @@
 | 7 | Embed widget | `<script src=".../embed.js">` | a floating Substrate heart on any page |
 | 8 | Claude skill | `integrations/skill/substrate-vagus/` | Claude agents that should consult Substrate |
 
-Plus two stateless services: `POST /v1/markets/analyze` (bet math, no personal data) and
+Plus stateless services: `POST /v1/volatility/analyze` (FX and gold volatility, stop-out odds, event
+combinatorics, trader biases; `live: true` pulls ECB daily rates for FX), and `POST /v1/markets/analyze` (bet math, no personal data) and
 `GET /v1/markets/polymarket/{slug}` (live Polymarket price via the public Gamma API).
 
 ## 3. Decorator
@@ -58,6 +59,23 @@ const s = new Substrate({ baseUrl: SUBSTRATE, userId: "demo-rahman" });
 const r = await s.advise("Polymarket YES at 62c, I think 80%. $5k on it.");   // NO BET, sized stake in the reasons
 const m = await s.betMath({ legs: [{ price: .7 }, { price: .7 }, { price: .7 }], stake: 100, bankroll: 5000 });
 ```
+
+## Legacy Vault
+
+```bash
+curl -X POST $SUBSTRATE/v1/legacy/letter -d '{"from_user":"demo-kapoor","to_user":"demo-maya","relation":"father",
+  "title":"Before you put too much into one thing","body":"Maya, if you are reading this...",
+  "release_type":"moment","release_value":"concentration"}'
+curl $SUBSTRATE/v1/legacy/demo-maya          # sealed letters show title and release only, never the words
+```
+
+Release types: `moment` (concentration, chasing, fomo, leverage, runway, impulse, trading-leverage, any-stop),
+`age` (needs `birth_year` in the heir's profile), `date` (ISO), `first`. Letters travel in the `.sub` file.
+
+## Memory bridge
+
+`GET /v1/memory/{user}` returns the genome as plain-language memories plus a Letta-style core block.
+`POST /v1/memory/{user}/mem0` writes them into Mem0 (`pip install mem0ai`, `MEM0_API_KEY` for the platform).
 
 ## Webhooks (enterprise)
 

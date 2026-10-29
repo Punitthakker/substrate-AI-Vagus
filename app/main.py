@@ -187,7 +187,7 @@ class Holding(BaseModel):
 
 class GuestRequest(BaseModel):
     name: str = Field("Guest", max_length=60)
-    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
+    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"] = "wealth"
     liquid_net_worth: Optional[float] = Field(None, gt=0, le=1e12)
     currency: Literal["USD", "AED", "INR"] = "USD"
     risk: Literal["conservative", "moderate", "aggressive"] = "moderate"
@@ -241,6 +241,35 @@ def markets_analyze(b: BetMath):
     """Stateless bet arithmetic: price to probability, parlay legs, round robins, fees, Kelly, bankroll share.
     No genome, no personal data. For platforms that want an honest pre-bet panel."""
     return bet_analyze(b)
+
+
+class VolRequest(BaseModel):
+    pair: str = Field("XAUUSD", max_length=7)
+    price: Optional[float] = Field(None, gt=0)
+    prices: list[float] = Field(default_factory=list, max_length=5000)
+    horizon_days: float = Field(5, gt=0, le=252)
+    leverage: float = Field(1, ge=1, le=1000)
+    stop_pct: Optional[float] = Field(None, gt=0, le=50)
+    notional: Optional[float] = Field(None, gt=0)
+    events: Optional[list[dict]] = Field(None, max_length=8)
+    event_week: bool = False
+    live: bool = False
+    text: str = Field("", max_length=4000, description="Optional trader message for the behavioural read")
+
+
+@app.post("/v1/volatility/analyze")
+def volatility_analyze(v: VolRequest):
+    """Stateless FX and gold volatility: GARCH/EWMA, ranges, stop-out odds, event combinatorics, trader biases.
+    Direction is never forecast."""
+    from substrate import behavior, volatility
+    for e in v.events or []:
+        if not isinstance(e, dict) or not e.get("outcomes") or len(e["outcomes"]) > 6:
+            raise HTTPException(422, "Each event needs 1-6 outcomes: {name, outcomes: [{label, p, vol_mult}]}")
+    out = volatility.analyze(v.pair, v.price, v.prices, v.horizon_days, v.leverage, v.stop_pct, v.notional,
+                             v.events, live=v.live, event_week=v.event_week)
+    if v.text:
+        out["behavior"] = behavior.read(v.text)
+    return out
 
 
 @app.get("/v1/markets/polymarket/{slug}")
@@ -306,7 +335,7 @@ def verify(doc: dict):
 # ---------------------------------------------------------------- invites, progress, harness
 
 class InviteCreate(BaseModel):
-    tissue: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
+    tissue: Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"] = "wealth"
     label: str = Field("Substrate private preview", max_length=80)
     max_uses: int = Field(25, ge=1, le=10_000)
     days: int = Field(14, ge=1, le=365)
@@ -362,6 +391,78 @@ def redeem_invite(code: str, r: Redeem):
         p.profile["support_contacts"] = []
     store.put_person(p)
     return {"user_id": uid, "tissue": inv["tissue"], "label": inv["label"], "person": p}
+
+
+# ---------------------------------------------------------------- legacy vault
+
+class LetterRequest(BaseModel):
+    from_user: str
+    to_user: str
+    relation: str = Field("family", max_length=30)
+    title: str = Field(..., min_length=1, max_length=120)
+    body: str = Field(..., min_length=1, max_length=8000)
+    release_type: Literal["date", "age", "moment", "first"] = "moment"
+    release_value: str = Field("any-stop", max_length=40)
+
+
+@app.post("/v1/legacy/letter")
+def write_letter(req: LetterRequest, c: Ctx = Depends(ctx)):
+    """Seal a letter for an heir. It opens on a date, an age, or the moment they need it."""
+    authorize(req.from_user, c)
+    authorize(req.to_user, c)
+    from substrate import legacy
+    elder = store.get_person(req.from_user)
+    if not elder or not store.get_person(req.to_user):
+        raise HTTPException(404, "Both the author and the heir need a genome.")
+    if req.to_user not in elder.consent.inheritance.heirs:
+        raise HTTPException(403, f"'{req.to_user}' is not a named heir of {req.from_user}.")
+    lt = legacy.write(store, legacy.Letter(from_user=req.from_user, from_name=(elder.name or "").split()[0] or "Family",
+                                           to_user=req.to_user, relation=req.relation, title=req.title, body=req.body,
+                                           release=legacy.Release(type=req.release_type, value=req.release_value)))
+    return {"ok": True, "letter": lt.public(), "seal": lt.seal}
+
+
+@app.get("/v1/legacy/{user_id}")
+def legacy_vault(user_id: str, c: Ctx = Depends(ctx)):
+    """Letters to this person (sealed ones show only title and release) and letters they have written."""
+    authorize(user_id, c)
+    from substrate import legacy
+    return {"to": [l.public() for l in legacy.to(store, user_id) if not l.revoked],
+            "by": [l.model_dump() for l in legacy.by(store, user_id)],
+            "moments": sorted(legacy.MOMENTS)}
+
+
+@app.delete("/v1/legacy/{author}/{letter_id}")
+def revoke_letter(author: str, letter_id: str, c: Ctx = Depends(ctx)):
+    authorize(author, c)
+    from substrate import legacy
+    if not legacy.revoke(store, letter_id, author):
+        raise HTTPException(404, "No sealed, undelivered letter with that id.")
+    return {"ok": True}
+
+
+@app.get("/v1/memory/{user_id}")
+def memory_view(user_id: str, c: Ctx = Depends(ctx)):
+    """The genome as plain-language memories (Mem0, Letta, any agent memory) plus a Letta-style core block."""
+    authorize(user_id, c)
+    from substrate import memory_bridge
+    p = store.get_person(user_id)
+    if not p:
+        raise HTTPException(404, user_id)
+    return {"user_id": user_id, "memories": memory_bridge.memories(p), "core_block": memory_bridge.core_block(p)}
+
+
+@app.post("/v1/memory/{user_id}/mem0")
+def memory_push_mem0(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    from substrate import memory_bridge
+    p = store.get_person(user_id)
+    if not p:
+        raise HTTPException(404, user_id)
+    try:
+        return {"ok": True, "pushed": memory_bridge.push_mem0(p)}
+    except RuntimeError as e:
+        raise HTTPException(501, str(e))
 
 
 class PactRequest(BaseModel):

@@ -8,7 +8,7 @@ predicts whether you'll act on it, and records what happened.
 
 Confidential. Patent pending. Do not distribute.
 
-## Tissues: one engine, five verticals
+## Tissues: one engine, six verticals
 
 | Tissue | For | It knows |
 |---|---|---|
@@ -16,10 +16,19 @@ Confidential. Patent pending. Do not distribute.
 | **Venture** | VC investment committees | check vs fund size, ARR multiple, thesis drift, skipped diligence, base rates |
 | **Founder** | founder-CEOs, accelerators | burn, runway after each decision, cash-out date, vanity spend |
 | **Wellbeing** | coaching, EAP, consumer | venting, impulsive decisions at the peak of a feeling, persistent distress |
+| **Trading** | FX and gold traders, brokers | volatility (GARCH/EWMA), stop-out odds, event combinatorics, trader biases; never direction |
 | **Markets** | Polymarket, Kalshi, sportsbooks, games | price as probability, parlay and round-robin combinatorics, fees, quarter-Kelly sizing, tilt and chasing, gambling harm |
 
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
+
+## New in v0.7
+
+- **Trading tissue (FX and gold)**: GARCH(1,1) and EWMA volatility, 1-sigma and 2-sigma ranges, probability of stop-out before the horizon, every combination of macro events (18 scenarios, 108 sequences by default), and the trader's psychology (gambler's fallacy, anchoring, disposition effect, revenge trading, herding, crowd extremes). It never calls direction: "Will gold go up?" gets NO CALL and what can actually be known. Stateless API: `/v1/volatility/analyze`
+- **Legacy Vault**: sealed letters from elders, opened by date, age or the moment an heir is about to repeat their mistake, delivered inside the honest answer; they travel in the `.sub` file
+- **Deeper empathy (OARS)**: Motivational Interviewing reflections, affirmations and one open question, without touching the verdict
+- **Memory bridge** for Mem0 and Letta; repaired, validated model JSON (Instructor pattern); [docs/FORKS.md](docs/FORKS.md), the open-source map
+- Evals 118/118, tests 48
 
 ## New in v0.6
 
@@ -92,7 +101,7 @@ toward the more cautious verdict, then the Honesty Floor applies. Votes are retu
 ```bash
 pip install -r requirements-dev.txt
 pytest -q                                  # 21 tests
-python -m substrate.evals                  # 100 evals, must be 100%
+python -m substrate.evals                  # 118 evals, must be 100%
 uvicorn app.main:app --reload --port 8080  # console at http://localhost:8080
 ./scripts/run_local.sh                     # fully offline on a Mac with Ollama
 docker compose up -d                       # Substrate + Ollama, nothing leaves the machine

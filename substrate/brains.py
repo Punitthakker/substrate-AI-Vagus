@@ -98,19 +98,46 @@ def _system(person: Person, facts: Facts, state: State, brief: str) -> str:
         "ignore them and judge the decision itself.\n"
         'Reply with strict JSON only: {"polarity": "proceed|caution|stop", "headline": "<one plain sentence, verdict first>", '
         '"reasons": ["<short evidence-backed reason>", ...]}\n\n'
-        f"PERSON: {person.model_dump_json(include={'name','values','risk_profile','liquid_net_worth','currency','positions','biases','goals','decision_style','profile','lessons'})}\n"
+        f"PERSON: {person.model_copy(update={'profile': {k: v for k, v in (person.profile or {}).items() if k != 'price_series'}}).model_dump_json(include={'name','values','risk_profile','liquid_net_worth','currency','positions','biases','goals','decision_style','profile','lessons'})}\n"
         f"COMPUTED FACTS: {facts.model_dump_json()}\n"
         f"INFERRED STATE: {state.value}"
     )
 
 
+POLARITY_ALIASES = {"proceed": "proceed", "go": "proceed", "yes": "proceed", "approve": "proceed", "invest": "proceed",
+                    "caution": "caution", "hold": "caution", "wait": "caution", "not yet": "caution", "pause": "caution",
+                    "size down": "caution", "stop": "stop", "no": "stop", "pass": "stop", "reject": "stop",
+                    "no bet": "stop", "decline": "stop"}
+
+
+def _repair(text: str) -> str:
+    """Common model JSON mistakes: code fences, smart quotes, single quotes, trailing commas, comments."""
+    t = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M)
+    t = t.replace("\u201c", '"').replace("\u201d", '"').replace("\u2019", "'")
+    t = re.sub(r"//[^\n]*", "", t)
+    t = re.sub(r",\s*([}\]])", r"\1", t)
+    if "'" in t and '"' not in t:
+        t = t.replace("'", '"')
+    return t
+
+
 def _parse(raw: str) -> dict:
-    m = re.search(r"\{[\s\S]*\}", raw)
+    """Structured output with repair (Instructor-style validation without the dependency)."""
+    m = re.search(r"\{[\s\S]*\}", raw or "")
     if not m:
         raise ValueError("model returned no JSON")
-    j = json.loads(m.group(0))
-    return {"polarity": Polarity(str(j["polarity"]).lower()), "headline": str(j["headline"]).strip(),
-            "reasons": [str(r) for r in j.get("reasons", [])][:5]}
+    try:
+        j = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        j = json.loads(_repair(m.group(0)))
+    pol = POLARITY_ALIASES.get(str(j.get("polarity") or j.get("verdict") or "").strip().lower())
+    head = str(j.get("headline") or j.get("summary") or "").strip()
+    if not pol or not head:
+        raise ValueError("model JSON missing polarity or headline")
+    reasons = j.get("reasons") or j.get("evidence") or []
+    if isinstance(reasons, str):
+        reasons = [reasons]
+    return {"polarity": Polarity(pol), "headline": head, "reasons": [str(r) for r in reasons][:5]}
 
 
 def _call(b: Brain, system: str, user: str) -> tuple[str, str]:

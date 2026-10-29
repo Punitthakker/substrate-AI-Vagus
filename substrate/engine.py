@@ -5,7 +5,7 @@ vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> predic
 """
 from __future__ import annotations
 
-from . import domains, limbic, pacts, redteam, temperaments
+from . import domains, legacy, limbic, pacts, redteam, reflect, temperaments
 from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
@@ -49,7 +49,7 @@ class VagusEngine:
         state = infer_state(signals)
         lm = limbic.read(req.message, [t.content for t in req.thread if t.role == "user"])
         ancestry_note = None
-        pact_offer = pact_active = None
+        pact_offer = pact_active = letter_out = None
 
         if is_crisis(req.message):
             # ---------------- the Safety Protocol: above every tissue, persona and policy
@@ -118,9 +118,33 @@ class VagusEngine:
                          "close": {**(voice or {}).get("close", {}),
                                    "caution": "Keep your word to yourself. Ask me again when the pact ends.",
                                    "stop": "Keep your word to yourself. Ask me again when the pact ends."}}
-            message = deliver(verdict, t, firmness, state, voice,
-                              limbic.empathy_lines(lm, verdict.polarity.value))
+            if facts.metrics.get("voice_override"):
+                vo = facts.metrics["voice_override"]
+                voice = {**(voice or {}), **{k: {**(voice or {}).get(k, {}), **v} for k, v in vo.items()}}
+            sev = verdict.polarity.severity
+            ack = [] if facts.metrics.get("quiet") else limbic.empathy_lines(lm, verdict.polarity.value)
+            mirror = reflect.reflection(tissue.key, facts, lm.needs)
+            if mirror:   # OARS: a precise reflection replaces the generic emotion acknowledgment
+                ack = [mirror] + [x for x in ack if x in limbic.NEED_LINE.values()]
+                if firmness <= 3 and (aff := reflect.affirmation(tissue.key, sev)):
+                    ack.append(aff)
+            message = deliver(verdict, t, firmness, state, voice, ack)
+            question = None if pact_active else reflect.open_question(tissue.key, sev, firmness, t.key)
+            if question:
+                note = "_This advice is recorded in your Vagus Ledger._"
+                message = message.replace(note, f"_{question}_\n\n{note}") if note in message else f"{message}\n\n_{question}_"
+            first = not any(h for h in self.store.history(req.user_id))
+            lt = legacy.deliver_due(self.store, req.user_id, person.profile, facts.flags, verdict.polarity.severity,
+                                    first, record=record)
+            if lt:
+                letter_out = lt.model_dump()
+                block = legacy.render(lt)
+                note = "_This advice is recorded in your Vagus Ledger._"
+                message = message.replace(note, block + "\n\n" + note) if note in message else message + "\n\n" + block
+                tone_notes.append(f"Legacy Vault: a sealed letter from {lt.from_name} delivered for this moment.")
             forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
+            if facts.metrics.get("label_override"):
+                label = facts.metrics["label_override"]
             if pact_active and "pact" in facts.flags and verdict.headline.startswith("Not yet."):
                 label = "PACT HOLDS"
 
@@ -138,7 +162,7 @@ class VagusEngine:
 
         return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
-                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, message=message,
+                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, letter=letter_out, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:

@@ -23,6 +23,7 @@ def export_sub(store: Store, user_id: str) -> dict:
         "genome": person.model_dump(),
         "consent": person.consent.model_dump(),
         "ledger": events,
+        "letters": __import__("substrate.legacy", fromlist=["export_for"]).export_for(store, user_id),
         "chain": {"length": len(events), "head": events[-1]["hash"] if events else None,
                   "verified": verify_chain(events)},
     }

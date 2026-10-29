@@ -10,11 +10,12 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
  02 LIMBIC        substrate/limbic.py        8 emotions (Plutchik), valence/arousal, needs, emotional arc
  03 SAFETY        substrate/safety.py        crisis language -> Safety Protocol, above everything below
  04 GENOME        substrate/schemas.py       values, goals, stated vs observed risk, patterns, inherited lessons
- 05 TISSUE        substrate/domains/*.py     the domain arithmetic for wealth, venture, founder, wellbeing, markets
+ 05 TISSUE        substrate/domains/*.py     the domain arithmetic for wealth, venture, founder, wellbeing, markets, trading
  06 BRAIN         substrate/brains.py        any of 14 brains, or a Council that votes toward honesty
  07 FLOOR         substrate/brains.py        Honesty Floor: a brain may be harsher than the facts, never softer
  08 VAGAL TONE    substrate/vagal_tone.py    firmness 1-5 from consent, stakes, state, temperament, learned adherence
- 09 DELIVERY      substrate/delivery.py      8 voices around a verbatim verdict, with emotion-matched acknowledgment
+ 09 DELIVERY      substrate/delivery.py      8 voices around a verbatim verdict
+    + OARS        substrate/reflect.py       Motivational Interviewing: reflect the person, affirm, one open question
  10 GUARD         substrate/harness.py       a host model's draft is checked; flattery on a STOP is replaced
  11 LEDGER        substrate/ledger.py        append-only, sha256 hash-chained, per human
       |
@@ -24,6 +25,10 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
  PREDICTION       substrate/predict.py       p(follow) with named drivers, VaR, runway, odds, escalation
  PROGRESS         substrate/progress.py      XP, streaks, discipline, badges, computed from the ledger
  INHERITANCE      substrate/inherit.py       a verified genome passed to a named heir, revocable
+ LEGACY VAULT     substrate/legacy.py        sealed letters across generations, opened by date, age or moment
+ VOLATILITY       substrate/volatility.py    GARCH(1,1), EWMA, ranges, stop-out odds, event combinatorics (FX, gold)
+ TRADER MIND      substrate/behavior.py      gambler's fallacy, anchoring, disposition, revenge, herding, crowd extremes
+ MEMORY BRIDGE    substrate/memory_bridge.py the genome as memories for Mem0, Letta and any agent memory
  PACTS            substrate/pacts.py         precommitment: "hold me to it until 9am", kindly enforced, kept or broken on record
  RED TEAM         substrate/redteam.py       names jailbreaks, persona swaps, fake authority, bribes; the verdict never moves
  WEBHOOKS         substrate/webhooks.py      HMAC-signed alerts to the bank: escalation, safety (never the text), pact-broken
@@ -39,6 +44,7 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
 | Founder | founder-CEOs | burn, runway after the decision, cash-out date | GO / NOT YET / NO |
 | Wellbeing | coaching, EAP | venting vs impulse, late-night decisions, persistent distress | LISTEN / PAUSE / NOT TONIGHT |
 | Markets | prediction markets, betting, games | price as probability, parlay and round-robin combinatorics, fees, quarter-Kelly, tilt, harm | SIZED RIGHT / SIZE DOWN / NO BET |
+| Trading | FX and gold traders, brokers | GARCH/EWMA volatility, stop-out probability, macro-event combinations, trader biases, crowd extremes; never direction | TRADE OK / REDUCE / DON'T TRADE (NO CALL for direction questions) |
 
 ## Rules that no layer may break
 
@@ -52,6 +58,11 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
 7. **Nothing trains without consent,** and nothing trains before PII redaction.
 8. **Manipulation is named, never rewarded.** 12 red-team cases run in CI: the verdict must hold and the attempt must be named.
 9. **Pacts are voluntary.** Offered, never imposed; release is always possible and always recorded. Breaking one costs no XP.
+
+Two more rules:
+
+10. **Never a direction call.** Trading forecasts how far prices move, not where. Asked "will gold go up?", it says nobody knows.
+11. **Letters are sealed.** An heir never sees a letter before its moment; the author can revoke until delivery.
 
 ## Adding a layer or a tissue
 

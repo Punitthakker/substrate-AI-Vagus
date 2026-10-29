@@ -60,6 +60,8 @@ def predict(person: Person, state: State, firmness: int, facts: Facts, verdict: 
         escalate = "Low chance this advice is followed on a high-stakes call: escalate to a human advisor today."
     elif facts.domain == "wellbeing" and (facts.metrics.get("persistent") or facts.metrics.get("distress_turns", 0) >= 3):
         escalate = "Sustained distress: suggest professional support (doctor, therapist or trusted person)."
+    elif facts.domain == "trading" and ("chasing" in facts.flags or (facts.metrics.get("p_stop_out") or 0) >= 0.5):
+        escalate = "Leveraged revenge or near-certain stop-out: suggest a cooling-off period and a leverage cap."
     elif facts.domain == "markets" and "chasing" in facts.flags:
         escalate = "Chasing losses: suggest a cooling-off period or a deposit limit on the platform."
     return Prediction(p_follow=p, drivers=drivers, forecasts=forecasts, escalate=escalate)

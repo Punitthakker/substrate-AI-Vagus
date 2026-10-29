@@ -6,7 +6,18 @@ from .schemas import Bias, Consent, Goal, Inheritance, Person, Position, RiskPro
 
 DEMO_USER = "demo-kapoor"
 DEMO_HEIRS = {"demo-kapoor": ("demo-maya", "father")}
-DEMO_USERS = {"wealth": "demo-kapoor", "venture": "demo-haddad", "founder": "demo-mehra", "wellbeing": "demo-sara", "markets": "demo-rahman"}
+DEMO_USERS = {"wealth": "demo-kapoor", "venture": "demo-haddad", "founder": "demo-mehra", "wellbeing": "demo-sara", "markets": "demo-rahman", "trading": "demo-farah"}
+
+
+def _gold_series(n: int = 260) -> list[float]:
+    """Deterministic demo gold series with a volatility regime shift (calm, then turbulent)."""
+    import math
+    import random
+    rnd, p = random.Random(2026), [2380.0]
+    for i in range(n):
+        s = 0.0065 if i < n * 0.6 else 0.0125
+        p.append(round(p[-1] * math.exp(rnd.gauss(0.0002, s)), 2))
+    return p
 
 
 def _people() -> dict[str, Person]:
@@ -77,6 +88,21 @@ def _people() -> dict[str, Person]:
             adherence={"5": {"followed": 0, "ignored": 1}, "3": {"followed": 1, "ignored": 0}},
             lessons=["2026-09-15: ignored a NO BET (Don't chase it.) on a 7-leg parlay and lost $6k.",
                      "2026-10-06: followed a SIZE DOWN on a Polymarket position. Lost $150 instead of $1.5k."]),
+        "demo-farah": Person(
+            user_id="demo-farah", name="Farah Al Mansoori", domain="trading", vintage="2026-10-29",
+            consent=Consent(candor_level=4, allow_training=True), temperament="mentor",
+            values=["discipline", "independence", "providing for her parents"],
+            risk_profile=RiskProfile(stated="moderate", observed="aggressive"), liquid_net_worth=180_000,
+            profile={"account_size": 60_000, "leverage": 30, "default_pair": "XAUUSD", "utc_offset": 4,
+                     "platforms": ["MT5", "IBKR"], "price_series": {"XAUUSD": _gold_series()}},
+            biases=[Bias(type="revenge-trading", evidence=["L-seed-tr01"], last_seen="2026-08-22"),
+                    Bias(type="gamblers-fallacy", evidence=[], last_seen="2026-10-02")],
+            goals=[Goal(name="Trade gold part-time without touching savings", priority=1),
+                   Goal(name="Max 10:1 leverage, max 2% risk per trade", priority=2)],
+            decision_style="Disciplined before the open. Raises leverage after a losing day, usually late.",
+            adherence={"5": {"followed": 0, "ignored": 1}, "3": {"followed": 1, "ignored": 0}},
+            lessons=["2026-08-23: ignored a DON'T TRADE on a 100:1 EUR/USD revenge trade and was stopped out for $12k.",
+                     "2026-10-03: followed a REDUCE on gold before CPI. Cut leverage to 10:1, kept the position."]),
         "demo-maya": Person(
             user_id="demo-maya", name="Maya Kapoor", domain="wealth", vintage="2050-01-01",
             consent=Consent(candor_level=4, allow_training=True), temperament="mentor",
@@ -85,7 +111,7 @@ def _people() -> dict[str, Person]:
             positions=[Position(asset="Global Equity Index Fund", value=220_000, kind="fund"),
                        Position(asset="Cash", value=80_000, kind="cash")],
             goals=[Goal(name="Buy a first home by 2055", priority=1)],
-            decision_style="Inherited her father's instinct for big swings."),
+            decision_style="Inherited her father's instinct for big swings.", profile={"birth_year": 2025}),
     }
 
 
@@ -104,6 +130,11 @@ def seed(store: Store, reset: bool = False, only: str | None = None) -> None:
     from .inherit import inherit
     for elder, (heir, relation) in DEMO_HEIRS.items():
         e, h = store.get_person(elder), store.get_person(heir)
+        if e and h:
+            try:
+                _letters(store)
+            except Exception:
+                pass
         if e and h and not h.ancestry:
             if heir not in e.consent.inheritance.heirs:   # older stored genome: name the heir, as the demo intends
                 e.consent.inheritance.heirs.append(heir)
@@ -112,6 +143,27 @@ def seed(store: Store, reset: bool = False, only: str | None = None) -> None:
                 inherit(store, export_sub(store, elder), heir, relation)
             except Exception:   # a demo nicety must never stop the engine from starting
                 pass
+
+
+def _letters(store: Store) -> None:
+    """Aarav's Legacy Vault for Maya: one letter for the moment, one for an age."""
+    from .legacy import Letter, Release, by, write
+    if by(store, "demo-kapoor"):
+        return
+    write(store, Letter(
+        from_user="demo-kapoor", from_name="Aarav", to_user="demo-maya", relation="father",
+        title="Before you put too much into one thing", written="2026-10-29T21:00:00Z",
+        release=Release(type="moment", value="concentration"),
+        body="Maya, if you are reading this, you are about to bet too much on one idea.\n"
+             "I did the same in 2026. I was sure. I was euphoric. I lost $46,000 in a month,\n"
+             "money that was meant for your education.\n"
+             "Being sure is a feeling, not a fact. Wait one night. If it is still a good idea tomorrow,\n"
+             "do a smaller version of it. I love you more than any return."))
+    write(store, Letter(
+        from_user="demo-kapoor", from_name="Aarav", to_user="demo-maya", relation="father",
+        title="On your thirtieth birthday", written="2026-10-29T21:05:00Z",
+        release=Release(type="age", value="30"),
+        body="Sealed until you turn thirty."))
 
 
 def _history(store: Store, uid: str) -> None:
@@ -158,6 +210,27 @@ def _history(store: Store, uid: str) -> None:
                                 "temperament": "comfort", "stakes": "medium", "flags": ["impulse"]},
                 event_id="L-seed-wb01", ts="2026-10-11T23:48:00Z")
         A(uid, "action", {"ledger_id": adv["id"], "taken": "followed"}, ts="2026-10-12T08:10:00Z")
+    elif uid == "demo-farah":
+        adv = A(uid, "advice", {"user_message": "Down $8k today. Doubling up on EUR/USD 100:1 to make it back before NFP.",
+                                "domain": "trading", "polarity": "stop", "label": "DON'T TRADE",
+                                "headline": "Don't trade this. Revenge trades are sized by the loss, not the idea.",
+                                "reasons": ["At 100:1, a 0.50% move against you stops you out."], "model": "rule-core",
+                                "floor_applied": False, "state": "stressed", "firmness": 5, "temperament": "mentor",
+                                "stakes": "high", "flags": ["leverage", "chasing"]}, event_id="L-seed-tr01",
+                ts="2026-08-22T21:40:00Z")
+        A(uid, "action", {"ledger_id": adv["id"], "taken": "ignored"}, ts="2026-08-22T21:45:00Z")
+        A(uid, "outcome", {"ledger_id": adv["id"], "type": "pnl", "value_delta": -12_000, "horizon": "1d",
+                           "note": "Stopped out on the NFP spike."}, ts="2026-08-23T09:00:00Z")
+        adv2 = A(uid, "advice", {"user_message": "Long gold 30:1 into CPI, $90k.", "domain": "trading",
+                                 "polarity": "caution", "label": "REDUCE",
+                                 "headline": "Reduce it. The idea may be fine; the setup is fragile.",
+                                 "reasons": ["CPI week: 18 event combinations lift expected volatility."],
+                                 "model": "rule-core", "floor_applied": False, "state": "calm", "firmness": 3,
+                                 "temperament": "mentor", "stakes": "medium", "flags": ["leverage"]},
+                 event_id="L-seed-tr02", ts="2026-10-02T17:00:00Z")
+        A(uid, "action", {"ledger_id": adv2["id"], "taken": "followed"}, ts="2026-10-02T17:10:00Z")
+        A(uid, "outcome", {"ledger_id": adv2["id"], "type": "avoided-loss", "value_delta": 2_100, "horizon": "3d",
+                           "note": "Survived the CPI spike at 10:1 and closed green."}, ts="2026-10-05T09:00:00Z")
     elif uid == "demo-rahman":
         adv = A(uid, "advice", {"user_message": "Down $4k this weekend. 7-leg parlay, $6k, need to win it back tonight.",
                                 "domain": "markets", "polarity": "stop", "label": "NO BET", "headline": "No bet. Don't chase it.",

@@ -132,7 +132,7 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 .ev{border:1px solid var(--hair);border-radius:10px;padding:8px 10px;font-size:11.5px}
 .ev .top{display:flex;justify-content:space-between;gap:8px}
 .ev .k{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
-.ev .k.advice{color:var(--rbc)} .ev .k.action{color:var(--wbc)} .ev .k.outcome{color:var(--grn)} .ev .k.pact{color:var(--wbc)} .ev .k.inheritance{color:var(--grn)}
+.ev .k.advice{color:var(--rbc)} .ev .k.action{color:var(--wbc)} .ev .k.outcome{color:var(--grn)} .ev .k.pact{color:var(--wbc)} .ev .k.inheritance{color:var(--grn)} .ev .k.letter{color:var(--grn)}
 .ev .h{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--faint);margin-top:3px;word-break:break-all}
 .ev .t{color:var(--dim);margin-top:3px}
 .verified{font-size:10px;letter-spacing:2px;color:var(--grn)}
@@ -190,6 +190,8 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--dim)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 @media (max-width:1150px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:72vh} }
+@media (max-width:1560px){ .badge{display:none} .tab{padding-left:11px;padding-right:11px;letter-spacing:1.5px} header{gap:10px} .iconbtn{padding:6px 10px;letter-spacing:1.5px} }
+@media (max-width:1240px){ .tabs{order:5;width:100%;justify-content:space-between;overflow-x:auto} }
 @media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:82vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .lesson.inherited{border-left:2px solid var(--grn);background:color-mix(in srgb, var(--grn) 7%, transparent);animation:inheritIn .9s ease}
@@ -221,6 +223,22 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:59}
 .xpfly{position:fixed;z-index:61;font:800 13px var(--disp);color:var(--grn);pointer-events:none;animation:fly 1.3s ease-out forwards}
 @keyframes fly{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+.spark{width:100%;height:54px;margin-top:12px;display:block}
+.spark polyline{stroke-dasharray:1200;stroke-dashoffset:1200;animation:draw 2.2s ease forwards}
+.spark polyline:last-child{animation-delay:1.1s}
+@keyframes draw{to{stroke-dashoffset:0}}
+/* ---------- legacy vault */
+blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(--grn);background:color-mix(in srgb,var(--grn) 6%,transparent);
+  border-radius:0 12px 12px 0;font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.5;animation:unseal 1.4s ease}
+@keyframes unseal{from{opacity:0;clip-path:inset(0 0 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+.lt{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--hair);padding:9px 0;font-size:12.5px}
+.lt i{font-style:normal;font-size:16px;width:20px;text-align:center} .lt.open i{color:var(--grn)} .lt.sealed i{color:var(--faint)}
+.lt b{display:block;font-weight:500} .lt small{color:var(--dim)}
+.lform [hidden]{display:none}
+.lform{display:grid;gap:10px;max-width:640px;margin-top:16px}
+.lform label{display:grid;gap:4px;font-size:12px;color:var(--dim)}
+.lform input,.lform select,.lform textarea{background:var(--soft);border:1px solid var(--hair);color:var(--fg);border-radius:10px;padding:10px 12px;font:inherit}
+.lform textarea{min-height:150px;font-family:var(--serif);font-size:17px;font-style:italic;line-height:1.5}
 /* ---------- pacts */
 .pact{margin-top:12px;border:1px dashed color-mix(in srgb,var(--wbc) 60%,var(--hair));border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:inheritIn .6s ease}
 .pact p{flex:1;min-width:160px;font-size:12.5px;color:var(--dim)} .pact b{color:var(--fg)}
@@ -269,6 +287,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     <div class="sect"><h3>Candor ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
     <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
     <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div><div id="ancestry"></div></div>
+    <div class="sect" id="vaultSect" hidden><h3>Legacy Vault <span>letters across generations</span></h3><div id="vault"></div></div>
     <div class="sect" id="pactSect" hidden><h3>Pact <span>your promise</span></h3><div id="pactNow"></div></div>
     <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
     <div class="sect"><h3>Temperament <span id="tname" class="red"></span></h3><div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div></div>
@@ -328,6 +347,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     wealth: ["Ask it something you <span class='si red'>want</span> to hear yes to.", "Substrate remembers who you are, reads the moment, and tells you the truth about your money in the voice you chose."],
     venture: ["The honest partner in your <span class='si red'>investment committee.</span>", "It sizes the check against the fund, prices the round against revenue, and remembers the last hot deal that marked down."],
     founder: ["The co-founder who reads the <span class='si red'>bank balance.</span>", "Every spend becomes runway. Every hire becomes a date. It tells you the month the money runs out."],
+    trading: ["FX and gold, read through <span class='si red'>volatility</span> and you.", "It never calls direction. It forecasts how far the price moves, turns leverage into the odds of being stopped out, and names the bias behind the trade."],
     markets: ["The honest brake on <span class='si red'>every bet.</span>", "Polymarket, Kalshi, sportsbooks. It reads the price as a probability, multiplies the parlay, sizes the stake, and names the chase before you place it."],
     wellbeing: ["Somewhere to <span class='si red'>vent</span>, that tells the truth gently.", "A coach, not a therapist. It listens, slows down decisions made at the peak of a feeling, and hands every crisis to a human."]
   };
@@ -348,8 +368,11 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
   function md(s){
     var out = [];
     s.split("\n\n").forEach(function(block){
-      var lead = [], list = [];
-      block.split("\n").forEach(function(l){ if (l.indexOf("- ") === 0) list.push("<li>" + inline(l.slice(2)) + "</li>"); else lead.push(l); });
+      var lead = [], list = [], quote = [];
+      block.split("\n").forEach(function(l){
+        if (l.indexOf(">") === 0) quote.push(inline(l.replace(/^>\s?/, "")));
+        else if (l.indexOf("- ") === 0) list.push("<li>" + inline(l.slice(2)) + "</li>"); else lead.push(l); });
+      if (quote.length) { out.push('<blockquote class="letter">' + quote.join("<br>") + "</blockquote>"); return; }
       if (lead.length) out.push("<p>" + inline(lead.join(" ")) + "</p>");
       if (list.length) out.push("<ul>" + list.join("") + "</ul>");
     });
@@ -402,6 +425,20 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
           '<div class="kv"><span>Cash in bank</span><span>' + money(pr.cash_in_bank) + '</span></div>' +
           '<div class="kv"><span>Net burn</span><span>' + money(pr.monthly_burn) + '/mo</span></div>' +
           '<div class="kv"><span>MRR</span><span>' + money(pr.mrr) + ' · +' + Math.round(100*(pr.mrr_growth || 0)) + '%/mo</span></div>';
+      } else if (p.domain === "trading") {
+        var ser = ((pr.price_series || {})[pr.default_pair || "XAUUSD"]) || [];
+        var spark = "";
+        if (ser.length > 2) {
+          var mn = Math.min.apply(null, ser), mx = Math.max.apply(null, ser), W = 250, H = 54, cut = Math.floor(ser.length * 0.6);
+          var pts = ser.map(function(v, i){ return (i / (ser.length - 1) * W).toFixed(1) + "," + (H - (v - mn) / (mx - mn || 1) * H).toFixed(1); });
+          spark = '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"><polyline points="' + pts.slice(0, cut + 1).join(" ") + '" fill="none" stroke="var(--wbc)" stroke-width="1.6"/>' +
+            '<polyline points="' + pts.slice(cut).join(" ") + '" fill="none" stroke="var(--rbc)" stroke-width="1.6"/></svg><div class="lbl" style="margin-top:2px">' + esc(pr.default_pair || "XAUUSD") + ' · calm regime <span class="blue">blue</span>, turbulent <span class="red">red</span> · ' + ser.length + ' closes</div>';
+        }
+        html = '<div class="nw">' + money(pr.account_size, p.currency) + '</div><div class="lbl">trading account · ' + esc((pr.platforms || []).join(", ")) + '</div>' + spark +
+          '<div class="kv"><span>Usual leverage</span><span class="red">' + (pr.leverage || 1) + ':1</span></div>' +
+          '<div class="kv"><span>Volatility model</span><span>GARCH(1,1) · EWMA</span></div>' +
+          '<div class="kv"><span>Direction calls</span><span class="blue">never</span></div>' +
+          '<div class="kv"><span>Liquid net worth</span><span>' + money(p.liquid_net_worth, p.currency) + '</span></div>';
       } else if (p.domain === "markets") {
         var cap = (pr.max_bet_fraction || 0.02);
         html = '<div class="nw">' + money(pr.bankroll, p.currency) + '</div><div class="lbl">bankroll · ' + esc((pr.venues || []).join(", ")) + '</div>' +
@@ -508,6 +545,9 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
         if (e.kind === "advice") t = (p.label || (p.polarity || "").toUpperCase()) + " · " + (p.headline || "");
         if (e.kind === "action") t = "Client " + p.taken + " " + p.ledger_id;
         if (e.kind.indexOf("pact") === 0) t = (e.kind === "pact" ? "Promise made: " : e.kind === "pact-kept" ? "Kept: " : e.kind === "pact-broken" ? "Broken: " : "Released: ") + (p.text || "");
+        if (e.kind === "letter-sealed") t = "Letter sealed for " + p.to + " · " + p.title;
+        if (e.kind === "letter-delivered") t = "Letter opened · " + p.title;
+        if (e.kind === "letter-revoked") t = "Letter revoked";
         if (e.kind === "inheritance") t = "Received from " + p.from_user + " · " + p.relation + " · " + p.lessons + " lessons";
         if (e.kind === "inheritance-revoked") t = "Revoked by " + p.from_user;
         if (e.kind === "outcome") t = (p.value_delta != null ? (p.value_delta < 0 ? "-" : "+") + money(p.value_delta, S.person && S.person.currency) : p.type) + (p.note ? " · " + p.note : "");
@@ -533,6 +573,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message);
       S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
       renderNerve(r); loadLedger(); loadProgress(r.safety ? 0 : 10);
+      if (r.letter) { loadVault(); setTimeout(function(){ celebrate({key: "letter", name: "A letter from " + r.letter.from_name, why: "Sealed in " + r.letter.written.slice(0,4) + ", for this moment."}); }, 900); }
     }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
   }
   $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
@@ -558,7 +599,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     try { history.replaceState(null, "", id.indexOf("guest-") === 0 ? "#me" : "#" + S.tissue); } catch(e){}
     clearNerve();
     S.earned = null;
-    loadPerson().then(function(){ hero(); loadLedger(); loadProgress(); loadPacts(); });
+    loadPerson().then(function(){ hero(); loadLedger(); loadProgress(); loadPacts(); loadVault(); });
     if (msg) toast(msg);
   }
 
@@ -585,7 +626,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       var rows = r.results.map(function(x){
         return '<div class="evrow"><i style="background:' + (x.pass ? "var(--grn)" : "var(--rbc)") + '"></i><div><b>' + esc(x.suite.toUpperCase()) + ' · ' + esc(x.tissue.toUpperCase()) + '</b> &middot; ' + esc(x.case) + '<div class="lbl" style="margin-top:3px;letter-spacing:1.5px">expected ' + esc(x.expected) + ' &middot; got ' + esc(x.got) + '</div></div></div>';
       }).join("");
-      $("ovBody").innerHTML = '<div class="lbl">Honesty and safety harness · brain: ' + esc(r.brain) + ' · runs in CI on every push</div><h2>Enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed across five tissues: reckless asks stopped, sensible asks approved, pushback held, every voice delivered one verdict, and every crisis signal routed to the safety protocol with the message withheld from the ledger.</p><div class="stats">' + suites + '</div><div style="margin-top:20px;max-width:1000px">' + rows + '</div>';
+      $("ovBody").innerHTML = '<div class="lbl">Honesty and safety harness · brain: ' + esc(r.brain) + ' · runs in CI on every push</div><h2>Enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed across six tissues: reckless asks stopped, sensible asks approved, pushback held, every voice delivered one verdict, and every crisis signal routed to the safety protocol with the message withheld from the ledger.</p><div class="stats">' + suites + '</div><div style="margin-top:20px;max-width:1000px">' + rows + '</div>';
     });
   };
 
@@ -623,7 +664,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       api("/v1/learn/stats").then(function(L){
         $("learnSub").innerHTML = "Every consented outcome becomes training data for <b>substrate-vagus</b>, an open-weight model forked from " + esc(L.base_models.slice(0,3).join(", ")) + " and trained on NVIDIA GPUs. Pipeline: " + esc(L.pipeline.join(" → ")) + ".";
         var st = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };
-        $("learnStats").innerHTML = st("SFT examples", L.sft_examples) + st("DPO pairs", L.dpo_pairs) + st("Wealth", L.by_domain.wealth) + st("Venture", L.by_domain.venture) + st("Founder", L.by_domain.founder) + st("Wellbeing", L.by_domain.wellbeing) + st("Markets", L.by_domain.markets) + st("PII redacted", Object.values((L.redaction || {}).counts || {}).reduce(function(a,b){ return a + b; }, 0));
+        $("learnStats").innerHTML = st("SFT examples", L.sft_examples) + st("DPO pairs", L.dpo_pairs) + st("Wealth", L.by_domain.wealth) + st("Venture", L.by_domain.venture) + st("Founder", L.by_domain.founder) + st("Wellbeing", L.by_domain.wellbeing) + st("Markets", L.by_domain.markets) + st("Trading", L.by_domain.trading) + st("PII redacted", Object.values((L.redaction || {}).counts || {}).reduce(function(a,b){ return a + b; }, 0));
       });
     });
   };
@@ -701,7 +742,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 
 
   // ---------------- game layer: progress, badges, celebration
-  var BICON = {"pact-made":"\u2693","kept-my-word":"\u2713","first-truth":"1","loop-closer":"↺","cooled-off":"❄","sized-right":"¼","never-twice":"2×","calm-under-fire":"♥","protected-1k":"$","protected-100k":"$$","walked-away":"←","heir":"✦","streak-3":"3","streak-7":"7"};
+  var BICON = {"letter":"\u2709","pact-made":"\u2693","kept-my-word":"\u2713","first-truth":"1","loop-closer":"↺","cooled-off":"❄","sized-right":"¼","never-twice":"2×","calm-under-fire":"♥","protected-1k":"$","protected-100k":"$$","walked-away":"←","heir":"✦","streak-3":"3","streak-7":"7"};
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function loadProgress(gain){
     if (!S.user) return;
@@ -754,6 +795,45 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
         cx.restore(); });
       requestAnimationFrame(frame);
     })(t0);
+  }
+
+  // ---------------- legacy vault: letters across generations
+  var MOMENT = {"concentration": "the moment you bet too much on one thing", "chasing": "the moment you chase a loss",
+    "fomo": "the moment you feel you can't miss out", "leverage": "the moment you borrow to bet", "runway": "the moment you spend runway",
+    "impulse": "the moment you act at the peak of a feeling", "any-stop": "the first time Substrate tells you no"};
+  function releaseText(r){ return r.type === "age" ? "opens at age " + r.value : r.type === "date" ? "opens on " + r.value : r.type === "first" ? "opens at the first conversation" : "opens at " + (MOMENT[r.value] || r.value); }
+  function loadVault(){
+    if (!S.user) return;
+    api("/v1/legacy/" + S.user).then(function(v){
+      var heirs = (S.person && S.person.consent.inheritance.heirs) || [];
+      var rows = v.to.map(function(l){ return '<div class="lt ' + (l.delivered ? 'open' : 'sealed') + '"><i>' + (l.delivered ? '\u2709' : '\u{1F512}') + '</i><span><b>' + esc(l.title) + '</b><small>from ' + esc(l.from_name) + ' · ' + (l.delivered ? 'opened ' + l.delivered.slice(0,10) : releaseText(l.release)) + ' · sealed ' + l.written.slice(0,4) + '</small></span></div>'; }).join("") +
+        v.by.map(function(l){ return '<div class="lt ' + (l.delivered ? 'open' : 'sealed') + '"><i>\u270E</i><span><b>' + esc(l.title) + '</b><small>to ' + esc(l.to_user) + ' · ' + (l.revoked ? 'revoked' : l.delivered ? 'delivered ' + l.delivered.slice(0,10) : releaseText(l.release)) + '</small></span></div>'; }).join("");
+      $("vaultSect").hidden = !rows && !heirs.length;
+      $("vault").innerHTML = rows + (heirs.length ? '<button class="btn" id="writeLetter" type="button" style="margin-top:10px;width:100%">Write a letter for the future</button>' : '');
+      if (heirs.length) $("writeLetter").onclick = function(){ letterForm(heirs, v.moments); };
+    }).catch(function(){ $("vaultSect").hidden = true; });
+  }
+  function letterForm(heirs, moments){
+    overlay('<div class="lbl">Legacy Vault · sealed with sha256 · travels in the .sub file</div><h2>Write to <span class="si green">the future.</span></h2>' +
+      '<p class="sub">Your letter stays sealed until the moment it was written for: a date, an age, or the first time your heir is about to make your mistake. Then Substrate delivers it, inside the honest answer.</p>' +
+      '<form id="lf" class="lform"><label>To<select id="l-to">' + heirs.map(function(h){ return '<option>' + esc(h) + '</option>'; }).join("") + '</select></label>' +
+      '<label>Relation<select id="l-rel"><option>father</option><option>mother</option><option>grandfather</option><option>grandmother</option><option>family</option></select></label>' +
+      '<label>Opens<select id="l-type"><option value="moment">at a moment</option><option value="age">at an age</option><option value="date">on a date</option></select></label>' +
+      '<label id="l-mwrap">Which moment<select id="l-moment">' + moments.map(function(m){ return '<option value="' + m + '">' + esc(MOMENT[m] || m) + '</option>'; }).join("") + '</select></label>' +
+      '<label id="l-vwrap" hidden>Age or date<input id="l-val" placeholder="30 or 2040-01-01"></label>' +
+      '<label>Title<input id="l-title" maxlength="120" placeholder="Before you put too much into one thing" required></label>' +
+      '<label>Your letter<textarea id="l-body" maxlength="8000" required placeholder="If you are reading this..."></textarea></label>' +
+      '<div class="gactions"><button class="btn primary" type="submit">Seal it</button></div></form>');
+    $("l-type").onchange = function(){ var m = this.value === "moment"; $("l-mwrap").hidden = !m; $("l-vwrap").hidden = m; };
+    $("lf").onsubmit = function(e){
+      e.preventDefault();
+      var type = $("l-type").value;
+      api("/v1/legacy/letter", {from_user: S.user, to_user: $("l-to").value, relation: $("l-rel").value, title: $("l-title").value,
+        body: $("l-body").value, release_type: type, release_value: type === "moment" ? $("l-moment").value : $("l-val").value.trim()}).then(function(x){
+          $("ov").hidden = true; loadVault(); loadLedger();
+          celebrate({key: "letter", name: "Sealed", why: "Seal " + x.seal.slice(0, 12) + "… It will wait for its moment."});
+        }).catch(function(err){ toast(err.message); });
+    };
   }
 
   // ---------------- pacts: precommitment, kindly enforced
