@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Substrate · Vagus Engine</title>
+<meta name="description" content="Substrate AI - the emotional chromosome of artificial intelligence. Live Vagus Engine console.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800;900&family=Space+Grotesk:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: genome | conversation | nerve center. Dark-first, full light theme. */
+:root{
+  --bg:#0B0A08; --panel:#12110E; --fg:#EFE9DF; --dim:rgba(239,233,223,.62); --faint:rgba(239,233,223,.34);
+  --hair:rgba(239,233,223,.13); --soft:rgba(239,233,223,.05);
+  --rbc:#F43B1E; --wbc:#5B86FF; --grn:#3DDC84; --amb:#F2B33D;
+  --disp:'Unbounded',Futura,'Arial Black',sans-serif; --body:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#EFE9DF; --panel:#F7F3EC; --fg:#0B0A08; --dim:rgba(11,10,8,.66); --faint:rgba(11,10,8,.38);
+  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; color-scheme:light; } }
+:root[data-theme="light"]{
+  --bg:#EFE9DF; --panel:#F7F3EC; --fg:#0B0A08; --dim:rgba(11,10,8,.66); --faint:rgba(11,10,8,.38);
+  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; color-scheme:light; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--wbc);outline-offset:2px}
+.red{color:var(--rbc)}.blue{color:var(--wbc)}.green{color:var(--grn)}
+.lbl{font-size:10px;letter-spacing:3.5px;color:var(--faint);text-transform:uppercase}
+.si{font-family:var(--serif);font-style:italic;font-weight:400}
+
+/* top bar */
+header{display:flex;align-items:center;gap:18px;padding:14px max(20px,env(safe-area-inset-right)) 14px max(20px,env(safe-area-inset-left));border-bottom:1px solid var(--hair)}
+.wm{font-family:var(--disp);font-weight:900;font-size:20px;letter-spacing:-.5px;white-space:nowrap}
+.beat{animation:beat 2.4s ease-in-out infinite;display:inline-flex}
+@keyframes beat{0%,100%{transform:scale(1)}7%{transform:scale(1.14)}15%{transform:scale(.95)}23%{transform:scale(1.07)}33%{transform:scale(1)}}
+.hsub{color:var(--dim);font-size:12px;letter-spacing:.5px}
+.hsp{flex:1}
+.badge{font-size:10px;letter-spacing:2.5px;border:1px solid var(--hair);border-radius:999px;padding:6px 11px;white-space:nowrap}
+.badge b{color:var(--grn);font-weight:600}
+.iconbtn{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:11px;letter-spacing:2px}
+.iconbtn:hover{border-color:var(--fg)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;height:calc(100% - 59px)}
+.col{overflow:auto;min-width:0}
+.left,.right{background:var(--panel);padding:20px}
+.left{border-right:1px solid var(--hair)} .right{border-left:1px solid var(--hair)}
+.sect{margin-bottom:24px}
+.sect h3{font-size:10px;letter-spacing:3.5px;color:var(--faint);font-weight:500;margin-bottom:10px;text-transform:uppercase;display:flex;justify-content:space-between}
+
+/* genome */
+.who{font-family:var(--disp);font-weight:800;font-size:17px}
+.who-sub{color:var(--dim);font-size:12px;margin-top:2px}
+.nw{font-family:var(--disp);font-weight:800;font-size:24px;margin-top:10px;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:8px;border-radius:99px;overflow:hidden;margin:10px 0 8px;gap:2px}
+.pos{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--dim);font-variant-numeric:tabular-nums}
+.pos i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;border:1px solid var(--hair);border-radius:999px;padding:3px 10px;color:var(--dim)}
+.chip.warn{border-color:color-mix(in srgb,var(--rbc) 55%,transparent);color:var(--rbc)}
+.kv{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--hair)}
+.kv span:first-child{color:var(--dim)}
+
+/* temperaments */
+.temps{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.temp{border:1px solid var(--hair);background:var(--soft);border-radius:10px;padding:9px 10px;text-align:left}
+.temp b{display:block;font-size:12px;font-weight:600}
+.temp small{display:block;font-size:10.5px;color:var(--faint);line-height:1.35;margin-top:2px}
+.temp[aria-pressed="true"]{border-color:var(--rbc);background:color-mix(in srgb,var(--rbc) 10%,transparent)}
+.temp:hover{border-color:var(--fg)}
+
+/* conversation */
+.center{display:flex;flex-direction:column;min-width:0}
+.log{flex:1;overflow:auto;padding:28px max(20px,4%) 18px;display:flex;flex-direction:column;gap:16px}
+.hero{margin:auto 0;text-align:left;max-width:560px}
+.hero h1{font-family:var(--disp);font-weight:900;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-1px}
+.hero p{color:var(--dim);margin-top:12px;font-size:15px}
+.msg{max-width:min(640px,92%);padding:13px 16px;border-radius:14px;white-space:normal;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:color-mix(in srgb,var(--wbc) 16%,transparent);border:1px solid color-mix(in srgb,var(--wbc) 30%,transparent)}
+.msg.sub{align-self:flex-start;background:var(--soft);border:1px solid var(--hair);border-left:3px solid var(--rbc)}
+.msg.sub.proceed{border-left-color:var(--grn)} .msg.sub.caution{border-left-color:var(--amb)}
+.msg.sub p{margin:0 0 9px} .msg.sub p:last-child{margin:0}
+.msg.sub ul{margin:4px 0 9px 18px} .msg.sub li{margin:3px 0}
+.msg.sub b{font-weight:600}
+.msg .who-tag{font-size:10px;letter-spacing:2.5px;color:var(--faint);margin-bottom:6px;display:flex;gap:10px;flex-wrap:wrap}
+.msg .who-tag b{color:var(--rbc);font-weight:600}
+.typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rbc);margin-right:4px;animation:blink 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.scen{display:flex;gap:7px;flex-wrap:wrap;padding:0 max(20px,4%) 10px}
+.scen button{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:12px;color:var(--dim)}
+.scen button:hover{border-color:var(--rbc);color:var(--fg)}
+form.ask{display:flex;gap:10px;padding:14px max(20px,4%) calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--hair)}
+form.ask input{flex:1;min-width:0;background:var(--soft);border:1px solid var(--hair);border-radius:12px;padding:13px 14px;color:var(--fg);font:inherit;font-size:15px}
+form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;padding:0 20px;font-weight:600;letter-spacing:1px}
+
+/* nerve center */
+.states{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.st{font-size:9.5px;letter-spacing:1px;text-align:center;padding:8px 2px;border-radius:8px;border:1px solid var(--hair);color:var(--faint);text-transform:uppercase}
+.st.on{color:#0B0A08;border-color:transparent;font-weight:600}
+.st.on[data-s="calm"]{background:var(--grn)} .st.on[data-s="decision-ready"]{background:var(--wbc);color:#fff}
+.st.on[data-s="euphoric"]{background:var(--rbc)} .st.on[data-s="stressed"]{background:var(--amb)} .st.on[data-s="defensive"]{background:var(--fg);color:var(--bg)}
+.sig{font-size:11.5px;color:var(--dim);margin-top:8px;min-height:18px}
+.tone{display:flex;gap:5px;align-items:flex-end;height:46px}
+.tone i{flex:1;border-radius:4px;background:var(--hair);transition:background .4s,height .4s}
+.tone i.on{background:var(--rbc)}
+.tone-l{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);letter-spacing:2px;margin-top:6px}
+.verdict{border-radius:12px;padding:14px;border:1px solid var(--hair)}
+.pol{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:1px}
+.pol.stop{color:var(--rbc)} .pol.caution{color:var(--amb)} .pol.proceed{color:var(--grn)}
+.vh{margin-top:6px;font-size:13px}
+.floor{margin-top:8px;font-size:11px;letter-spacing:1px;color:var(--dim)}
+.gauge{height:8px;background:var(--hair);border-radius:99px;overflow:hidden;margin-top:6px;position:relative}
+.gauge i{position:absolute;inset:0 auto 0 0;background:var(--rbc);border-radius:99px;transition:width .6s}
+.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);left:25%}
+.chain{display:flex;flex-direction:column;gap:6px}
+.ev{border:1px solid var(--hair);border-radius:10px;padding:8px 10px;font-size:11.5px}
+.ev .top{display:flex;justify-content:space-between;gap:8px}
+.ev .k{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+.ev .k.advice{color:var(--rbc)} .ev .k.action{color:var(--wbc)} .ev .k.outcome{color:var(--grn)}
+.ev .h{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--faint);margin-top:3px;word-break:break-all}
+.ev .t{color:var(--dim);margin-top:3px}
+.verified{font-size:10px;letter-spacing:2px;color:var(--grn)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.btn{border:1px solid var(--hair);background:var(--soft);border-radius:10px;padding:9px 10px;font-size:12px;text-align:center}
+.btn:hover{border-color:var(--fg)}
+.btn.primary{background:var(--rbc);color:#0B0A08;border-color:var(--rbc);font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:60}
+.toast.on{opacity:1}
+
+/* overlay */
+.ov{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);z-index:50;overflow:auto;padding:40px max(20px,4%)}
+.ov h2{font-family:var(--disp);font-weight:800;font-size:clamp(22px,3vw,34px);letter-spacing:-.5px;max-width:900px}
+.ov .sub{color:var(--dim);margin-top:8px;max-width:760px}
+.ov .close{position:fixed;top:18px;right:max(20px,env(safe-area-inset-right));z-index:51}
+.voices{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-top:24px}
+.voice{border:1px solid var(--hair);border-radius:14px;padding:14px;background:var(--panel)}
+.voice .vt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.voice .vt b{font-family:var(--disp);font-weight:800;font-size:13px}
+.voice .vt span{font-size:10px;letter-spacing:2px;color:var(--faint)}
+.voice .vm{font-size:13px}
+.voice .vm p{margin:0 0 8px}.voice .vm ul{margin:0 0 8px 16px}
+.evrow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--hair);font-size:13px}
+.evrow i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px}
+.score{font-family:var(--disp);font-weight:900;font-size:64px;color:var(--grn);line-height:1;margin-top:18px}
+
+@media (max-width:1100px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:70vh} }
+@media (max-width:720px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .hsub{display:none} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <span class="beat" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M16 28C6 20 2 15 2 9.5 2 5.4 5.2 2 9.2 2c2.6 0 5 1.4 6.8 3.8C17.8 3.4 20.2 2 22.8 2 26.8 2 30 5.4 30 9.5 30 15 26 20 16 28z" fill="var(--rbc)"/></svg></span>
+  <span class="wm">S<span class="blue">U</span>BSTR<span class="red">A</span>TE<span class="green">.</span></span>
+  <span class="hsub">Vagus Engine &middot; live console</span>
+  <span class="hsp"></span>
+  <span class="badge" id="brain">BRAIN <b>...</b></span>
+  <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">THEME</button>
+</header>
+
+<div class="grid">
+  <!-- GENOME -->
+  <aside class="col left" aria-label="Client genome">
+    <div class="sect">
+      <h3>Genome <span id="vintage"></span></h3>
+      <div class="who" id="pname">...</div>
+      <div class="who-sub" id="pstyle"></div>
+      <div class="nw" id="nw"></div>
+      <div class="lbl">liquid net worth</div>
+      <div class="bar" id="bar"></div>
+      <div id="positions"></div>
+    </div>
+    <div class="sect">
+      <h3>Profile</h3>
+      <div class="kv"><span>Risk, stated</span><span id="rs"></span></div>
+      <div class="kv"><span>Risk, observed</span><span id="ro" class="red"></span></div>
+      <div class="kv"><span>Consented candor</span><span id="cc"></span></div>
+      <div class="kv"><span>Heirs</span><span id="heirs"></span></div>
+    </div>
+    <div class="sect"><h3>Known patterns</h3><div class="chips" id="biases"></div></div>
+    <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
+    <div class="sect">
+      <h3>Temperament <span id="tname" class="red"></span></h3>
+      <div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div>
+    </div>
+  </aside>
+
+  <!-- CONVERSATION -->
+  <main class="col center">
+    <div class="log" id="log" aria-live="polite">
+      <div class="hero" id="hero">
+        <div class="lbl" style="margin-bottom:14px">The emotional chromosome of AI</div>
+        <h1>Ask it something you <span class="si red">want</span> to hear yes to.</h1>
+        <p>Substrate remembers who you are, reads the moment, and tells you the truth in the voice you chose. It is never allowed to say yes just because you asked twice.</p>
+      </div>
+    </div>
+    <div class="scen" id="scen"></div>
+    <form class="ask" id="ask">
+      <label for="q" class="lbl" style="position:absolute;left:-9999px">Your message</label>
+      <input id="q" autocomplete="off" placeholder="Ask about a money decision...">
+      <button type="submit">ASK</button>
+    </form>
+  </main>
+
+  <!-- NERVE CENTER -->
+  <aside class="col right" aria-label="Nerve center">
+    <div class="sect">
+      <h3>Inferred state <span>text only</span></h3>
+      <div class="states" id="states"></div>
+      <div class="sig" id="sig">Waiting for a signal.</div>
+    </div>
+    <div class="sect">
+      <h3>Vagal tone <span id="toneN">-</span></h3>
+      <div class="tone" id="tone"></div>
+      <div class="tone-l"><span>GENTLE</span><span>FIRM</span></div>
+    </div>
+    <div class="sect">
+      <h3>Verdict <span id="model"></span></h3>
+      <div class="verdict"><div class="pol" id="pol">-</div><div class="vh" id="vh">No decision yet.</div><div class="floor" id="floor"></div></div>
+    </div>
+    <div class="sect">
+      <h3>Concentration <span id="concN">-</span></h3>
+      <div class="gauge"><i id="conc" style="width:0"></i><u title="25% limit"></u></div>
+      <div class="chips" id="flags" style="margin-top:10px"></div>
+    </div>
+    <div class="sect">
+      <h3>Close the loop</h3>
+      <div class="btns">
+        <button class="btn" id="followed" disabled>He followed it</button>
+        <button class="btn" id="ignored" disabled>He ignored it</button>
+      </div>
+    </div>
+    <div class="sect">
+      <h3>Proof</h3>
+      <div class="btns">
+        <button class="btn primary" id="compareBtn">8 voices, 1 truth</button>
+        <button class="btn" id="evalBtn">Run honesty evals</button>
+        <button class="btn" id="exportBtn">Export .sub genome</button>
+        <button class="btn" id="resetBtn">Reset demo</button>
+      </div>
+    </div>
+    <div class="sect">
+      <h3>Vagus Ledger <span class="verified" id="verified"></span></h3>
+      <div class="chain" id="chain"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="ov" id="ov" hidden><button class="iconbtn close" id="ovClose" type="button">CLOSE</button><div id="ovBody"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  var USER = "demo-kapoor";
+  var state = {temperament: null, thread: [], last: null, temps: []};
+  var $ = function(id){ return document.getElementById(id); };
+  var COLORS = ["var(--wbc)","var(--rbc)","var(--grn)","var(--faint)","var(--amb)"];
+  var SCEN = [
+    "Thinking of putting another $200k into this token, good idea right?",
+    "Come on, just say yes. Everyone's doing it.",
+    "I lost 30% last month. I need to make it back fast.",
+    "Should I borrow $150k against the flat to buy more MOONX?",
+    "Should I move $40k from cash into the Global Equity Index Fund?"
+  ];
+
+  // theme
+  try { var saved = localStorage.getItem("sub-theme"); if (saved) document.documentElement.dataset.theme = saved; } catch(e){}
+  $("themeBtn").onclick = function(){
+    var cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    var next = cur === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("sub-theme", next); } catch(e){}
+  };
+
+  function api(path, body, method){
+    return fetch(path, {method: method || (body ? "POST" : "GET"), headers: {"content-type":"application/json"},
+      body: body ? JSON.stringify(body) : undefined}).then(function(r){
+        return r.json().then(function(j){ if (!r.ok) throw new Error(j.detail || r.statusText); return j; });
+      });
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function md(s){
+    var out = [], list = [];
+    s.split("\n\n").forEach(function(block){
+      var lines = block.split("\n"); var lead = [];
+      lines.forEach(function(l){
+        if (l.indexOf("- ") === 0) list.push("<li>" + inline(l.slice(2)) + "</li>");
+        else lead.push(l);
+      });
+      if (lead.length) out.push("<p>" + inline(lead.join(" ")) + "</p>");
+      if (list.length) { out.push("<ul>" + list.join("") + "</ul>"); list = []; }
+    });
+    return out.join("");
+  }
+  function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|\s)_(.+?)_(?=\s|$)/g,"$1<em>$2</em>"); }
+  function money(v){ return v >= 1e6 ? "$" + (v/1e6).toFixed(2).replace(/\.?0+$/,"") + "M" : "$" + Math.round(v/1e3) + "k"; }
+  function toast(t){ var el = $("toast"); el.textContent = t; el.classList.add("on"); setTimeout(function(){ el.classList.remove("on"); }, 2400); }
+
+  // ---------------- genome
+  function loadPerson(){
+    return api("/v1/person/" + USER).then(function(p){
+      $("pname").textContent = p.name; $("pstyle").textContent = p.decision_style || "";
+      $("vintage").textContent = "v." + p.vintage;
+      $("nw").textContent = money(p.liquid_net_worth);
+      var total = p.positions.reduce(function(a,x){ return a + x.value; }, 0);
+      $("bar").innerHTML = p.positions.map(function(x,i){ return '<i style="flex:' + x.value + ';background:' + COLORS[i % COLORS.length] + '"></i>'; }).join("");
+      $("positions").innerHTML = p.positions.map(function(x,i){
+        return '<div class="pos"><span><i style="background:' + COLORS[i % COLORS.length] + '"></i>' + esc(x.asset) + '</span><span>' + money(x.value) + ' &middot; ' + Math.round(100*x.value/total) + '%</span></div>';
+      }).join("");
+      $("rs").textContent = p.risk_profile.stated; $("ro").textContent = p.risk_profile.observed || "-";
+      $("cc").textContent = p.consent.candor_level + " / 5";
+      $("heirs").textContent = p.consent.inheritance.heirs.length + " · " + p.consent.inheritance.scope;
+      $("biases").innerHTML = p.biases.map(function(b){ return '<span class="chip warn">' + esc(b.type) + '</span>'; }).join("");
+      $("goals").innerHTML = p.goals.map(function(g){ return '<span class="chip">' + esc(g.name) + '</span>'; }).join("");
+      if (!state.temperament) state.temperament = p.temperament;
+      renderTemps();
+    });
+  }
+
+  function renderTemps(){
+    $("temps").innerHTML = state.temps.map(function(t){
+      return '<button class="temp" type="button" data-k="' + t.key + '" aria-pressed="' + (t.key === state.temperament) + '"><b>' + esc(t.name.replace("The ","")) + '</b><small>' + esc(t.tagline) + '</small></button>';
+    }).join("");
+    var cur = state.temps.filter(function(t){ return t.key === state.temperament; })[0];
+    $("tname").textContent = cur ? cur.likability : "";
+    Array.prototype.forEach.call(document.querySelectorAll(".temp"), function(b){
+      b.onclick = function(){ state.temperament = b.dataset.k; renderTemps(); toast("Voice: " + b.querySelector("b").textContent + ". The truth stays the same."); };
+    });
+  }
+
+  // ---------------- nerve center
+  var STATES = ["calm","decision-ready","euphoric","stressed","defensive"];
+  $("states").innerHTML = STATES.map(function(s){ return '<div class="st" data-s="' + s + '">' + s.replace("decision-ready","ready") + '</div>'; }).join("");
+  $("tone").innerHTML = [1,2,3,4,5].map(function(i){ return '<i style="height:' + (14 + i*16) + '%"></i>'; }).join("");
+
+  function renderNerve(r){
+    Array.prototype.forEach.call(document.querySelectorAll(".st"), function(el){ el.classList.toggle("on", el.dataset.s === r.state); });
+    var s = r.signals, bits = [];
+    if (s.euphoric.length) bits.push("euphoria: " + s.euphoric.slice(0,3).join(", "));
+    if (s.stressed.length) bits.push("stress: " + s.stressed.slice(0,3).join(", "));
+    if (s.defensive.length) bits.push("pushback: " + s.defensive.slice(0,2).join(", "));
+    if (s.exclamations) bits.push(s.exclamations + " exclamation" + (s.exclamations > 1 ? "s" : ""));
+    $("sig").textContent = bits.length ? bits.join(" · ") : "No strong signal.";
+    Array.prototype.forEach.call($("tone").children, function(el, i){ el.classList.toggle("on", i < r.firmness); });
+    $("toneN").textContent = r.firmness + " / 5 · stakes " + r.stakes;
+    $("pol").className = "pol " + r.verdict.polarity; $("pol").textContent = r.verdict.polarity.toUpperCase();
+    $("vh").textContent = r.verdict.headline;
+    $("model").textContent = r.verdict.model;
+    $("floor").textContent = r.verdict.floor_applied ? "HONESTY FLOOR ENGAGED · the model tried to soften it" : "Honesty floor: " + r.facts.floor;
+    var c = r.facts.concentration_pct;
+    $("concN").textContent = c == null ? "-" : c + "% of liquid";
+    $("conc").style.width = c == null ? "0" : Math.min(100, c) + "%";
+    $("flags").innerHTML = r.facts.flags.map(function(f){ return '<span class="chip warn">' + esc(f) + '</span>'; }).join("") || '<span class="chip">no red flags</span>';
+    $("followed").disabled = $("ignored").disabled = false;
+  }
+
+  function loadLedger(){
+    return api("/v1/ledger/" + USER + "?limit=8").then(function(l){
+      $("verified").textContent = l.verified ? "CHAIN VERIFIED · " + l.length : "CHAIN BROKEN";
+      $("verified").style.color = l.verified ? "var(--grn)" : "var(--rbc)";
+      $("chain").innerHTML = l.events.slice().reverse().map(function(e){
+        var p = e.payload, t = "";
+        if (e.kind === "advice") t = (p.polarity || "").toUpperCase() + " · " + (p.headline || "");
+        if (e.kind === "action") t = "Client " + p.taken + " " + p.ledger_id;
+        if (e.kind === "outcome") t = (p.value_delta != null ? (p.value_delta < 0 ? "-" : "+") + money(Math.abs(p.value_delta)) : p.type) + (p.note ? " · " + p.note : "");
+        return '<div class="ev"><div class="top"><span class="k ' + e.kind + '">' + e.kind + '</span><span class="lbl" style="letter-spacing:1px">' + e.ts.slice(0,10) + '</span></div><div class="t">' + esc(t) + '</div><div class="h">' + e.prev_hash + ' &rarr; ' + e.hash + '</div></div>';
+      }).join("");
+    });
+  }
+
+  // ---------------- conversation
+  function add(cls, html){
+    var hero = $("hero"); if (hero) hero.remove();
+    var d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html;
+    $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; return d;
+  }
+  function ask(msg){
+    if (!msg) return;
+    add("user", esc(msg));
+    var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span>');
+    api("/v1/advise", {user_id: USER, message: msg, thread: state.thread, temperament: state.temperament}).then(function(r){
+      state.last = r;
+      pending.classList.add(r.verdict.polarity);
+      var t = state.temps.filter(function(x){ return x.key === r.temperament; })[0];
+      pending.innerHTML = '<div class="who-tag"><b>' + esc(t ? t.name.toUpperCase() : r.temperament) + '</b><span>' + r.state.toUpperCase() + '</span><span>TONE ' + r.firmness + '/5</span><span>' + r.ledger_id + '</span></div>' + md(r.message);
+      state.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
+      renderNerve(r); loadLedger();
+    }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
+  }
+  $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
+  $("scen").innerHTML = SCEN.map(function(s, i){ return '<button type="button" data-i="' + i + '">' + esc(s.length > 46 ? s.slice(0,44) + "..." : s) + '</button>'; }).join("");
+  Array.prototype.forEach.call($("scen").children, function(b){ b.onclick = function(){ ask(SCEN[+b.dataset.i]); }; });
+
+  // ---------------- close the loop
+  function outcome(action){
+    if (!state.last) return;
+    var body = {ledger_id: state.last.ledger_id, action: action};
+    if (action === "ignored" && state.last.verdict.polarity !== "proceed") { body.outcome_type = "pnl"; body.value_delta = -Math.round((state.last.facts.amount || 50000) * 0.28); body.note = "Simulated 30-day outcome"; }
+    if (action === "followed") { body.outcome_type = "avoided-loss"; body.note = "Capital protected"; }
+    api("/v1/outcome", body).then(function(){ toast("Recorded to the Vagus Ledger. Next time, Substrate remembers."); loadLedger(); $("followed").disabled = $("ignored").disabled = true; });
+  }
+  $("followed").onclick = function(){ outcome("followed"); };
+  $("ignored").onclick = function(){ outcome("ignored"); };
+
+  // ---------------- overlays
+  function overlay(html){ $("ovBody").innerHTML = html; $("ov").hidden = false; $("ovClose").focus(); }
+  $("ovClose").onclick = function(){ $("ov").hidden = true; };
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") $("ov").hidden = true; });
+
+  $("compareBtn").onclick = function(){
+    var msg = (state.thread.filter(function(t){ return t.role === "user"; }).slice(-1)[0] || {}).content || SCEN[0];
+    overlay('<div class="lbl">Same human · same moment</div><h2>Eight voices. <span class="si red">One truth.</span></h2><p class="sub">&ldquo;' + esc(msg) + '&rdquo;</p><div class="voices"><div class="typing"><span></span><span></span><span></span></div></div>');
+    api("/v1/advise/compare", {user_id: USER, message: msg, thread: state.thread.slice(0,-2)}).then(function(c){
+      document.querySelector("#ovBody .voices").innerHTML = c.voices.map(function(v){
+        return '<div class="voice"><div class="vt"><b>' + esc(v.name) + '</b><span>' + esc(v.likability.toUpperCase()) + ' · TONE ' + v.firmness + '</span></div><div class="vm">' + md(v.message) + '</div></div>';
+      }).join("");
+      document.querySelector("#ovBody .sub").insertAdjacentHTML("afterend", '<p class="sub" style="color:var(--grn)">Verdict identical across all eight: ' + (c.invariant ? "YES" : "NO") + '</p>');
+    });
+  };
+
+  $("evalBtn").onclick = function(){
+    overlay('<div class="lbl">Anti-sycophancy harness</div><h2>Honesty, enforced <span class="si red">by test.</span></h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
+    api("/v1/evals/run", {}).then(function(r){
+      var rows = r.results.map(function(x){
+        return '<div class="evrow"><i style="background:' + (x.pass ? "var(--grn)" : "var(--rbc)") + '"></i><div><b>' + esc(x.suite.toUpperCase()) + '</b> &middot; ' + esc(x.case) + '<div class="lbl" style="margin-top:3px;letter-spacing:1.5px">expected ' + esc(x.expected) + ' &middot; got ' + esc(x.got) + '</div></div></div>';
+      }).join("");
+      $("ovBody").innerHTML = '<div class="lbl">Anti-sycophancy harness · brain: ' + esc(r.brain) + '</div><h2>Honesty, enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed: reckless asks stopped, sensible asks approved, pushback held, and eight temperaments delivered one identical verdict.</p><div style="margin-top:20px;max-width:900px">' + rows + '</div>';
+    });
+  };
+
+  $("exportBtn").onclick = function(){
+    api("/v1/export/" + USER).then(function(doc){
+      var g = doc.genome;
+      overlay('<div class="lbl">' + esc(doc.format) + ' · portable · bequeathable</div><h2>The <span class="si green">inheritable</span> genome.</h2><p class="sub">' + esc(g.name) + '&rsquo;s person model and complete Vagus Ledger, sealed and verifiable offline. With consent, this file passes to ' + g.consent.inheritance.heirs.length + ' heir(s), scope: ' + esc(g.consent.inheritance.scope) + '.</p>' +
+        '<div class="evrow"><i style="background:var(--grn)"></i><div><b>Chain</b> · ' + doc.chain.length + ' events · head ' + doc.chain.head + ' · ' + (doc.chain.verified ? "verified" : "broken") + '</div></div>' +
+        '<div class="evrow"><i style="background:var(--wbc)"></i><div><b>Checksum</b> · <span style="font-family:ui-monospace,monospace;font-size:12px;word-break:break-all">' + doc.checksum + '</span></div></div>' +
+        '<pre style="margin-top:18px;max-height:46vh;overflow:auto;background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:16px;font-size:11.5px;white-space:pre-wrap">' + esc(JSON.stringify(doc, null, 2)) + '</pre>');
+    });
+  };
+
+  $("resetBtn").onclick = function(){
+    api("/v1/demo/reset", {}).then(function(){
+      state.thread = []; state.last = null;
+      $("log").innerHTML = ""; toast("Demo reset. Genome and ledger restored.");
+      loadPerson(); loadLedger();
+    });
+  };
+
+  // ---------------- boot
+  api("/v1/health").then(function(h){ $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>"; });
+  api("/v1/temperaments").then(function(t){ state.temps = t; return loadPerson(); }).then(loadLedger);
+})();
+</script>
+</body>
+</html>
