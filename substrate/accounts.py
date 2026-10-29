@@ -149,6 +149,23 @@ def login(store: Store, email: str, password: str) -> dict:
     return {"user_id": uid, "email": email, "token": issue(store, email, uid, int(ver))}
 
 
+def user_of(store: Store, email: str) -> str | None:
+    init(store)
+    r = store.db.execute("select user_id from accounts where email=?", (email.strip().lower(),)).fetchone()
+    return r[0] if r else None
+
+
+def delete_account(store: Store, email: str, user_id: str) -> None:
+    """Right to erasure: the genome, its ledger, its pacts, letters to and from it, and the account itself."""
+    from . import legacy
+    store.delete_person(user_id)
+    legacy.init(store)
+    with _lock:
+        store.db.execute("delete from letters where to_user=? or from_user=?", (user_id, user_id))
+        store.db.execute("delete from accounts where email=?", (email,))
+        store.db.commit()
+
+
 def email_of(store: Store, user_id: str) -> str | None:
     init(store)
     r = store.db.execute("select email from accounts where user_id=?", (user_id,)).fetchone()

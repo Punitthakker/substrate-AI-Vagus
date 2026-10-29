@@ -106,7 +106,7 @@ def analyze(b: BetMath) -> dict:
 
 
 def polymarket_price(slug: str, outcome: str = "Yes", timeout: float = 6.0) -> dict:
-    r = httpx.get(f"{GAMMA}/markets", params={"slug": slug}, timeout=timeout)
+    r = httpx.get(f"{GAMMA}/markets", params={"slug": slug}, timeout=timeout, follow_redirects=True)
     r.raise_for_status()
     rows = r.json()
     m = rows[0] if isinstance(rows, list) and rows else rows

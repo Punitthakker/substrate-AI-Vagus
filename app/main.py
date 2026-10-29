@@ -475,9 +475,21 @@ class LetterRequest(BaseModel):
     release_value: str = Field("any-stop", max_length=40)
 
 
+def _resolve_heir(ref: str) -> str:
+    """Heirs can be addressed by genome id or by the email of their Substrate account."""
+    if ref.startswith("email:") or "@" in ref:
+        from substrate.accounts import user_of
+        uid = user_of(store, ref.replace("email:", ""))
+        if not uid:
+            raise HTTPException(404, "No Substrate account with that email yet. Ask them to sign up first.")
+        return uid
+    return ref
+
+
 @app.post("/v1/legacy/letter")
 def write_letter(req: LetterRequest, c: Ctx = Depends(ctx)):
     """Seal a letter for an heir. It opens on a date, an age, or the moment they need it."""
+    req.to_user = _resolve_heir(req.to_user)
     authorize(req.from_user, c)
     if c.role != "user":
         authorize(req.to_user, c)
@@ -667,6 +679,34 @@ def auth_me(c: Ctx = Depends(ctx)):
     return {**c.user, "person": p}
 
 
+@app.delete("/v1/auth/account", tags=["accounts"])
+def auth_delete(c: Ctx = Depends(ctx)):
+    """Delete my account and everything Substrate holds about me. Irreversible."""
+    from substrate import accounts
+    if c.role != "user":
+        raise HTTPException(401, "Not signed in.")
+    accounts.delete_account(store, c.user["email"], c.user["user_id"])
+    return {"ok": True, "deleted": c.user["user_id"]}
+
+
+@app.get("/v1/clients", tags=["enterprise"])
+def clients(c: Ctx = Depends(ctx)):
+    """The people in scope, newest activity first: id, name, tissue, advice count, last verdict."""
+    if c.role not in ("tenant", "admin", "master"):
+        raise HTTPException(403, "Tenant, admin or master key required.")
+    out = []
+    for uid in _scope_users(c):
+        p = store.get_person(uid)
+        if not p:
+            continue
+        ev = [e for e in store.events(uid) if e["kind"] == "advice"]
+        last = ev[-1] if ev else None
+        out.append({"user_id": uid, "name": p.name, "domain": p.domain, "advice": len(ev),
+                    "last_ts": last["ts"] if last else None,
+                    "last_label": (last["payload"].get("label") if last else None)})
+    return sorted(out, key=lambda x: x["last_ts"] or "", reverse=True)
+
+
 @app.post("/v1/auth/logout", tags=["accounts"])
 def auth_logout(c: Ctx = Depends(ctx)):
     """Signs out everywhere: every session for this account stops working."""
@@ -702,6 +742,7 @@ class InheritRequest(BaseModel):
 @app.post("/v1/inherit/{elder_id}")
 def inherit_genome(elder_id: str, req: InheritRequest, c: Ctx = Depends(ctx)):
     """Pass a genome down: the heir receives the elder's values and the lessons they paid for (per consent)."""
+    req.heir_id = _resolve_heir(req.heir_id)
     if not (c.role == "user" and c.user["user_id"] == elder_id):
         authorize(req.heir_id, c)   # an elder passes their genome on; the heir doesn't need to be signed in
     try:

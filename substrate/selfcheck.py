@@ -40,7 +40,8 @@ def ecb_fx():
     from .volatility import analyze, fx_history
     s = fx_history("EURUSD", 120)
     if len(s) < 30:
-        return False, f"only {len(s)} observations"
+        from .volatility import LAST_FX_ERROR
+        return False, f"only {len(s)} observations; {LAST_FX_ERROR}"
     a = analyze("EURUSD", prices=s, horizon_days=5)
     return True, f"{len(s)} daily EURUSD closes, last {s[-1]:.4f}, {a['method']} vol {a['vol_annual'] * 100:.1f}%"
 

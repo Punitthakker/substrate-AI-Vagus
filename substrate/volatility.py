@@ -143,23 +143,33 @@ def scenarios(base_vol: float, events: list[dict] | None = None, top: int = 3) -
                     "Orderings count the n! sequences in which the events can land."}
 
 
-FRANKFURTER = os.environ.get("FRANKFURTER_URL", "https://api.frankfurter.app")
+FRANKFURTER = os.environ.get("FRANKFURTER_URL", "")
+FX_BASES = [b for b in [FRANKFURTER, "https://api.frankfurter.dev/v1", "https://api.frankfurter.app"] if b]
+LAST_FX_ERROR = ""
 
 
 def fx_history(pair: str, days: int = 120, timeout: float = 6.0) -> list[float]:
     """Daily ECB reference rates via the free Frankfurter API (no key). Best effort; empty list on failure."""
+    global LAST_FX_ERROR
     from datetime import date, timedelta
     base, quote = pair[:3].upper(), pair[3:6].upper()
     if "XAU" in (base, quote) or "XAG" in (base, quote):
         return []
     start = (date.today() - timedelta(days=int(days * 1.5))).isoformat()
-    try:
-        r = httpx.get(f"{FRANKFURTER}/{start}..", params={"from": base, "to": quote}, timeout=timeout)
-        r.raise_for_status()
-        rates = r.json().get("rates", {})
-        return [v[quote] for _, v in sorted(rates.items()) if quote in v][-days:]
-    except Exception:
-        return []
+    for b in FX_BASES:
+        try:
+            r = httpx.get(f"{b.rstrip('/')}/{start}..", params={"from": base, "to": quote}, timeout=timeout,
+                          follow_redirects=True)
+            r.raise_for_status()
+            rates = r.json().get("rates", {})
+            out = [v[quote] for _, v in sorted(rates.items()) if quote in v][-days:]
+            if out:
+                LAST_FX_ERROR = ""
+                return out
+            LAST_FX_ERROR = f"{b}: empty response"
+        except Exception as e:
+            LAST_FX_ERROR = f"{b}: {type(e).__name__} {str(e)[:120]}"
+    return []
 
 
 def analyze(pair: str, price: float | None = None, prices: list[float] | None = None, horizon_days: float = 5,
