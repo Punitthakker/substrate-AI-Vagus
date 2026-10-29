@@ -85,6 +85,17 @@ body.print .slide{page-break-after:always;margin:0}
 body.print .rev{opacity:1;transform:none}
 body.print #hud,body.print #hint,body.print #donestamp{display:none}
 body.print .heartbeat,body.print .flowline{animation:none}
+
+body.print .pfoot{position:absolute;left:0;right:0;bottom:0;height:46px;border-top:1px solid var(--hair);
+  display:flex;align-items:center;gap:16px;padding:0 24px;background:#0B1016}
+body.print .pfoot .mono{font-size:11px;letter-spacing:1.8px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+body.print .pfoot svg{height:30px}
+body.print .pfoot a.tick{display:inline-block;width:20px;height:10px;border:1px solid var(--edge);margin-right:4px}
+body.print .pfoot a.tick.done{background:var(--mid);border-color:var(--mid)}
+body.print .pfoot a.tick.here{background:var(--red);border-color:var(--red)}
+body.print .slide{padding-bottom:88px}
+body.print .fc.bl,body.print .fc.br{bottom:56px}
+
 @media (prefers-reduced-motion: reduce){.heartbeat,.flowline{animation:none}}
 </style>
 </head>
@@ -260,7 +271,34 @@ body.print .heartbeat,body.print .flowline{animation:none}
 "use strict";
 (function(){
   var PRINT = /[?&]print=1/.test(location.search);
-  if(PRINT){ document.body.className="print"; return; }
+  if(PRINT){
+    document.body.className="print";
+    var sl=[].slice.call(document.querySelectorAll(".slide"));
+    sl.forEach(function(sec,i){
+      var n=i+1, f=document.createElement("div"); f.className="pfoot";
+      // clickable film ticks
+      var ticks='<span style="white-space:nowrap">';
+      for(var t=0;t<10;t++){ ticks+='<a class="tick'+(t<n?(t===i?' here':' done'):'')+'" href="#s'+(t+1)+'" title="Film '+(t+1)+'"></a>'; }
+      ticks+='</span>';
+      // ECG grows one heartbeat per page
+      var seg=100, d="M0 16", W=10*seg;
+      for(var k=0;k<10;k++){ var x0=k*seg;
+        d += (k<n) ? " L"+(x0+seg*.3)+" 16 L"+(x0+seg*.42)+" 4 L"+(x0+seg*.52)+" 26 L"+(x0+seg*.62)+" 16 L"+(x0+seg)+" 16"
+                   : " L"+(x0+seg)+" 16"; }
+      var ecg='<svg viewBox="0 0 '+W+' 30" preserveAspectRatio="none" style="flex:1"><path d="'+d+'" fill="none" stroke="#7FD8F7" stroke-width="1.6"/></svg>';
+      // pulse travels brain -> heart across the ten pages
+      var py=7+(34-7)*(i/9);
+      var glyph='<svg viewBox="0 0 22 44" style="height:36px"><ellipse cx="11" cy="7" rx="6.5" ry="5" fill="none" stroke="#7FD8F7" stroke-width="1.2"/>'+
+        '<path d="M11 12 C 9 20, 13 26, 11 31" fill="none" stroke="#D8F3FF" stroke-width="1.4"/>'+
+        '<path d="M11 41 c-5 -4.5 -7 -8 -3.6 -9.8 c1.8 -0.9 3.6 0.4 3.6 2 c0 -1.6 1.8 -2.9 3.6 -2 c3.4 1.8 1.4 5.3 -3.6 9.8z" fill="none" stroke="#FF4B33" stroke-width="1.3"/>'+
+        '<circle cx="11" cy="'+py.toFixed(1)+'" r="2.3" fill="#FF4B33"/></svg>';
+      var label = n===10 ? 'ALL FILMS READ \u00B7 10/10' : 'FILM '+n+'/10 \u00B7 FLIP TO ANIMATE';
+      f.innerHTML='<span class="mono">'+label+'</span>'+ticks+ecg+glyph;
+      sec.appendChild(f);
+      if(n===10){ var st=document.createElement("div"); st.className="stamp"; st.style.right="90px"; st.style.top="86px"; st.textContent="DECK READ"; sec.appendChild(st); }
+    });
+    return;
+  }
   var slides=[].slice.call(document.querySelectorAll(".slide")), cur=0, seen={0:true};
   function fit(){
     var s=Math.min(innerWidth/1320, (innerHeight-60)/760, 1);
