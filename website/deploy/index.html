@@ -141,6 +141,42 @@ footer a:hover{color:var(--lum)}
 .exhibit a.plain:hover{border-color:var(--lum)}
 @media (max-width:980px){.exhibit{grid-template-columns:1fr}}
 
+
+/* the living plate */
+.plate{position:relative;background:#F6F1E4;border:1px solid #2A3845;border-radius:2px;padding:8px;
+  box-shadow:0 14px 28px rgba(0,0,0,.55);transform:rotate(-.6deg);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.plate:hover{transform:rotate(0deg) scale(1.01)}
+.plate svg{width:100%;height:auto;display:block}
+.markcount{color:var(--red);font-weight:400}
+.markcount.done{color:#2E7D4F}
+.hotspot{cursor:pointer}
+.hotspot:focus{outline:none}
+.hotspot:focus>.hotring{opacity:.5}
+.authstamp{position:absolute;top:42%;left:50%;width:270px;margin-left:-135px;text-align:center;
+  font-family:var(--disp);font-weight:700;font-size:27px;letter-spacing:3px;color:#A8271C;
+  border:3px double #A8271C;border-radius:6px;padding:10px 6px 12px;background:rgba(246,241,228,.88);
+  transform:rotate(-8deg) scale(2.4);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,1.4,.3,1),opacity .35s}
+.authstamp small{display:block;font-family:var(--hand);font-size:19px;letter-spacing:.5px;text-transform:none;margin-top:2px}
+.authstamp.on{opacity:1;transform:rotate(-8deg) scale(1)}
+@keyframes beatp{0%,100%{transform:scale(1)}12%{transform:scale(1.045)}24%{transform:scale(1)}36%{transform:scale(1.03)}}
+#noteplate .heartG{animation:beatp 1.35s ease-in-out infinite}
+@keyframes rowin{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+#noteplate g.med{opacity:0}
+.plate.lit #noteplate g.med{animation:rowin 1s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes sparkle{0%,88%,100%{opacity:.15}92%{opacity:1}}
+#noteplate .neuron{animation:sparkle 3.2s infinite}
+@keyframes bloodflow{to{stroke-dashoffset:-44}}
+#noteplate .flowp{stroke-dasharray:3 8;animation:bloodflow 2.6s linear infinite}
+@keyframes inkline{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.plate.lit #noteplate .drawn{stroke-dasharray:var(--len);animation:inkline 1.6s cubic-bezier(.4,0,.2,1) var(--d,0s) both}
+@keyframes popmark{from{opacity:0;transform:scale(.4)}60%{transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
+#noteplate .foundmark{transform-origin:center;transform-box:fill-box;animation:popmark .5s cubic-bezier(.2,1.3,.3,1) both}
+@media (prefers-reduced-motion: reduce){
+  #noteplate .heartG,#noteplate .neuron,#noteplate .flowp{animation:none}
+  .plate.lit #noteplate g.med{animation:none;opacity:1}
+  .plate.lit #noteplate .drawn{animation:none}
+}
+
 /* motion */
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
 .reveal.on{opacity:1;transform:none}
@@ -242,9 +278,12 @@ footer a:hover{color:var(--lum)}
     <section class="sect">
       <h2 class="reveal">The organ, <span class="dim">on paper</span></h2>
       <div class="exhibit reveal">
-        <figure style="margin:0">
-          <img src="vagus-note.webp" alt="Engraved certificate plate: a brain and a heart in banknote line engraving, joined by the vagus nerve" loading="lazy" width="1100" height="1006">
-          <figcaption>PLATE 1 &middot; HAND OF THE ENGRAVER &middot; SERIES 2026</figcaption>
+        <figure style="margin:0" class="notewrap">
+          <div class="plate" id="plate">
+            <svg id="noteplate" viewBox="0 0 720 660" role="img" aria-label="Engraved plate: a brain and a heart in banknote line engraving, joined by the vagus nerve. Five security marks are hidden in the engraving."></svg>
+            <div class="authstamp" id="authstamp" aria-hidden="true">AUTHENTICATED<small>bound by its engraving</small></div>
+          </div>
+          <figcaption>PLATE 1 &middot; HAND OF THE ENGRAVER &middot; <b id="markcount" class="markcount">FIND THE 5 SECURITY MARKS &middot; 0/5</b></figcaption>
         </figure>
         <div class="note-copy">
           <p class="handnote" style="font-size:clamp(24px,2.2vw,30px)">one brain, one nerve, one heart</p>
@@ -574,6 +613,135 @@ footer a:hover{color:var(--lum)}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}})},{threshold:0.16});
   Array.prototype.forEach.call(document.querySelectorAll(".reveal"),function(r,i){r.style.transitionDelay=(i%5)*0.06+"s";io.observe(r)});
 })();
+
+  // ================= the living plate: engraving + security-mark game =================
+  (function(){
+    var svg=document.getElementById("noteplate"); if(!svg)return;
+    var NSP="http://www.w3.org/2000/svg", INK="#1D4A38", SEAL="#A8271C", INDIGO="#2B3F8C";
+    var reduceP=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function pel(tag,attrs,parent){var e=document.createElementNS(NSP,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e}
+    function PP(pts){return pts.map(function(p,i){return (i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)}).join(" ")}
+    pel("rect",{x:0,y:0,width:720,height:660,fill:"#F6F1E4"});
+    pel("rect",{x:10,y:10,width:700,height:640,fill:"none",stroke:INK,"stroke-width":1.2,opacity:.7});
+    pel("rect",{x:16,y:16,width:688,height:628,fill:"none",stroke:INK,"stroke-width":.5,opacity:.4});
+    for(var ly=40;ly<660;ly+=36){var w=[];for(var lx=24;lx<=696;lx+=6)w.push([lx,ly+Math.sin(lx*.045+ly)*2.2]);pel("path",{d:PP(w),fill:"none",stroke:INK,"stroke-width":.3,opacity:.1})}
+    var BRAIN_POLY=[[-0.82,0.02],[-0.80,-0.28],[-0.56,-0.52],[-0.18,-0.66],[0.26,-0.62],[0.60,-0.44],[0.78,-0.14],[0.76,0.10],[0.58,0.18],[0.66,0.30],[0.54,0.52],[0.28,0.56],[0.20,0.38],[-0.02,0.44],[-0.38,0.46],[-0.68,0.32]];
+    function inBrain(px,py){var x=px/1.12,y=py/1.12,ins=false,p=BRAIN_POLY;
+      for(var a=0,b=p.length-1;a<p.length;b=a++){if((p[a][1]>y)!==(p[b][1]>y)&&x<(p[b][0]-p[a][0])*(y-p[a][1])/(p[b][1]-p[a][1])+p[a][0])ins=!ins}return ins}
+    function inHeart(px,py){var x=px*1.25,y=-py*1.25+0.28,a2=x*x+y*y-1;return a2*a2*a2-x*x*y*y*y<=0}
+    function medallion(cx,cy,R,inside,rows,delay){
+      var g=pel("g",{class:"med",style:"animation-delay:"+delay+"s"});
+      var step=(R*2)/rows;
+      for(var ri=0;ri<=rows;ri++){
+        var y=cy-R+ri*step,segs=[],pts=[],cur=null;
+        for(var x=cx-R;x<=cx+R;x+=2.0){
+          var dx=(x-cx)/R,dy=(y-cy)/R;
+          if(dx*dx+dy*dy>1){if(pts.length){segs.push([cur,pts]);pts=[]}cur=null;continue}
+          var ins=inside(dx,dy)?1:0;
+          if(cur===null)cur=ins;
+          if(ins!==cur){if(pts.length)segs.push([cur,pts]);pts=[];cur=ins}
+          pts.push([x,y+(ins?-2.2:0)+Math.sin(x*(ins?0.9:0.45)+ri*1.7)*(ins?3.2:0.9)]);
+        }
+        if(pts.length)segs.push([cur,pts]);
+        segs.forEach(function(sg){if(sg[1].length<3)return;
+          pel("path",{d:PP(sg[1]),fill:"none",stroke:INK,"stroke-width":sg[0]?0.95:0.45,opacity:sg[0]?0.95:0.28},g)});
+      }
+      pel("circle",{cx:cx,cy:cy,r:R+6,fill:"none",stroke:INK,"stroke-width":1.1,class:"drawn",style:"--d:"+delay+"s"},g);
+      pel("circle",{cx:cx,cy:cy,r:R+11,fill:"none",stroke:INK,"stroke-width":.5,opacity:.5},g);
+      for(var tk=0;tk<72;tk++){var a3=tk/72*Math.PI*2;
+        pel("line",{x1:cx+Math.cos(a3)*(R+6),y1:cy+Math.sin(a3)*(R+6),x2:cx+Math.cos(a3)*(R+(tk%6?9:11)),y2:cy+Math.sin(a3)*(R+(tk%6?9:11)),stroke:INK,"stroke-width":.5,opacity:.6},g)}
+      return g;
+    }
+    function cartouche(cx,cy,num,label){
+      var g=pel("g",{class:"med"});
+      pel("rect",{x:cx-52,y:cy-30,width:104,height:60,fill:"#F6F1E4",stroke:INK,"stroke-width":1.6},g);
+      pel("rect",{x:cx-47,y:cy-25,width:94,height:50,fill:"none",stroke:INK,"stroke-width":.6,opacity:.6},g);
+      var t=pel("text",{x:cx,y:cy+2,"text-anchor":"middle","font-family":"Big Shoulders Display","font-weight":"700","font-size":"30",fill:INK},g); t.textContent=num;
+      var l=pel("text",{x:cx,y:cy+20,"text-anchor":"middle","font-family":"Share Tech Mono","font-size":"12","letter-spacing":"1.5",fill:INK,opacity:.75},g); l.textContent=label;
+      return g;
+    }
+    cartouche(90,70,"126","OF 126 EVALS"); cartouche(630,70,"6","TISSUES");
+    cartouche(90,590,"8","VOICES"); cartouche(630,590,"14","BRAINS");
+    // brain
+    medallion(360,150,96,inBrain,30,0.15);
+    for(var n=0;n<30;n++){var ang=Math.random()*Math.PI*2,rad=Math.sqrt(Math.random())*0.78,px=Math.cos(ang)*rad,py=Math.sin(ang)*rad;
+      if(!inBrain(px,py))continue;
+      pel("circle",{cx:360+px*96,cy:150+py*96,r:n%6?1:1.6,fill:n%4?INDIGO:SEAL,class:"neuron",style:"animation-delay:"+(Math.random()*3).toFixed(2)+"s"})}
+    var ct=pel("text",{x:452,y:108,"font-family":"Share Tech Mono","font-size":"12","letter-spacing":"2",fill:INK,opacity:.65});ct.textContent="CORTEX \u00B7 RENTED";
+    // nerve
+    var vag="M360 256 C 352 292, 376 318, 362 348 C 354 372, 366 384, 362 396";
+    var vp=pel("path",{d:vag,fill:"none",stroke:INK,"stroke-width":2.1,class:"drawn",style:"--d:.9s"});
+    pel("path",{d:vag,fill:"none",stroke:SEAL,"stroke-width":.9,opacity:.6,transform:"translate(-3 0)",class:"flowp"});
+    pel("path",{d:"M360 282 C 330 292, 312 306, 300 324",fill:"none",stroke:INK,"stroke-width":.6,opacity:.6});
+    pel("path",{d:"M364 312 C 396 322, 414 338, 424 356",fill:"none",stroke:INK,"stroke-width":.6,opacity:.6});
+    var vt=pel("text",{x:398,y:332,"font-family":"Share Tech Mono","font-size":"12","letter-spacing":"2",fill:SEAL});vt.textContent="VAGUS \u00B7 OWNED";
+    // heart
+    var hg=pel("g",{class:"heartG",style:"transform-origin:360px 486px;transform-box:view-box"});
+    svg.appendChild(hg);
+    (function(){var hold=pel; pel=function(t,a,p){return hold(t,a,p||hg)};
+      medallion(360,486,104,inHeart,34,0.5); pel=hold})();
+    function heartPath(ox,oy){var pts=[];for(var t=0;t<=Math.PI*2+.02;t+=.02){var x=16*Math.pow(Math.sin(t),3),y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));pts.push([360+ox+x*4.6,486+oy+y*4.6-12])}return PP(pts)+"Z"}
+    pel("path",{d:heartPath(1.8,1.4),fill:"none",stroke:SEAL,"stroke-width":.8,opacity:.5},hg);
+    pel("path",{d:heartPath(0,0),fill:"none",stroke:SEAL,"stroke-width":1.3,opacity:.8},hg);
+    // vessels
+    [["M300 420 C 240 396, 180 398, 116 430",SEAL],["M420 420 C 480 396, 540 398, 604 430",INDIGO],
+     ["M330 568 C 290 600, 252 614, 204 622",SEAL],["M390 568 C 430 600, 468 614, 516 622",INDIGO]].forEach(function(v){
+      pel("path",{d:v[0],fill:"none",stroke:v[1],"stroke-width":.9,opacity:.6,class:"flowp"});
+      pel("path",{d:v[0],fill:"none",stroke:INK,"stroke-width":.4,opacity:.3,transform:"translate(0 3)"})});
+    var tt=pel("text",{x:360,y:636,"text-anchor":"middle","font-family":"Big Shoulders Display","font-weight":"700","font-size":"17","letter-spacing":"4",fill:INK});tt.textContent="THE VAGUS ENGINE";
+    // traveling pulse brain -> heart
+    if(!reduceP){
+      var dot=pel("circle",{cx:360,cy:256,r:3.6,fill:SEAL,opacity:0});
+      var L=vp.getTotalLength(),t0=null;
+      requestAnimationFrame(function step(ts){
+        if(t0===null)t0=ts; var k=((ts-t0)%2600)/2600;
+        if(k<0.72){var pt=vp.getPointAtLength(L*(k/0.72));dot.setAttribute("cx",pt.x);dot.setAttribute("cy",pt.y);dot.setAttribute("opacity",.9)}
+        else dot.setAttribute("opacity",Math.max(0,.9-(k-0.72)*8));
+        requestAnimationFrame(step)});
+    }
+    // scroll: light the plate
+    var plate=document.getElementById("plate");
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(en,ob){en.forEach(function(e){if(e.isIntersecting){plate.classList.add("lit");ob.disconnect()}})},{threshold:.25}).observe(plate);
+    }else plate.classList.add("lit");
+    try{var ln=vp.getTotalLength();vp.style.setProperty("--len",Math.ceil(ln))}catch(e){}
+
+    // ------- the game: find the five security marks -------
+    var found={}, order=["brain","vagus","heart","denom","title"];
+    var MARKS={
+      brain:{x:360,y:150,rx:112,ry:112,note:"mark i \u00B7 the rented cortex. replaceable.",nx:168,ny:208},
+      vagus:{x:361,y:326,rx:34,ry:78,note:"mark ii \u00B7 the vagus. verdicts only.",nx:196,ny:306},
+      heart:{x:360,y:486,rx:120,ry:120,note:"mark iii \u00B7 the owned heart. 126/126.",nx:560,ny:416},
+      denom:{x:90,y:70,rx:62,ry:40,note:"mark iv \u00B7 paid in honest answers.",nx:232,ny:34},
+      title:{x:360,y:631,rx:120,ry:18,note:"mark v \u00B7 microprint: never whether.",nx:542,ny:614}
+    };
+    var counter=document.getElementById("markcount");
+    function foundMark(key){
+      if(found[key])return; found[key]=true;
+      var m=MARKS[key];
+      var g=pel("g",{class:"foundmark"});
+      pel("ellipse",{cx:m.x,cy:m.y,rx:m.rx,ry:m.ry,fill:"none",stroke:"#C43B2A","stroke-width":2.4,opacity:.85,
+        "stroke-dasharray":"7 5",transform:"rotate(-3 "+m.x+" "+m.y+")"},g);
+      var tx=pel("text",{x:m.nx,y:m.ny,"text-anchor":"middle","font-family":"Caveat","font-size":"21","font-weight":"600",fill:"#C43B2A",transform:"rotate(-3 "+m.nx+" "+m.ny+")"},g);
+      tx.textContent=m.note;
+      var n=order.filter(function(k){return found[k]}).length;
+      counter.textContent="SECURITY MARKS \u00B7 "+n+"/5";
+      if(n===5){
+        counter.textContent="ALL 5 MARKS FOUND \u00B7 THE NOTE IS GENUINE";
+        counter.classList.add("done");
+        setTimeout(function(){document.getElementById("authstamp").classList.add("on")},350);
+      }
+    }
+    order.forEach(function(key){
+      var m=MARKS[key];
+      var hs=pel("g",{class:"hotspot",tabindex:"0",role:"button","aria-label":"Security mark: "+key});
+      pel("ellipse",{cx:m.x,cy:m.y,rx:m.rx,ry:m.ry,fill:"transparent"},hs);
+      pel("ellipse",{cx:m.x,cy:m.y,rx:m.rx,ry:m.ry,fill:"none",stroke:"#C43B2A","stroke-width":1,opacity:0,class:"hotring"},hs);
+      hs.addEventListener("click",function(){foundMark(key)});
+      hs.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();foundMark(key)}});
+    });
+  })();
+
 </script>
 </body>
 </html>
