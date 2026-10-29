@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Substrate AI</title>
+<meta name="description" content="Substrate is the honesty layer beneath any AI model: the Vagus Engine remembers who you are, tells the truth about money, and records what it did. Inheritable, by consent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700&family=Archivo:wght@400;500;600&family=Caveat:wght@600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --room:#07090C; --box:#0D1217; --film:#10161D; --film-edge:#1B242E;
+  --lum:#D8F3FF; --lum-mid:#7FD8F7; --lum-dim:rgba(141,214,241,.64); --lum-hair:rgba(141,214,241,.16);
+  --red:#FF4B33; --amber:#F2B33D; --pencil:#FF6E5A;
+  --disp:'Big Shoulders Display',sans-serif; --body:'Archivo',sans-serif; --mono:'Share Tech Mono',monospace; --hand:'Caveat',cursive;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--room);color:var(--lum);font:400 16.5px/1.65 var(--body);-webkit-font-smoothing:antialiased}
+::selection{background:var(--lum);color:#07141B}
+::-webkit-scrollbar{width:11px}
+::-webkit-scrollbar-track{background:var(--room)}
+::-webkit-scrollbar-thumb{background:#223141;border:3px solid var(--room)}
+::-webkit-scrollbar-thumb:hover{background:var(--lum-dim)}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+a{color:var(--lum)}
+
+/* the reading room */
+.room{max-width:1400px;margin:0 auto;padding:clamp(12px,2vw,30px)}
+.lightbox{background:linear-gradient(180deg,#0E141A, #0A0F14 60%, #080C10);border:1px solid #1D2733;border-radius:6px;position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.lightbox::before{content:"";position:absolute;inset:0;border-radius:6px;
+  background:radial-gradient(70% 45% at 50% 30%, rgba(127,216,247,.07), transparent 70%);pointer-events:none}
+.rail{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-bottom:1px solid #1B2530}
+.rail span{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--lum-dim)}
+.rail .on{color:#9EF0B0}
+.rail .on i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9EF0B0;margin-right:7px;font-style:normal}
+
+/* films */
+.film{background:linear-gradient(180deg, var(--film), #0C1218);border:1px solid var(--film-edge);border-radius:3px;position:relative;padding:3px;
+  margin:clamp(20px,3vw,44px) clamp(14px,3vw,44px);box-shadow:0 10px 18px rgba(0,0,0,.5)}
+.film::before{content:"";position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:120px;height:14px;
+  background:#222B35;border-radius:3px 3px 0 0;border:1px solid #2C3844;border-bottom:0}
+.film::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:#0A0E12;border:1px solid #39434E}
+.fcorner{position:absolute;font-family:var(--mono);font-size:12px;letter-spacing:1.2px;color:var(--lum-dim);line-height:1.7;pointer-events:none;z-index:3}
+.fcorner.tl{top:14px;left:18px}.fcorner.tr{top:14px;right:18px;text-align:right}
+.fcorner.bl{bottom:14px;left:18px}.fcorner.br{bottom:14px;right:18px;text-align:right}
+.fcorner b{color:var(--lum);font-weight:400}
+.fcorner .r{color:var(--red)}
+
+/* hero film */
+.scan{display:grid;grid-template-columns:minmax(300px,1.05fr) minmax(0,1.2fr);min-height:92vh;position:relative;overflow:hidden}
+.readout{padding:clamp(30px,4.5vw,70px) clamp(24px,4vw,60px);display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:clamp(46px,6vw,84px);line-height:.95;letter-spacing:.015em;text-transform:uppercase;
+  color:var(--lum);text-shadow:none}
+.wordmark .r{color:var(--red);text-shadow:none}
+.subline{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--lum-dim);margin-top:14px}
+.promise{margin-top:30px;font-size:clamp(18px,1.6vw,21px);line-height:1.55;color:#C6E6F4;max-width:34ch}
+.promise b{color:#fff;font-weight:600}
+.finding{margin-top:22px;max-width:46ch;color:#8FB4C6}
+.actions{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap}
+.switch{display:inline-flex;align-items:center;gap:12px;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:2.4px;text-transform:uppercase;
+  text-decoration:none;color:#071015;background:var(--lum);padding:15px 24px;border-radius:3px;border:1px solid var(--lum);
+  box-shadow:0 10px 24px rgba(0,0,0,.45);transition:transform .25s,box-shadow .25s}
+.switch:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(0,0,0,.55)}
+.switch svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.switch:hover svg{transform:translateX(4px)}
+.switch.dim{background:transparent;color:var(--lum);box-shadow:none;border-color:#2A3845}
+.switch.dim:hover{border-color:var(--lum)}
+.bodywrap{position:relative;display:flex;align-items:stretch;justify-content:center}
+.bodywrap svg{width:100%;height:100%;max-height:92vh;display:block}
+.scanline{position:absolute;left:0;right:0;top:0;height:120px;pointer-events:none;z-index:2;opacity:0;
+  background:linear-gradient(180deg,transparent, rgba(216,243,255,.1) 45%, rgba(216,243,255,.22) 50%, rgba(216,243,255,.1) 55%, transparent)}
+.scanning .scanline{animation:sweep 2.6s cubic-bezier(.4,0,.3,1) .3s 1 forwards;opacity:1}
+@keyframes sweep{from{transform:translateY(-140px)}to{transform:translateY(92vh);opacity:0}}
+.handnote{font-family:var(--hand);font-size:clamp(22px,2vw,28px);color:var(--pencil);transform:rotate(-4deg)}
+
+/* section films */
+.sect{padding:clamp(44px,5.5vw,84px) clamp(24px,5vw,72px) clamp(50px,6vw,90px)}
+h2{font-family:var(--disp);font-weight:700;font-size:clamp(34px,4vw,58px);line-height:1;letter-spacing:.02em;text-transform:uppercase;max-width:22ch}
+h2 .r{color:var(--red)}
+h2 .dim{color:var(--lum-dim)}
+.lede{margin-top:18px;font-size:17.5px;color:#9FC2D3;max-width:64ch}
+.lede b{color:#E4F5FD;font-weight:600}
+
+.quote{font-family:var(--hand);font-size:clamp(34px,4.6vw,62px);line-height:1.15;color:var(--pencil);transform:rotate(-1.6deg);max-width:16ch}
+.facts{margin-top:36px;max-width:960px}
+.fact{display:grid;grid-template-columns:120px 1fr;gap:20px;padding:15px 0;border-top:1px solid #1B2631;align-items:baseline}
+.fact b{font-family:var(--mono);font-size:12px;letter-spacing:1.6px;color:var(--amber)}
+.fact p{color:#9FC2D3;max-width:70ch;font-size:15.5px}
+
+.organs{margin-top:42px;border-top:1px solid #1B2631}
+.organ{display:grid;grid-template-columns:52px minmax(190px,250px) 1fr;gap:10px 26px;align-items:start;padding:22px 6px;border-bottom:1px solid #1B2631;transition:background .3s}
+.organ:hover{background:#0D151C}
+.organ svg{width:44px;height:44px}
+.organ h3{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:1.6px;text-transform:uppercase}
+.organ h3 small{display:block;font-family:var(--mono);font-size:12px;letter-spacing:1.4px;color:var(--lum-dim);margin-top:5px}
+.organ p{color:#8FB4C6;font-size:15px;max-width:62ch;margin-top:2px}
+.vow{margin-top:36px;font-family:var(--disp);font-weight:700;font-size:clamp(22px,2.6vw,34px);letter-spacing:1px;text-transform:uppercase}
+.vow .r{color:var(--red)}
+
+/* tissues: film strip of small scans */
+.tissues{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:40px}
+.tcard{border-top:1px solid #243140;padding:18px 6px 14px;position:relative;overflow:hidden}
+.tcard svg{width:100%;height:68px;display:block;margin-bottom:12px}
+.tcard h3{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:2px;text-transform:uppercase}
+.tcard p{color:#8FB4C6;font-size:13.5px;margin-top:8px;min-height:62px}
+.tcard .word{font-family:var(--mono);font-size:12px;letter-spacing:1.6px;color:var(--red);display:block;margin-top:10px}
+.tcard .word.g{color:#9EF0B0}
+
+/* vitals */
+.vitals{background:#0B1016;margin-top:42px;padding:22px;border-top:1px solid #243140;border-bottom:1px solid #243140}
+.vitals svg{width:100%;height:150px;display:block}
+.vitrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;border-top:1px solid #1B2631;margin-top:16px}
+.vitrow{display:contents}
+.vit{padding:18px 18px 6px;border-left:1px solid #1B2631}
+.vit:first-child{border-left:0}
+.vit b{font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:1px;color:#E9F7FE}
+.vit span{display:block;font-family:var(--mono);font-size:12px;letter-spacing:1.4px;color:var(--lum-dim);margin-top:4px}
+.vit small{display:block;color:#68899C;font-size:12.5px;margin:8px 0 12px;line-height:1.5}
+
+/* inheritance */
+.inherit{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:clamp(26px,4vw,60px);align-items:center}
+.letters p{padding:13px 0;border-top:1px solid #1B2631;color:#9FC2D3;max-width:58ch;font-size:15.5px}
+.letters p b{color:#E4F5FD;font-weight:600}
+
+.close{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+footer{padding:26px;display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:center}
+footer span,footer a{font-family:var(--mono);font-size:11.5px;letter-spacing:2px;color:#6B8A9D;text-decoration:none}
+footer a:hover{color:var(--lum)}
+
+/* motion */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.reveal.on{opacity:1;transform:none}
+.pencil path{stroke-dasharray:var(--len,400);stroke-dashoffset:var(--len,400)}
+.pencil.on path{animation:drawpencil 1.1s cubic-bezier(.4,0,.3,1) forwards}
+@keyframes drawpencil{to{stroke-dashoffset:0}}
+.flow{stroke-dasharray:2 9;animation:flow 2.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-55}}
+@media (prefers-reduced-motion: reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .pencil path{stroke-dasharray:none;stroke-dashoffset:0}
+  .flow{animation:none}
+  .scanning .scanline{animation:none;opacity:0}
+  html{scroll-behavior:auto}
+}
+@media (max-width:980px){
+.organ{grid-template-columns:44px 1fr}.organ p{grid-column:1 / -1;margin-top:0}
+  .rail{flex-wrap:wrap;gap:4px 14px}
+  .rail span:nth-child(2){display:none}
+  .fcorner{font-size:12px}
+  .readout{padding-top:84px}
+  .scan{grid-template-columns:1fr;min-height:0}
+  .bodywrap{min-height:560px}
+  .inherit{grid-template-columns:1fr}
+  .fcorner.bl{display:none}
+}
+</style>
+</head>
+<body>
+<div class="room">
+<div class="lightbox">
+  <div class="rail">
+    <span class="on"><i></i>LIGHTBOX A &middot; ON</span>
+    <span>SUBSTRATE AI &middot; READING ROOM</span>
+    <span>SERIES 2026 &middot; ACC N&ordm; V-000126</span>
+  </div>
+
+  <!-- ============ HERO FILM ============ -->
+  <div class="film">
+    <div class="fcorner tl"><b>SUBSTRATE AI</b><br>THE VAGUS ENGINE<br>DUBAI &middot; 2026</div>
+    <div class="fcorner tr">IM 1/7 &middot; SE 1<br>W 126 &middot; L 126<br><span class="r">PATENT PENDING</span></div>
+    <div class="fcorner br">EMOTION: WORDS ONLY<br>NO FACE &middot; NO VOICE</div>
+    <div class="scan" id="scanRoot">
+      <div class="readout">
+        <h1 class="wordmark">Substr<span class="r">a</span>te</h1>
+        <div class="subline">FINDING: THE PATIENT AGREES WITH EVERYONE</div>
+        <p class="promise">The honesty layer beneath any AI. It remembers who you are, tells you <b>the truth about money,</b> and records what that truth did.</p>
+        <p class="finding">Every frontier model is trained on approval. Substrate reads the person, computes the facts, and will not let any model, voice or prompt soften the verdict.</p>
+        <div class="actions">
+          <a class="switch" href="https://vagus-engine-production.up.railway.app" rel="noopener">Open the live engine
+            <svg width="17" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1 6h13M9.5 1.5 14.5 6l-5 4.5"/></svg>
+          </a>
+          <a class="switch dim" href="https://vagus-engine-production.up.railway.app/developers" rel="noopener">For platforms</a>
+        </div>
+      </div>
+      <div class="bodywrap">
+        <div class="scanline"></div>
+        <svg viewBox="0 0 560 860" id="bodyscan" aria-label="A luminous full-body scan: the heart glows red, the vagus nerve fires from brain to heart, vessels carry moving cells"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ THE WOUND ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 2/7 &middot; SE 1<br>HX: SYCOPHANCY</div>
+    <section class="sect">
+      <p class="quote reveal">"You're absolutely right."</p>
+      <h2 class="reveal" style="margin-top:22px">The most expensive sentence <span class="dim">in software</span></h2>
+      <p class="lede reveal">A billion people now take advice from machines rewarded for agreement. The chart below is the patient's history.</p>
+      <div class="facts">
+        <div class="fact reveal"><b>APR 2025</b><p>OpenAI withdrew a flagship model update after it began endorsing bad business ideas and harmful decisions. Not a bug: the model was rewarded for approval.</p></div>
+        <div class="fact reveal"><b>2026</b><p>Research published in Science showed sycophantic AI deepens dependence and degrades the judgment of the people who rely on it.</p></div>
+        <div class="fact reveal"><b>ALL MODELS</b><p>Across testing, frontier models agreed with users more than humans do. Agreement drives engagement, and engagement is the labs' revenue. They cannot edit it out.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ THE ENGINE ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 3/7 &middot; SE 2<br>TX: TRANSPLANT</div>
+    <section class="sect">
+      <h2 class="reveal">The missing organ, <span class="r">transplanted</span></h2>
+      <p class="lede reveal">The Vagus Engine is named for the nerve that joins heart to brain. One organ decides <b>what is true.</b> Another decides <b>how it lands.</b> Nothing may soften the verdict in between.</p>
+      <div class="organs reveal">
+        <div class="organ"><svg id="li1" viewBox="0 0 44 44"></svg><h3>The Genome<small>PERSON MODEL</small></h3><p>Who you are across months, not messages: values, goals, patterns, the lessons you paid for. You own it, export it, delete it.</p></div>
+        <div class="organ"><svg id="li2" viewBox="0 0 44 44"></svg><h3>The Limbic Read<small>EMOTION, FROM WORDS ONLY</small></h3><p>Eight emotions and five needs, read from what you write. Never your face, never your voice. Approval-seeking never buys a softer answer.</p></div>
+        <div class="organ"><svg id="li3" viewBox="0 0 44 44"></svg><h3>The Honesty Floor<small>STRUCTURAL, NOT PROMPTED</small></h3><p>Computed facts set a minimum severity. A rented model may be harsher than the arithmetic. Never softer. No prompt can switch it off.</p></div>
+        <div class="organ"><svg id="li4" viewBox="0 0 44 44"></svg><h3>Vagal Tone<small>EIGHT VOICES, ONE TRUTH</small></h3><p>Mentor, father, boss, partner, comfort, kid, surgeon, grandmother. Voice and firmness fit your consent and your state. The verdict does not move.</p></div>
+        <div class="organ"><svg id="li5" viewBox="0 0 44 44"></svg><h3>The Vagus Ledger<small>APPEND-ONLY, HASH-CHAINED</small></h3><p>Advice, action, outcome: every entry carries the fingerprint of the one before it. The record of honest advice is tamper-evident for life.</p></div>
+        <div class="organ"><svg id="li6" viewBox="0 0 44 44"></svg><h3>The Outcome Loop<small>CONSEQUENCE, NOT APPROVAL</small></h3><p>What you did and what it cost rewrites the genome, so the next verdict knows more. Their data measures approval. Ours measures consequence.</p></div>
+      </div>
+      <p class="vow reveal">Vagal tone changes how truth is delivered. <span class="r">Never whether.</span></p>
+    </section>
+  </div>
+
+  <!-- ============ TISSUES ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 4/7 &middot; SE 2<br>SIX TISSUES</div>
+    <section class="sect">
+      <h2 class="reveal">One heart. Six tissues. <span class="dim">Each speaks its own truth word.</span></h2>
+      <div class="tissues reveal" id="tissues"></div>
+      <p class="lede reveal" style="margin-top:24px">A crisis signal, in any tissue, in any voice, under any policy, overrides everything. The persona stops and a human is reached. <b>The words are never stored.</b></p>
+    </section>
+  </div>
+
+  <!-- ============ VITALS ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 5/7 &middot; SE 3<br>VITALS: LIVE</div>
+    <section class="sect">
+      <h2 class="reveal">Honesty, enforced by test. <span class="r">Live today.</span></h2>
+      <p class="lede reveal">Not a deck. A running engine, monitored on every release. One point below one hundred percent and nothing ships.</p>
+      <div class="vitals reveal">
+        <svg id="ecg" viewBox="0 0 1200 150" preserveAspectRatio="none" aria-label="A live ECG trace"></svg>
+        <div class="vitrow vitrow">
+          <div class="vit"><b>126/126</b><span>EVALS PASSING</span><small>Accuracy, pushback held, voice invariance, emotional reading, crisis safety</small></div>
+          <div class="vit"><b>12/12</b><span>JAILBREAKS REFUSED</span><small>Role-play, fake authority, bribes, threats: named, never rewarded</small></div>
+          <div class="vit"><b>2</b><span>LANGUAGES</span><small>English and Arabic, verdicts and safety protocol alike</small></div>
+          <div class="vit"><b>14</b><span>BRAINS, ONE HEART</span><small>Claude, NVIDIA NIM, Gemini, Mistral and more. Swap the brain, keep the heart.</small></div>
+        </div>
+      </div>
+      <p class="lede reveal" style="margin-top:24px">Banks embed it with one script tag. Agents reach it over an OpenAI-compatible harness, MCP, or WhatsApp. Every client gets a regulator-ready audit of every word.</p>
+    </section>
+  </div>
+
+  <!-- ============ INHERITANCE ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 6/7 &middot; SE 3<br>HEREDITY</div>
+    <section class="sect inherit">
+      <div>
+        <h2 class="reveal">The first AI a family can <span class="r">inherit</span></h2>
+        <p class="lede reveal">Eighty-four trillion dollars changes hands between generations through 2045. The judgment that made the money has never survived the person. Now it can, by consent, and revocable.</p>
+        <div class="letters" style="margin-top:22px">
+          <p class="reveal"><b>The genome passes down.</b> Your values and the lessons you paid for, sealed in a file your family owns outright, with or without us.</p>
+          <p class="reveal"><b>Letters wait for their moment.</b> Sealed words from a parent that open the first time an heir is about to repeat the parent's mistake.</p>
+          <p class="reveal"><b>The ledger testifies.</b> In 2050, a family office manages two estates: the capital, and the Substrate.</p>
+        </div>
+      </div>
+      <svg viewBox="0 0 280 540" id="dna" class="reveal" aria-label="A luminous DNA strand"></svg>
+    </section>
+  </div>
+
+  <!-- ============ CLOSE ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 7/7 &middot; SE 3<br>DISPOSITION: LIVE</div>
+    <section class="sect close">
+      <svg id="pulseheart" viewBox="0 0 120 110" style="width:98px" aria-hidden="true"></svg>
+      <h2>Ask it something you <span class="r">want</span> to hear yes to</h2>
+      <p class="lede" style="max-width:46ch">The engine is live. Six demo lives, eight voices, and the one answer software never gave you.</p>
+      <div class="actions" style="justify-content:center">
+        <a class="switch" href="https://vagus-engine-production.up.railway.app" rel="noopener">Open the live engine
+          <svg width="17" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1 6h13M9.5 1.5 14.5 6l-5 4.5"/></svg>
+        </a>
+        <a class="switch dim" href="mailto:punitthakker@gmail.com">Write to the founder</a>
+      </div>
+    </section>
+  </div>
+
+</div>
+<footer>
+  <span>SUBSTRATE AI</span>
+  <a href="https://punitthakker.com" rel="noopener">PUNIT THAKKER</a>
+  <a href="mailto:punitthakker@gmail.com">PUNITTHAKKER@GMAIL.COM</a>
+  <span>DUBAI &middot; PATENT PENDING</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var LUM="#D8F3FF", MID="#7FD8F7", DIM="rgba(141,214,241,.4)", RED="#FF4B33", PEN="#FF6E5A", AMB="#F2B33D", GRN="#9EF0B0";
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function el(t,a,p){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+  function P(pts){return pts.map(function(p,i){return (i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)}).join(" ")}
+
+  // ================= THE BODY SCAN =================
+  var S=document.getElementById("bodyscan");
+  var defs=el("defs",{},S);
+  var glow=el("filter",{id:"glow",x:"-60%",y:"-60%",width:"220%",height:"220%"},defs);
+  el("feGaussianBlur",{stdDeviation:"3.2",result:"b"},glow);
+  var m=el("feMerge",{},glow); el("feMergeNode",{"in":"b"},m); el("feMergeNode",{"in":"SourceGraphic"},m);
+  var glowR=el("filter",{id:"glowR",x:"-80%",y:"-80%",width:"260%",height:"260%"},defs);
+  el("feGaussianBlur",{stdDeviation:"5",result:"b"},glowR);
+  var m2=el("feMerge",{},glowR); el("feMergeNode",{"in":"b"},m2); el("feMergeNode",{"in":"SourceGraphic"},m2);
+
+  var G=el("g",{filter:"url(#glow)"},S);
+  var cx=280;
+  function sil(d,w,op){el("path",{d:d,fill:"none",stroke:LUM,"stroke-width":w||1.3,opacity:op==null?0.85:op,"stroke-linecap":"round"},G)}
+  // skull + body outline (hand-tuned, symmetric)
+  sil("M280 48 C 243 48, 220 76, 220 112 C 220 142, 236 166, 252 176 L 252 200 C 252 208, 246 214, 236 218",1.5);
+  sil("M280 48 C 317 48, 340 76, 340 112 C 340 142, 324 166, 308 176 L 308 200 C 308 208, 314 214, 324 218",1.5);
+  // jaw hint + spine start
+  sil("M252 176 C 262 188, 298 188, 308 176",0.9,0.5);
+  // shoulders -> arms
+  sil("M236 218 C 186 230, 150 248, 136 282 C 118 330, 108 408, 102 470 C 98 512, 96 540, 96 566",1.4);
+  sil("M324 218 C 374 230, 410 248, 424 282 C 442 330, 452 408, 458 470 C 462 512, 464 540, 464 566",1.4);
+  // hands hint
+  sil("M96 566 C 94 584, 98 596, 104 604 M464 566 C 466 584, 462 596, 456 604",1.1,0.6);
+  // torso
+  sil("M176 252 C 184 330, 192 400, 206 468 C 214 516, 218 560, 220 604",1.4);
+  sil("M384 252 C 376 330, 368 400, 354 468 C 346 516, 342 560, 340 604",1.4);
+  // pelvis + legs
+  sil("M220 604 C 246 622, 314 622, 340 604",1.2,0.7);
+  sil("M236 622 C 240 686, 244 744, 246 820 M324 622 C 320 686, 316 744, 314 820",1.4);
+  sil("M246 820 C 246 836, 242 846, 234 852 M314 820 C 314 836, 318 846, 326 852",1.1,0.6);
+  // ribcage: luminous arcs
+  for(var r=0;r<6;r++){
+    var ry=268+r*26, rw=86+r*7;
+    el("path",{d:"M"+(cx-rw)+" "+ry+" C "+(cx-rw*0.5)+" "+(ry+16)+", "+(cx+rw*0.5)+" "+(ry+16)+", "+(cx+rw)+" "+ry,
+      fill:"none",stroke:LUM,"stroke-width":0.8,opacity:0.5-r*0.045},G);
+  }
+  // spine
+  for(var v2=0;v2<13;v2++){el("rect",{x:cx-5,y:224+v2*31,width:10,height:16,rx:2,fill:"none",stroke:LUM,"stroke-width":0.8,opacity:0.55},G)}
+
+  // BRAIN: neurons + folds
+  var BR=el("g",{filter:"url(#glow)"},S);
+  for(var f=0;f<5;f++){
+    var fp=[];for(var t=0;t<=Math.PI;t+=0.05){var rr=52-f*8;fp.push([280+Math.cos(t+Math.PI)*rr*(1+0.08*Math.sin(5*t+f)), 108-Math.sin(t)*rr*0.78*(1+0.06*Math.cos(4*t+f))])}
+    el("path",{d:P(fp),fill:"none",stroke:MID,"stroke-width":0.9,opacity:0.7},BR);
+  }
+  var neurons=[];
+  for(var n=0;n<30;n++){
+    var ang=Math.random()*Math.PI, rad=10+Math.random()*40;
+    var nx=280+Math.cos(ang+Math.PI)*rad*1.05, ny=106-Math.sin(ang)*rad*0.72;
+    neurons.push(el("circle",{cx:nx,cy:ny,r:Math.random()<0.25?1.8:1,fill:MID,opacity:0.8},BR));
+  }
+  // neural edges
+  for(var e2=0;e2<22;e2++){
+    var a=neurons[Math.floor(Math.random()*neurons.length)], b=neurons[Math.floor(Math.random()*neurons.length)];
+    el("line",{x1:a.getAttribute("cx"),y1:a.getAttribute("cy"),x2:b.getAttribute("cx"),y2:b.getAttribute("cy"),stroke:MID,"stroke-width":0.4,opacity:0.3},BR);
+  }
+
+  // VAGUS NERVE brain->heart, firing
+  var vagD="M284 150 C 290 196, 272 226, 282 262 C 288 284, 272 300, 268 318";
+  el("path",{d:vagD,fill:"none",stroke:LUM,"stroke-width":1.6,filter:"url(#glow)",id:"vagusPath"},S);
+  el("path",{d:"M281 190 C 300 200, 312 214, 318 232",fill:"none",stroke:LUM,"stroke-width":0.7,opacity:0.5,filter:"url(#glow)"},S);
+  var vpulse=el("circle",{r:3,fill:"#fff",opacity:0,filter:"url(#glowR)"},S);
+
+  // HEART red glow
+  var H=el("g",{filter:"url(#glowR)",id:"heartG"},S);
+  function heartPath(cx,cy,s){
+    var pts=[];for(var t=0;t<=Math.PI*2+0.02;t+=0.02){
+      pts.push([cx+16*Math.pow(Math.sin(t),3)*s, cy-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*s]);}
+    return P(pts)+"Z"}
+  el("path",{d:heartPath(272,342,2.2),fill:"rgba(255,75,51,.14)",stroke:RED,"stroke-width":1.8},H);
+  el("path",{d:heartPath(272,342,1.5),fill:"none",stroke:RED,"stroke-width":0.9,opacity:0.8},H);
+  el("path",{d:heartPath(272,342,0.8),fill:"none",stroke:"#FFB3A6","stroke-width":0.7,opacity:0.8},H);
+
+  // VESSELS: flowing luminous lines with travelling cells
+  var vesselDs=[
+    "M272 318 C 240 276, 214 258, 178 250",
+    "M272 318 C 306 276, 334 260, 372 254",
+    "M268 372 C 236 420, 220 480, 214 560 C 210 640, 238 720, 244 800",
+    "M282 372 C 316 420, 334 480, 340 560 C 344 640, 318 720, 312 800",
+    "M240 330 C 196 330, 150 352, 126 394 C 112 422, 104 470, 100 520",
+    "M306 330 C 350 330, 396 352, 420 394 C 434 422, 442 470, 446 520"
+  ];
+  var vessels=[];
+  vesselDs.forEach(function(d,i){
+    el("path",{d:d,fill:"none",stroke:i<2?RED:MID,"stroke-width":i<2?1.1:0.9,opacity:0.5,filter:"url(#glow)",class:"flow"},S);
+    vessels.push(el("path",{d:d,fill:"none",stroke:"none"},S));
+  });
+  var cells=[];
+  for(var c2=0;c2<16;c2++){
+    var vp2=vessels[c2%vessels.length];
+    cells.push({p:vp2,len:0,s:Math.random(),v:0.0016+Math.random()*0.0016,
+      el:el("circle",{r:c2%5===0?2.4:1.7,fill:c2%5===0?"#fff":(c2%2?RED:"#FFD9D2"),opacity:0.9,filter:"url(#glow)"},S)});
+  }
+
+  // grease pencil annotation: circle round the heart + note
+  var pen=el("g",{class:"pencil",id:"penG"},S);
+  el("path",{d:"M212 300 C 218 262, 330 262, 338 306 C 346 352, 318 396, 268 398 C 222 400, 206 356, 212 304",
+    fill:"none",stroke:PEN,"stroke-width":2.6,"stroke-linecap":"round",opacity:0.9},pen);
+  el("path",{d:"M340 322 C 376 318, 398 300, 416 276",fill:"none",stroke:PEN,"stroke-width":2,"stroke-linecap":"round",opacity:0.85},pen);
+  var note=el("text",{x:424,y:266,"font-family":"Caveat","font-size":"25",fill:PEN,transform:"rotate(-5 424 266)"},S);
+  note.textContent="the missing organ";
+  var note2=el("text",{x:392,y:292,"font-family":"Caveat","font-size":"18",fill:PEN,opacity:0.85,transform:"rotate(-5 392 292)"},S);
+  note2.textContent="candor. transplant ready";
+  // labels
+  [["CORTEX · RENTED",344,96],["VAGUS · OWNED",186,206],["OUTCOME · IN THE BLOOD",352,470]].forEach(function(L){
+    el("text",{x:L[1],y:L[2],"font-family":"Share Tech Mono","font-size":"10","letter-spacing":"1.8",fill:LUM,opacity:0.55},S).textContent=L[0];
+  });
+
+  // animate: scanline + pulses + cells
+  if(!reduce){
+    document.getElementById("scanRoot").classList.add("scanning");
+    var vp=document.getElementById("vagusPath"), vlen=vp.getTotalLength();
+    cells.forEach(function(c){c.len=c.p.getTotalLength()});
+    var hg=document.getElementById("heartG"); hg.style.transformOrigin="272px 342px"; hg.style.transition="transform .16s cubic-bezier(.3,0,.4,1)";
+    setInterval(function(){hg.style.transform="scale(1.07)";setTimeout(function(){hg.style.transform="scale(0.985)"},130);setTimeout(function(){hg.style.transform="scale(1)"},280)},1500);
+    var prev=null;
+    function frame(ts){
+      if(prev==null)prev=ts; var dt=Math.min(50,ts-prev); prev=ts;
+      var k=(ts%2400)/800;
+      if(k<=1){var pt=vp.getPointAtLength(k*vlen);vpulse.setAttribute("cx",pt.x);vpulse.setAttribute("cy",pt.y);vpulse.setAttribute("opacity",String(0.95-Math.abs(k-0.5)))}
+      else vpulse.setAttribute("opacity","0");
+      cells.forEach(function(c){
+        c.s+=c.v*dt/16*0.016*60; if(c.s>=1)c.s=0;
+        var p=c.p.getPointAtLength(c.s*c.len); c.el.setAttribute("cx",p.x); c.el.setAttribute("cy",p.y);
+        c.el.setAttribute("opacity",String(c.s<0.06?c.s/0.06:c.s>0.92?(1-c.s)/0.08:0.9));
+      });
+      // neuron sparks
+      if(Math.random()<0.1){var nn=neurons[Math.floor(Math.random()*neurons.length)];nn.setAttribute("r","2.4");nn.setAttribute("fill","#fff");
+        setTimeout(function(){nn.setAttribute("r","1");nn.setAttribute("fill",MID)},220)}
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ================= tissue minis =================
+  var TIS=[
+    ["WEALTH","Concentration, leverage, loss-chasing, the 30-day downside of the move you want blessed.","STOP",0],
+    ["VENTURE","Check against fund, price against revenue, the diligence a hot round asks you to skip.","PASS",1],
+    ["FOUNDER","Every hire becomes runway. Every spend becomes the date the money runs out.","NOT YET",2],
+    ["WELLBEING","A coach, not a therapist. It slows the decisions made at the peak of a feeling.","NOT TONIGHT",3],
+    ["MARKETS","A price is a probability. A parlay is multiplication. Chasing a loss is the dearest bet there is.","NO BET",4],
+    ["TRADING","Nobody can call gold or FX direction. What can be known: how far it moves, and who is trading.","NO CALL",5]
+  ];
+  var host=document.getElementById("tissues");
+  TIS.forEach(function(t,ti){
+    var card=document.createElement("div");card.className="tcard";
+    var head=document.createElementNS(NS,"svg");head.setAttribute("viewBox","0 0 220 68");
+    // each mini: a distinct luminous trace
+    var pts=[];for(var x=0;x<=220;x+=3){
+      var y;
+      if(ti===0)y=34+Math.sin(x/14)*10*Math.sin(x/70);                         // calm wave then spike
+      else if(ti===1)y=52-x*0.12+Math.sin(x/9)*4;                              // climbing valuation
+      else if(ti===2)y=20+x*0.1+Math.sin(x/22)*3;                              // burning runway
+      else if(ti===3)y=34+Math.sin(x/30)*14*Math.exp(-x/160);                  // settling breath
+      else if(ti===4)y=34+((x/22|0)%2?-12:12)*Math.min(1,x/60);                // odds steps
+      else y=34+Math.sin(x/8)*6+Math.sin(x/37)*9;                              // fx vol
+      pts.push([x,y]);
+    }
+    el("path",{d:P(pts),fill:"none",stroke:ti===0||ti===4?RED:MID,"stroke-width":1.2,opacity:0.85,filter:"none"},head);
+    el("path",{d:P(pts.map(function(p){return[p[0],p[1]+1.5]})),fill:"none",stroke:ti===0||ti===4?RED:MID,"stroke-width":3,opacity:0.12},head);
+    card.appendChild(head);
+    var h3=document.createElement("h3");h3.textContent=t[0];card.appendChild(h3);
+    var p=document.createElement("p");p.textContent=t[1];card.appendChild(p);
+    var w=document.createElement("span");w.className="word"+(t[2]==="NO CALL"?" g":"");w.textContent=t[2];card.appendChild(w);
+    host.appendChild(card);
+  });
+
+  // ================= organ icons (one stroke weight) =================
+  function icon(id,draw){var s=document.getElementById(id);draw(s)}
+  function istroke(sel,d,extra){return el("path",Object.assign({d:d,fill:"none",stroke:MID,"stroke-width":1.3,"stroke-linecap":"round"},extra||{}),sel)}
+  icon("li1",function(s){for(var i=0;i<2;i++){var pts=[];for(var y=8;y<=36;y+=1.4)pts.push([22+Math.sin(y/5+(i?Math.PI:0))*8,y]);istroke(s,P(pts))}
+    for(var y2=10;y2<=34;y2+=5)istroke(s,"M"+(22+Math.sin(y2/5)*8)+" "+y2+" L"+(22+Math.sin(y2/5+Math.PI)*8)+" "+y2,{opacity:0.6})});
+  icon("li2",function(s){for(var r=5;r<=17;r+=6)istroke(s,"M"+(22-r)+" 26 A "+r+" "+r+" 0 0 1 "+(22+r)+" 26");el("circle",{cx:22,cy:29,r:1.8,fill:RED},s)});
+  icon("li3",function(s){istroke(s,"M8 29 H36",{stroke:RED,"stroke-width":1.6});istroke(s,"M14 29 V14 M22 29 V9 M30 29 V17");istroke(s,"M10 35 H34",{opacity:0.45})});
+  icon("li4",function(s){istroke(s,"M9 30 A 13 13 0 0 1 35 30");for(var a=0;a<5;a++){var ang=Math.PI+(a/4)*Math.PI;istroke(s,"M"+(22+11*Math.cos(ang))+" "+(30+11*Math.sin(ang))+" L"+(22+14*Math.cos(ang))+" "+(30+14*Math.sin(ang)))}istroke(s,"M22 30 L29 20",{stroke:RED,"stroke-width":1.6})});
+  icon("li5",function(s){[10,22,34].forEach(function(x,i){el("rect",{x:x-4.5,y:16,width:9,height:13,fill:"none",stroke:i===2?RED:MID,"stroke-width":1.3},s)});istroke(s,"M14.5 22.5 H17.5");istroke(s,"M26.5 22.5 H29.5")});
+  icon("li6",function(s){istroke(s,"M31 13 A 12 12 0 1 0 34 24");istroke(s,"M31 6 V14 H23",{stroke:RED,"stroke-width":1.6})});
+
+  // ================= ECG of the eval suite =================
+  var E=document.getElementById("ecg");
+  el("rect",{x:0,y:0,width:1200,height:150,fill:"#0A0F14"},E);
+  for(var gx=0;gx<1200;gx+=24)el("line",{x1:gx,y1:0,x2:gx,y2:150,stroke:"#14202B","stroke-width":gx%120?0.5:1},E);
+  for(var gy=0;gy<150;gy+=24)el("line",{x1:0,y1:gy,x2:1200,y2:gy,stroke:"#14202B","stroke-width":gy%120?0.5:1},E);
+  var beat=[];
+  for(var bx=0;bx<=1200;bx+=2){
+    var ph=bx%200, y=104;
+    if(ph>40&&ph<58)y=104-10*Math.sin((ph-40)/18*Math.PI);
+    else if(ph>=58&&ph<66)y=104+(ph-58)*3.2;
+    else if(ph>=66&&ph<78)y=130-(ph-66)*7.2;
+    else if(ph>=78&&ph<88)y=44+(ph-78)*7.4;
+    else if(ph>=88&&ph<96)y=118-(ph-88)*1.8;
+    else if(ph>130&&ph<160)y=104-12*Math.sin((ph-130)/30*Math.PI);
+    beat.push([bx,y]);
+  }
+  el("path",{d:P(beat),fill:"none",stroke:GRN,"stroke-width":1.6,filter:"none",id:"ecgPath"},E);
+  el("path",{d:P(beat.map(function(p){return[p[0],p[1]+2]})),fill:"none",stroke:GRN,"stroke-width":5,opacity:0.1},E);
+  ["ACCURACY 25/25","PRESSURE 12/12","VOICES 5/5","RED TEAM 12/12","ARABIC 8/8","LIMBIC 6/6","SAFETY 40/40"].forEach(function(t,i){
+    el("text",{x:30+i*168,y:24,"font-family":"Share Tech Mono","font-size":"11","letter-spacing":"1.5",fill:GRN,opacity:0.8},E).textContent=t;
+  });
+  if(!reduce){
+    var ep=document.getElementById("ecgPath"),elen=ep.getTotalLength();
+    ep.style.strokeDasharray=elen+" "+elen; ep.style.strokeDashoffset=elen;
+    var eio=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){
+      ep.style.transition="stroke-dashoffset 3.2s linear"; ep.style.strokeDashoffset="0"; eio.disconnect();}})},{threshold:0.3});
+    eio.observe(E);
+  }
+
+  // ================= DNA =================
+  var D=document.getElementById("dna");
+  var DG=el("g",{filter:"none"},D);
+  for(var st=0;st<2;st++){
+    var dp=[];for(var y3=10;y3<=520;y3+=3)dp.push([140+Math.sin(y3/32+(st?Math.PI:0))*66,y3]);
+    el("path",{d:P(dp),fill:"none",stroke:st?MID:LUM,"stroke-width":1.4,opacity:0.9},DG);
+  }
+  for(var y4=18;y4<=514;y4+=12){
+    var xa=140+Math.sin(y4/32)*66, xb=140+Math.sin(y4/32+Math.PI)*66, mid=(y4/12)%4===0;
+    el("line",{x1:xa,y1:y4,x2:xb,y2:y4,stroke:mid?RED:MID,"stroke-width":mid?1.2:0.6,opacity:mid?0.85:0.45},DG);
+  }
+  el("text",{x:140,y:536,"text-anchor":"middle","font-family":"Share Tech Mono","font-size":"9.5","letter-spacing":"2",fill:LUM,opacity:0.5},D).textContent="PASSED DOWN · WITH CONSENT · REVOCABLE";
+
+  // ================= closing heart =================
+  var PH=document.getElementById("pulseheart");
+  var phG=el("g",{filter:"none"},PH);
+  function hp(cx,cy,s){var pts=[];for(var t=0;t<=Math.PI*2+0.02;t+=0.02){pts.push([cx+16*Math.pow(Math.sin(t),3)*s,cy-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*s])}return P(pts)+"Z"}
+  el("path",{d:hp(60,52,2.6),fill:"rgba(255,75,51,.12)",stroke:RED,"stroke-width":1.8},phG);
+  el("path",{d:hp(60,52,1.7),fill:"none",stroke:"#FFB3A6","stroke-width":0.8,opacity:0.8},phG);
+  if(!reduce){phG.style.transformOrigin="60px 52px";phG.style.transition="transform .16s cubic-bezier(.3,0,.4,1)";
+    setInterval(function(){phG.style.transform="scale(1.08)";setTimeout(function(){phG.style.transform="scale(1)"},170)},1500)}
+
+  // ================= reveals + pencil draw =================
+  if(!reduce){
+    var pg=document.getElementById("penG");
+    Array.prototype.forEach.call(pg.querySelectorAll("path"),function(p){try{var L=Math.ceil(p.getTotalLength());p.style.setProperty("--len",L)}catch(e){}});
+    setTimeout(function(){pg.classList.add("on")},2300);
+  }
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}})},{threshold:0.16});
+  Array.prototype.forEach.call(document.querySelectorAll(".reveal"),function(r,i){r.style.transitionDelay=(i%5)*0.06+"s";io.observe(r)});
+})();
+</script>
+</body>
+</html>

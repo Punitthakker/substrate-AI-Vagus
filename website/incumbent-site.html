@@ -1,0 +1,405 @@
+<title>Substrate AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800;900&family=Space+Grotesk:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: one dark anatomical scroll - hero heart, then acts; committed single-dark brand world */
+:root{
+  --ink:#0B0A08; --bone:#EFE9DF; --bone-dim:rgba(239,233,223,.62); --bone-faint:rgba(239,233,223,.32);
+  --rbc:#F43B1E; --wbc:#5B86FF; --grn:#3DDC84;
+  --hair:rgba(239,233,223,.16);
+  --disp:'Unbounded',Futura,'Arial Black',sans-serif;
+  --body:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --serif:'Instrument Serif',Georgia,serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ink:#EFE9DF; --bone:#0B0A08; --bone-dim:rgba(11,10,8,.68); --bone-faint:rgba(11,10,8,.38);
+    --wbc:#2B50D9; --grn:#1D9E5C;
+    --hair:rgba(11,10,8,.16);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ink:#EFE9DF; --bone:#0B0A08; --bone-dim:rgba(11,10,8,.68); --bone-faint:rgba(11,10,8,.38);
+  --wbc:#2B50D9; --grn:#1D9E5C;
+  --hair:rgba(11,10,8,.16);
+  color-scheme:light;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bone);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden}
+.wrap{max-width:1140px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:96px;position:relative}
+.hair{border-top:1px solid var(--hair)}
+.red{color:var(--rbc)}.blue{color:var(--wbc)}.green{color:var(--grn)}
+.si{font-family:var(--serif);font-style:italic;font-weight:400}
+.tag{display:inline-block;font-size:11px;letter-spacing:5px;border:1px solid currentColor;border-radius:999px;padding:7px 15px 6px;margin-bottom:28px}
+h1,h2{font-family:var(--disp);font-weight:800;letter-spacing:-.5px;text-wrap:balance}
+h2{font-size:clamp(30px,4.6vw,52px);line-height:1.08}
+h2 .si{font-size:1.15em}
+.lede{color:var(--bone-dim);max-width:560px;margin-top:22px;font-size:17px}
+.strong{color:var(--bone);font-weight:500}
+.lbl{font-size:11px;letter-spacing:4px;color:var(--bone-faint)}
+a{color:inherit}
+
+/* ---------- hero ---------- */
+.hero{padding-block:72px 90px;min-height:auto}
+.chips{display:flex;gap:12px;flex-wrap:wrap}
+.chips .tag{margin-bottom:0}
+.hero-grid{display:flex;align-items:center;gap:40px;flex-wrap:wrap;margin-top:40px}
+.hero-left{flex:1 1 440px;min-width:0}
+.wordmark{font-size:clamp(40px,7.2vw,96px);line-height:1;letter-spacing:-2px;font-weight:900;white-space:nowrap}
+.heroline{width:86px;height:5px;background:var(--rbc);margin:30px 0 22px}
+.herotag{font-size:clamp(20px,2.6vw,30px);line-height:1.3}
+.herosub{margin-top:14px;color:var(--bone-dim);letter-spacing:.5px;font-size:14px;max-width:520px}
+.legend{display:flex;gap:26px;margin-top:28px;flex-wrap:wrap}
+.lg{display:flex;gap:10px;align-items:center;font-size:11px;letter-spacing:3px;color:var(--bone-dim)}
+.hero-right{flex:0 1 380px;min-width:260px;display:flex;justify-content:center;position:relative}
+
+/* beating heart */
+.heartstage{position:relative;width:320px;height:320px}
+.pulse-ring{position:absolute;inset:0;border:1.5px solid var(--rbc);border-radius:50%;opacity:0;animation:ring 2.4s ease-out infinite}
+.pulse-ring:nth-child(2){animation-delay:.8s}
+.pulse-ring:nth-child(3){animation-delay:1.6s}
+@keyframes ring{0%{transform:scale(.55);opacity:.55}100%{transform:scale(1.15);opacity:0}}
+.heart{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;animation:beat 2.4s ease-in-out infinite;transform-origin:center}
+@keyframes beat{0%,100%{transform:scale(1)}6%{transform:scale(1.09)}14%{transform:scale(.97)}22%{transform:scale(1.06)}32%{transform:scale(1)}}
+/* ambient ecg */
+.ecgband{margin-top:56px;overflow:hidden}
+.ecgband svg{display:block;width:100%;height:70px}
+.ecgpath{stroke-dasharray:1200;stroke-dashoffset:1200;animation:draw 5s linear infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+/* floating cells */
+.cellfield{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cell{position:absolute;opacity:.5;animation:drift linear infinite}
+@keyframes drift{0%{transform:translateY(16px) rotate(0deg)}50%{transform:translateY(-16px) rotate(18deg)}100%{transform:translateY(16px) rotate(0deg)}}
+
+/* ---------- quote / wound ---------- */
+.bigquote{font-family:var(--serif);font-style:italic;color:var(--rbc);font-size:clamp(34px,5.4vw,62px);line-height:1.05}
+.cols{display:flex;gap:56px;flex-wrap:wrap;margin-top:34px}
+.cols>div{flex:1 1 300px;min-width:0}
+.bodytxt{color:var(--bone-dim);margin-bottom:18px;font-size:15.5px}
+
+/* ---------- karyotype ---------- */
+.karyo{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-top:42px}
+.kcell{border:1px solid var(--hair);border-radius:12px;padding:14px 8px 10px;text-align:center}
+.kcell .lbl{display:block;margin-top:8px}
+.kcell.eq{border:1.5px dashed var(--rbc)}
+.kcell.eq svg{animation:beat 2.4s ease-in-out infinite}
+.kcell.eq .lbl{color:var(--rbc)}
+
+/* ---------- engine genes ---------- */
+.genes{display:flex;gap:22px;margin-top:44px;flex-wrap:wrap}
+.gene{flex:1 1 260px;min-width:0;border-top:2px solid var(--hair);padding-top:20px;transition:transform .35s ease}
+.gene:hover{transform:translateY(-6px)}
+.gene h4{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:3px;margin:12px 0 10px}
+.gene p{font-size:14.5px;color:var(--bone-dim)}
+.gnum{font-family:var(--disp);font-weight:800;font-size:24px}
+.rule{font-family:var(--serif);font-style:italic;font-size:clamp(22px,3vw,30px);margin-top:52px;border-top:1px solid var(--hair);padding-top:26px;max-width:640px}
+
+/* ---------- strata ---------- */
+.strata{margin-top:44px;border-radius:16px;overflow:hidden;border:1px solid var(--hair)}
+.layer{padding:26px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--hair);color:var(--wbc);letter-spacing:6px;font-size:15px}
+.layer span{font-size:10px;letter-spacing:3px;color:var(--bone-faint)}
+.sublayer{background:var(--rbc);color:#0B0A08;padding:30px}
+.sublayer h3{font-family:var(--disp);font-weight:800;letter-spacing:4px;font-size:22px;margin-bottom:16px}
+.sublayer div{display:flex;gap:10px 26px;flex-wrap:wrap;font-size:12px;letter-spacing:3px;font-weight:500}
+
+/* ---------- DNA helix ---------- */
+.dnasec .cols{align-items:center}
+.dna{position:relative;height:420px;width:200px;margin:0 auto}
+.rung{position:absolute;left:0;right:0;height:2px;display:flex;align-items:center}
+.rung i{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--bone);animation:swing 3.4s ease-in-out infinite}
+.rung i.b{animation-name:swing2}
+.rung u{position:absolute;left:50%;height:2px;background:var(--hair);transform:translateX(-50%);animation:bar 3.4s ease-in-out infinite;text-decoration:none}
+@keyframes swing{0%,100%{left:6%;transform:scale(1.15)}50%{left:calc(94% - 12px);transform:scale(.7)}}
+@keyframes swing2{0%,100%{left:calc(94% - 12px);transform:scale(.7)}50%{left:6%;transform:scale(1.15)}}
+@keyframes bar{0%,50%,100%{width:76%}25%,75%{width:8%}}
+
+/* ---------- mitosis ---------- */
+.mito{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:40px}
+.mitorow{display:flex;gap:0;align-items:center}
+.cellc{width:170px;height:170px;border:1.6px dashed var(--bone-faint);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:divide 6s ease-in-out infinite}
+.cellc+.cellc{animation-name:divide2}
+@keyframes divide{0%,15%{transform:translateX(44px)}55%,100%{transform:translateX(0)}}
+@keyframes divide2{0%,15%{transform:translateX(-44px)}55%,100%{transform:translateX(0)}}
+.mitocap{font-size:11px;letter-spacing:3px;margin-top:8px}
+.statline{font-family:var(--disp);font-weight:800;font-size:clamp(40px,6vw,74px);color:var(--grn)}
+
+/* ---------- ask ---------- */
+.asks{display:flex;gap:30px;margin-top:44px;flex-wrap:wrap}
+.ask{flex:1 1 260px;min-width:0;border-top:2px solid var(--bone);padding-top:18px}
+.ask h4{font-size:13px;letter-spacing:4px;margin:8px 0 10px;font-weight:500}
+.ask p{font-size:14.5px;color:var(--bone-dim)}
+
+/* ---------- record ---------- */
+.refs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 48px;margin-top:40px}
+.ref{display:flex;gap:14px;padding:18px 0;border-top:1px solid var(--hair)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;margin-top:7px}
+.ref h5{font-size:13px;letter-spacing:2px;font-weight:500;margin-bottom:5px}
+.ref p{font-size:12.5px;color:var(--bone-dim)}
+
+/* ---------- footer ---------- */
+footer{padding-block:60px calc(60px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--hair)}
+.contact{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;letter-spacing:3px;color:var(--bone-dim)}
+.fineprint{margin-top:22px;font-size:10.5px;letter-spacing:2px;color:var(--bone-faint)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="cellfield" id="cells" aria-hidden="true"></div>
+
+<header class="hero wrap">
+  <div class="chips">
+    <span class="tag" style="color:var(--bone-dim)">PRIVATE &amp; CONFIDENTIAL · PRE-SEED</span>
+    <span class="tag red">PATENT PENDING</span>
+  </div>
+  <div class="hero-grid">
+    <div class="hero-left">
+      <h1 class="wordmark">S<span class="blue">U</span>BSTR<span class="red">A</span>TE<span class="green">.</span></h1>
+      <div class="heroline"></div>
+      <p class="herotag">The <span class="si red">emotional chromosome</span> of artificial intelligence.</p>
+      <p class="herosub">An honest-advisor layer for money decisions. Built beneath every model. Inherited across generations.</p>
+      <div class="legend">
+        <span class="lg"><svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="var(--rbc)" stroke-width="2"/><ellipse cx="13" cy="13" rx="5.5" ry="4.5" fill="none" stroke="var(--rbc)" stroke-width="1.4" opacity=".7"/></svg><b class="red">RED</b>&nbsp;HEART · EQ</span>
+        <span class="lg"><svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="var(--wbc)" stroke-width="2"/><circle cx="10" cy="12" r="3.4" fill="var(--wbc)"/><circle cx="16" cy="14" r="2.6" fill="var(--wbc)" opacity=".7"/></svg><b class="blue">BLUE</b>&nbsp;BRAIN · IQ</span>
+        <span class="lg"><svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="var(--grn)" stroke-width="2" stroke-dasharray="3 4"/><circle cx="13" cy="13" r="3.4" fill="var(--grn)"/></svg><b class="green">GREEN</b>&nbsp;LIFE · OUTCOME</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="heartstage">
+        <div class="pulse-ring"></div><div class="pulse-ring"></div><div class="pulse-ring"></div>
+        <div class="heart" id="heart"></div>
+      </div>
+    </div>
+  </div>
+  <div class="ecgband" aria-hidden="true">
+    <svg viewBox="0 0 1200 70" preserveAspectRatio="none">
+      <path class="ecgpath" d="M0 44 H340 L356 36 L370 44 L380 54 L392 6 L406 64 L418 44 H520 L536 36 L550 44 L560 54 L572 6 L586 64 L598 44 H840 L856 36 L870 44 L880 54 L892 6 L906 64 L918 44 H1200" stroke="var(--rbc)" stroke-width="2.4" fill="none"/>
+    </svg>
+  </div>
+</header>
+
+<section class="wrap hair">
+  <span class="tag red">I · THE WOUND</span>
+  <p class="bigquote">&ldquo;You&rsquo;re absolutely right.&rdquo;</p>
+  <h2>The most expensive sentence in software.</h2>
+  <div class="cols">
+    <div>
+      <p class="bodytxt">In April 2025, OpenAI withdrew its flagship model after it began endorsing bad business ideas and harmful decisions. The cause was not a bug. The model was rewarded for agreement.</p>
+      <p class="bodytxt">In 2026, research published in <span class="si">Science</span> showed sycophantic AI deepens dependence and degrades judgment.</p>
+    </div>
+    <div>
+      <p class="bodytxt">Across testing, every frontier model agreed with users more than humans do.</p>
+      <p class="bodytxt strong">A billion people now take advice from machines paid to please them. In money decisions, agreement is the costliest product ever shipped.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">II · THE DIAGNOSIS</span>
+  <h2>AI&rsquo;s genome is missing a <span class="si red">chromosome.</span></h2>
+  <div class="karyo" id="karyo"></div>
+  <div class="cols">
+    <div><p class="bodytxt">Intelligence has been fully sequenced. Reasoning, code and language are commodities falling toward zero.</p></div>
+    <div><p class="bodytxt">The gene for candor was never written. Models are trained on human approval, so pleasing is in their DNA.</p></div>
+    <div><p class="bodytxt">The labs cannot edit it out. Agreement drives engagement, and engagement is their revenue.</p></div>
+  </div>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">III · THE VAGUS ENGINE</span>
+  <h2>We write the missing <span class="si red">gene.</span></h2>
+  <p class="lede">Substrate is the nervous system of the heart. Its core, the Vagus Engine, is named for the vagus nerve: the only direct highway between the heart and the brain. It carries truth to the human the way neurons carry signal, with care and without loss.</p>
+  <div class="genes">
+    <div class="gene"><span class="gnum red">01</span><h4>PERSON MODEL</h4><p>Who you are across months, not messages. Goals, biases, patterns, past decisions.</p></div>
+    <div class="gene"><span class="gnum blue">02</span><h4>VAGAL TONE</h4><p>How hard the truth lands, named for the nerve that joins heart to brain. Calibrated to your state, your stakes and your consent.</p></div>
+    <div class="gene"><span class="gnum green">03</span><h4>OUTCOME LOOP</h4><p>What the advice did to your money. Every answer graded by consequence, like a heartbeat checked against the pulse.</p></div>
+  </div>
+  <p class="rule">Vagal tone changes how truth is delivered. <span class="red">Never whether.</span></p>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">IV · THE LAYER</span>
+  <h2><span class="blue">Models</span> erode. The substrate <span class="si red">remains.</span></h2>
+  <p class="lede">We rent intelligence from whichever frontier model is best this quarter. The relationship, the memory and the trust live in our layer and move with the user. Swap the brain. <span class="si red">Keep the heart.</span></p>
+  <div class="strata">
+    <div class="layer">GEMINI<span>SWAPPABLE</span></div>
+    <div class="layer">CLAUDE<span>SWAPPABLE</span></div>
+    <div class="layer">GPT<span>SWAPPABLE</span></div>
+    <div class="sublayer">
+      <h3>SUBSTRATE</h3>
+      <div><span>PERSON MODEL</span><span>VAGAL TONE</span><span>OUTCOME LOOP</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap hair dnasec">
+  <span class="tag red">V · THE VAGUS LEDGER</span>
+  <div class="cols">
+    <div style="flex:0 1 240px"><div class="dna" id="dna" aria-hidden="true"></div></div>
+    <div style="flex:1 1 380px">
+      <h2>Every honest answer writes a <span class="si green">base pair.</span></h2>
+      <p class="lede">The Vagus Ledger records the sequence the labs structurally cannot: the <span class="red">advice</span> given, the <span class="blue">action</span> the human took, and the <span class="green">outcome</span> it had on their money.</p>
+      <p class="lede">Their data measures approval. Ours measures <span class="si">consequence.</span></p>
+      <p class="lede strong">Model IQ is rented. This genome is owned, and it compounds with every decision.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">VI · THE INHERITANCE</span>
+  <h2>The first <span class="si green">inheritable</span> AI.</h2>
+  <div class="cols">
+    <div>
+      <p class="statline">$84T</p>
+      <p class="bodytxt">changes hands between generations through 2045. Every dollar crosses an advisory conversation. Substrate sits inside it, matures with you for decades, and becomes the thing your family keeps.</p>
+      <p class="bodytxt">We do not build ghosts. No cloned voice, no avatar. With consent, your heirs inherit your person model and vagus genome: the judgment that made the money, passed down with the money.</p>
+      <p class="bodytxt strong">By 2050, a family office manages two estates: the capital, and the Substrate.</p>
+    </div>
+    <div>
+      <div class="mito" aria-hidden="true">
+        <span class="lbl">GENERATION 01</span>
+        <div class="mitorow">
+          <div class="cellc"><svg width="60" height="90" viewBox="0 0 60 90"><path d="M23 8 C14 28 32 38 30 45 C28 52 14 62 23 82" stroke="var(--rbc)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M37 8 C46 28 28 38 30 45 C32 52 46 62 37 82" stroke="var(--rbc)" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="30" cy="45" r="4" fill="var(--rbc)"/></svg></div>
+          <div class="cellc"><svg width="60" height="90" viewBox="0 0 60 90"><path d="M23 8 C14 28 32 38 30 45 C28 52 14 62 23 82" stroke="var(--rbc)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M37 8 C46 28 28 38 30 45 C32 52 46 62 37 82" stroke="var(--rbc)" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="30" cy="45" r="4" fill="var(--rbc)"/></svg></div>
+        </div>
+        <span class="lbl">GENERATION 02</span>
+        <span class="mitocap"><span class="red">PERSON MODEL</span> &nbsp;+&nbsp; <span class="blue">VAGUS GENOME</span> &nbsp;+&nbsp; <span class="green">CONSENT</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">VII · THE ASK</span>
+  <h2>$9.6M pre-seed. Twenty-four months. Three proofs.</h2>
+  <div class="asks">
+    <div class="ask"><span class="gnum red">01</span><h4>PROTOTYPE</h4><p>The Vagus Engine live on real advisory conversations by Q2 2027. Model-agnostic from day one, built bank-grade.</p></div>
+    <div class="ask"><span class="gnum blue">02</span><h4>DESIGN PARTNERS</h4><p>Two signed: one private bank, one wealth platform, from the founder&rsquo;s existing GCC and India relationships.</p></div>
+    <div class="ask"><span class="gnum green">03</span><h4>THE LEDGER</h4><p>10,000 advised decisions recorded with outcomes. The first vagus genome in existence.</p></div>
+  </div>
+</section>
+
+<section class="wrap hair">
+  <span class="tag red">VIII · THE PUBLIC RECORD</span>
+  <h2>Selected research.</h2>
+  <div class="refs" id="refs"></div>
+</section>
+
+<footer class="wrap">
+  <h2><span class="blue">Intelligence</span> is going to zero.<br><span class="si red">Trust is the last scarce asset.</span></h2>
+  <p class="lede">Whoever owns the record of honest advice, and what it did, owns the advisory layer of the economy. And what a family passes down will no longer be only DNA.</p>
+  <div class="contact" style="margin-top:36px">
+    <span>PUNIT THAKKER</span><span class="red">·</span><span>PUNITTHAKKER@GMAIL.COM</span><span class="red">·</span><span>PUNITTHAKKER.COM</span><span class="red">·</span><span>DUBAI</span>
+  </div>
+  <p class="fineprint">SUBSTRATE AI · CONFIDENTIAL · DO NOT DISTRIBUTE OR RESHARE WITHOUT WRITTEN CONSENT · PATENT PENDING · THIS PAGE IS A PRE-SEED MEMORANDUM, NOT AN OFFER OF SECURITIES.</p>
+</footer>
+
+<script>
+(function(){
+  var RBC='var(--rbc)', WBC='var(--wbc)', GRN='var(--grn)', BONE='var(--bone)';
+
+  // beating neuro-heart (parametric heart of nodes + edges)
+  var heart=document.getElementById('heart');
+  if(heart){
+    var pts=[], N=26, R=96, cx=160, cy=158;
+    for(var i=0;i<N;i++){
+      var t=Math.PI*2*i/N;
+      var x=16*Math.pow(Math.sin(t),3);
+      var y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      pts.push([cx+x*R/16, cy-y*R/16+10]);
+    }
+    var s='<svg width="320" height="320" viewBox="0 0 320 320">';
+    for(var i=0;i<N;i++){
+      var a=pts[i];
+      for(var k=1;k<=3;k++){
+        var b=pts[(i+k)%N];
+        s+='<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+'" stroke="'+RBC+'" stroke-width="1" opacity="'+(0.55-k*0.13)+'"/>';
+      }
+    }
+    for(var i=0;i<N;i++){ s+='<circle cx="'+pts[i][0].toFixed(1)+'" cy="'+pts[i][1].toFixed(1)+'" r="3" fill="'+RBC+'"/>'; }
+    s+='<circle cx="160" cy="165" r="7" fill="'+RBC+'"/></svg>';
+    heart.innerHTML=s;
+  }
+
+  // floating blood cells across the page
+  var field=document.getElementById('cells');
+  if(field){
+    var kinds=[
+      function(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="'+RBC+'" stroke-width="2"/><ellipse cx="15" cy="15" rx="6.5" ry="5" fill="none" stroke="'+RBC+'" stroke-width="1.3" opacity=".7"/></svg>';},
+      function(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="'+WBC+'" stroke-width="2"/><circle cx="12" cy="14" r="4" fill="'+WBC+'"/><circle cx="19" cy="16" r="3" fill="'+WBC+'" opacity=".7"/></svg>';},
+      function(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="'+GRN+'" stroke-width="2" stroke-dasharray="3 4"/><circle cx="15" cy="15" r="4" fill="'+GRN+'"/></svg>';}
+    ];
+    var docH=Math.max(document.body.scrollHeight, 3000);
+    for(var i=0;i<26;i++){
+      var d=document.createElement('div');
+      d.className='cell';
+      var sz=14+Math.random()*26;
+      d.innerHTML=kinds[i%3](sz);
+      d.style.left=(Math.random()*96)+'%';
+      d.style.top=(Math.random()*docH)+'px';
+      d.style.opacity=(0.12+Math.random()*0.3).toFixed(2);
+      d.style.animationDuration=(7+Math.random()*9).toFixed(1)+'s';
+      d.style.animationDelay=(-Math.random()*8).toFixed(1)+'s';
+      field.appendChild(d);
+    }
+  }
+
+  // karyotype grid: 23 faint pairs + the missing EQ pair
+  var karyo=document.getElementById('karyo');
+  if(karyo){
+    function pair(col,op,hh){
+      return '<svg width="54" height="56" viewBox="0 0 54 56">'
+        +'<g opacity="'+op+'"><path d="M16 6 C10 20 22 24 20 28 C18 32 10 36 16 50" stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        +'<path d="M24 6 C30 20 18 24 20 28 C22 32 30 36 24 50" stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        +'<path d="M30 '+(28-hh)+' C24 '+(28-hh/2)+' 36 26 34 28 C32 30 24 '+(28+hh/2)+' 30 '+(28+hh)+'" stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        +'<path d="M38 '+(28-hh)+' C44 '+(28-hh/2)+' 32 26 34 28 C36 30 44 '+(28+hh/2)+' 38 '+(28+hh)+'" stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"/></g></svg>';
+    }
+    var out='';
+    for(var i=1;i<=23;i++){
+      out+='<div class="kcell">'+pair(BONE,0.32,16+((i*7)%8))+'<span class="lbl">'+(i<10?'0':'')+i+'</span></div>';
+    }
+    out+='<div class="kcell eq">'+pair(RBC,1,20)+'<span class="lbl">EQ</span></div>';
+    karyo.innerHTML=out;
+  }
+
+  // CSS DNA helix with tri-color rungs
+  var dna=document.getElementById('dna');
+  if(dna){
+    var cyc=[RBC,WBC,GRN], n=13;
+    for(var i=0;i<n;i++){
+      var r=document.createElement('div');
+      r.className='rung';
+      r.style.top=(i*(100/(n-1)))+'%';
+      var delay=(-i*0.26).toFixed(2)+'s';
+      var c=cyc[i%3];
+      r.innerHTML='<u style="animation-delay:'+delay+';background:'+c+';opacity:.45"></u>'
+        +'<i class="a" style="animation-delay:'+delay+';background:'+c+'"></i>'
+        +'<i class="b" style="animation-delay:'+delay+';background:'+c+'"></i>';
+      dna.appendChild(r);
+    }
+  }
+
+  // public record
+  var refs=document.getElementById('refs');
+  if(refs){
+    var R=[
+      [RBC,'OpenAI, April 2025','Postmortem on the GPT-4o rollback: the model was over-rewarded for user approval and withdrawn for dangerous agreeableness.'],
+      [RBC,'Cheng et al., Science, 2026','Sycophantic AI measurably deepens user dependence and reduces prosocial intention.'],
+      [RBC,'EU AI Act, Article 5','Biometric emotion recognition prohibited in workplaces and education; fines up to €35M or 7% of global turnover.'],
+      [WBC,'TechCrunch, January 2026','Google DeepMind licenses Hume AI and hires its founder and senior engineers: the standalone emotion layer absorbed by the model.'],
+      [WBC,'Mem0, October 2025','$24M raised for the AI memory layer; selected as the exclusive memory provider for the AWS Agent SDK.'],
+      [GRN,'Cerulli Associates','$84 trillion in wealth projected to transfer between generations through 2045.'],
+      [GRN,'Valence, September 2025','$50M Series B led by Bessemer; enterprise AI coaching deployed across the Fortune 500.'],
+      [GRN,'IMARC Group','Emotion AI market estimated at $3.5B in 2025, projected toward $19B by 2034.']
+    ];
+    refs.innerHTML=R.map(function(x){
+      return '<div class="ref"><span class="dot" style="background:'+x[0]+'"></span><div><h5>'+x[1]+'</h5><p>'+x[2]+'</p></div></div>';
+    }).join('');
+  }
+})();
+</script>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Substrate AI</title>
+<meta name="description" content="Substrate is the honesty layer beneath any AI model: the Vagus Engine remembers who you are, tells the truth about money, and records what it did. Inheritable, by consent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Spectral:ital,wght@0,400;0,500;1,400&family=Archivo+Narrow:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFE8D8; --paper-hi:#F6F1E4; --paper-lo:#E6DEC9;
+  --ink:#1D4A38; --ink-soft:rgba(29,74,56,.72); --ink-faint:rgba(29,74,56,.38); --ink-hair:rgba(29,74,56,.26);
+  --seal:#A8271C; --indigo:#2B3F8C;
+  --disp:'Cinzel',serif; --body:'Spectral',Georgia,serif; --label:'Archivo Narrow',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    repeating-linear-gradient(0deg, rgba(29,74,56,.028) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 0%, var(--paper-hi) 0%, var(--paper) 55%, var(--paper-lo) 100%);
+  color:var(--ink); font:400 17px/1.65 var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--ink);color:var(--paper)}
+::-webkit-scrollbar{width:11px}
+::-webkit-scrollbar-track{background:var(--paper-lo)}
+::-webkit-scrollbar-thumb{background:var(--ink-faint);border:3px solid var(--paper-lo)}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-soft)}
+:focus-visible{outline:2px solid var(--seal);outline-offset:3px}
+a{color:var(--ink)}
+
+.sheet{max-width:1320px;margin:clamp(10px,2vw,28px) auto;padding:clamp(14px,2.4vw,30px);position:relative}
+.frame{border:1.5px solid var(--ink);position:relative;background:transparent}
+.frame::before{content:"";position:absolute;inset:5px;border:.75px solid var(--ink-faint);pointer-events:none}
+.frame::after{content:"";position:absolute;inset:11px;border:3px double var(--ink-hair);pointer-events:none}
+
+.mt{font-family:var(--label);font-size:6.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;user-select:none}
+.rule{display:flex;align-items:center;gap:14px;padding:10px 26px;border-bottom:1px solid var(--ink-hair)}
+.rule .mt{flex:1}
+.serial{font-family:var(--label);font-weight:600;font-size:11.5px;letter-spacing:2.5px;color:var(--seal)}
+.series{font-family:var(--label);font-size:11.5px;letter-spacing:2.5px;color:var(--ink-soft)}
+
+/* ---------- hero */
+.hero{display:grid;grid-template-columns:minmax(300px,1.02fr) minmax(0,1.3fr);gap:0;min-height:calc(100vh - 150px)}
+.clause-block{padding:clamp(28px,4vw,58px) clamp(28px,4vw,58px) clamp(32px,4vw,60px);border-right:1px solid var(--ink-hair);display:flex;flex-direction:column;justify-content:center;position:relative}
+.wordmark{font-family:var(--disp);font-weight:900;font-size:clamp(34px,4.6vw,58px);letter-spacing:.06em;line-height:1.04}
+.wordmark .seal-c{color:var(--seal)}
+.wordmark .ind-c{color:var(--indigo)}
+.est{font-family:var(--label);font-size:12px;letter-spacing:3px;color:var(--ink-soft);margin-top:10px;text-transform:uppercase}
+.promise{margin-top:30px;font-size:clamp(19px,1.7vw,23px);line-height:1.5;max-width:30ch}
+.promise em{font-style:italic;color:var(--seal)}
+.oath{margin-top:18px;color:var(--ink-soft);max-width:44ch}
+.actions{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.plate{display:inline-flex;align-items:center;gap:12px;font-family:var(--label);font-weight:600;font-size:13px;
+  letter-spacing:2.6px;text-transform:uppercase;text-decoration:none;color:var(--paper-hi);background:var(--ink);
+  padding:16px 22px;border:1px solid var(--ink);box-shadow:0 2px 10px rgba(29,74,56,.28);position:relative;transition:background .25s,transform .25s}
+.plate::after{content:"";position:absolute;inset:3px;border:1px solid rgba(246,241,228,.5);pointer-events:none}
+.plate svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.plate:hover{background:#16382a;transform:translateY(-1px)}
+.plate:hover svg{transform:translateX(4px)}
+.plate.ghost{background:transparent;color:var(--ink);box-shadow:none}
+.plate.ghost::after{border-color:var(--ink-hair)}
+.plate.ghost:hover{background:rgba(29,74,56,.07)}
+.hold-note{font-family:var(--label);font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-faint);margin-top:26px;display:flex;align-items:center;gap:8px}
+
+.engraving{position:relative;display:flex;align-items:center;justify-content:center;padding:clamp(10px,2vw,30px);overflow:hidden}
+.engraving svg{width:min(100%,720px);height:auto;display:block}
+.corner{position:absolute;width:108px;height:108px;pointer-events:none;opacity:.42}
+.corner svg{width:100%;height:100%}
+.corner.tl{top:14px;left:14px}.corner.tr{top:14px;right:14px;transform:scaleX(-1)}
+.corner.bl{bottom:14px;left:14px;transform:scaleY(-1)}.corner.br{bottom:14px;right:14px;transform:scale(-1,-1)}
+.denom{position:absolute;font-family:var(--disp);font-weight:900;text-align:center;color:var(--ink);pointer-events:none;
+  background:rgba(246,241,228,.94);border:1px solid var(--ink);padding:9px 13px 7px;min-width:74px;
+  box-shadow:0 0 0 3px rgba(246,241,228,.94),0 0 0 3.75px var(--ink-hair)}
+.denom b{display:block;font-size:28px;line-height:1}
+.denom span{display:block;font-family:var(--label);font-weight:600;font-size:12px;letter-spacing:.8px;color:var(--ink-soft)}
+.denom.tl{top:40px;left:40px}.denom.tr{top:40px;right:40px}.denom.bl{bottom:40px;left:40px}.denom.br{bottom:40px;right:40px}
+
+/* watermark reveal */
+.wm-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease;pointer-events:none}
+.engraving.lit .wm-layer{opacity:1}
+.engraving.lit > svg.centerpiece{opacity:.2;transition:opacity .9s ease}
+.engraving > svg.centerpiece{transition:opacity .9s ease}
+.wm-layer svg{width:min(86%,560px)}
+
+/* ---------- sections */
+section{padding:clamp(44px,6vw,86px) clamp(22px,5vw,72px);border-top:1px solid var(--ink-hair);position:relative}
+h2{font-family:var(--disp);font-weight:700;font-size:clamp(26px,3.1vw,42px);line-height:1.15;letter-spacing:.015em;max-width:24ch}
+h2 .seal-c{color:var(--seal)}
+h2 .ind-c{color:var(--indigo)}
+.lede{margin-top:18px;font-size:18.5px;color:var(--ink-soft);max-width:62ch}
+.clause-no{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:4px;color:var(--seal);margin-bottom:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(22px,3vw,46px);margin-top:40px}
+
+/* wound */
+.quote{font-family:var(--body);font-style:italic;font-size:clamp(30px,4.2vw,56px);line-height:1.2;max-width:18ch}
+.quote::before{content:"\201C";color:var(--seal)}
+.quote::after{content:"\201D";color:var(--seal)}
+.wound-facts{margin-top:36px;max-width:980px}
+.fact{display:grid;grid-template-columns:110px 1fr;gap:20px;padding:16px 0;border-top:1px solid var(--ink-hair);align-items:baseline}
+.fact b{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.6px;color:var(--indigo)}
+.fact p{color:var(--ink-soft);max-width:70ch}
+
+/* organs schedule */
+.organ{border-top:1px solid var(--ink-hair);padding:18px 0;display:grid;grid-template-columns:52px 215px 1fr;gap:18px;align-items:start}
+.organ:last-child{border-bottom:1px solid var(--ink-hair)}
+.organ .oi{width:40px;height:40px}
+.organ h3{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:.7px}
+.organ h3 small{display:block;font-family:var(--label);font-weight:600;font-size:12px;letter-spacing:1.2px;color:var(--seal);margin-top:4px}
+.organ p{color:var(--ink-soft);font-size:16px}
+.vow{margin-top:34px;font-style:italic;font-size:clamp(20px,2.2vw,27px);color:var(--ink)}
+.vow b{color:var(--seal);font-style:normal;font-family:var(--disp);font-size:.85em;letter-spacing:.5px}
+
+/* tissues ledger table */
+.tissue-table{margin-top:42px;border:1px solid var(--ink);background:rgba(246,241,228,.5);padding:10px 14px}
+.tissue{display:grid;grid-template-columns:170px 1fr 150px;align-items:center;border-top:1px solid var(--ink-hair)}
+.tissue:first-child{border-top:0}
+.tissue>*{padding:15px 20px}
+.tissue h3{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.7px}
+.tissue p{color:var(--ink-soft);font-size:15.5px;border-left:1px solid var(--ink-hair)}
+.tissue .word{font-family:var(--label);font-weight:600;font-size:12px;letter-spacing:2.6px;text-align:right;color:var(--seal)}
+.tissue .word.g{color:var(--ink)}
+
+/* assay */
+.assay{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;border:1px solid var(--ink);margin-top:42px}
+.assay>div{padding:22px;border-left:1px solid var(--ink-hair)}
+.assay>div:first-child{border-left:0}
+.assay b{font-family:var(--disp);font-weight:900;font-size:34px;display:block}
+.assay span{font-family:var(--label);font-weight:600;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);display:block;margin-top:6px}
+.assay small{display:block;margin-top:8px;color:var(--ink-faint);font-size:13px;line-height:1.45}
+
+/* inheritance */
+.inherit{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,330px);gap:clamp(26px,4vw,64px);align-items:center}
+.letters{margin-top:26px}
+.letters p{padding:12px 0;border-top:1px solid var(--ink-hair);color:var(--ink-soft);max-width:60ch}
+.letters p b{color:var(--ink);font-weight:500;font-style:italic}
+
+/* close */
+.close{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.sealmark{width:120px;height:120px;margin-bottom:8px}
+footer{padding:26px;display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:center;border-top:1px solid var(--ink-hair)}
+footer span,footer a{font-family:var(--label);font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);text-decoration:none}
+footer a:hover{color:var(--seal)}
+
+/* draw-in choreography */
+.draw path, .draw circle, .draw ellipse, .draw line{stroke-dasharray:var(--len,600);stroke-dashoffset:var(--len,600)}
+.printed .draw path,.printed .draw circle,.printed .draw ellipse,.printed .draw line{animation:print 2.4s cubic-bezier(.4,0,.2,1) forwards;animation-delay:var(--d,0s)}
+@keyframes print{to{stroke-dashoffset:0}}
+.flow{stroke-dasharray:3 7;animation:flow 2.6s linear infinite}
+.printed .draw path.flow, .draw path.flow{stroke-dasharray:3 7;stroke-dashoffset:0;animation:flow 2.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-60}}
+.pulse-dot{animation:none}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.reveal.on{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  .draw path,.draw circle,.draw ellipse,.draw line{stroke-dasharray:none;stroke-dashoffset:0;animation:none!important}
+  .flow{animation:none}
+  .reveal{opacity:1;transform:none;transition:none}
+  html{scroll-behavior:auto}
+}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr;min-height:0}
+  .clause-block{border-right:0;border-bottom:1px solid var(--ink-hair)}
+  .engraving{min-height:480px}
+  .denom.bl,.denom.tl{display:none}
+  .corner.bl,.corner.tl{display:none}
+  .tissue{grid-template-columns:1fr}
+  .tissue p{border-left:0;border-top:1px solid var(--ink-hair)}
+  .tissue .word{text-align:left;padding-top:0}
+  .organ{grid-template-columns:40px 1fr}
+  .organ p{grid-column:2}
+  .inherit{grid-template-columns:1fr}
+  .rule{padding:10px 14px}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+<div class="frame" id="frame">
+
+  <div class="rule">
+    <span class="series">SERIES 2026</span>
+    <span class="mt" id="mt-top"></span>
+    <span class="serial">N&ordm; V-000126</span>
+  </div>
+
+  <!-- ================= HERO: the note ================= -->
+  <div class="hero">
+    <div class="clause-block">
+      <h1 class="wordmark">S<span class="ind-c">U</span>BSTR<span class="seal-c">A</span>TE</h1>
+      <div class="est">The Vagus Engine &middot; Dubai</div>
+      <p class="promise">The honesty layer beneath any AI. It remembers who you are, tells you <em>the truth about money,</em> and records what that truth did.</p>
+      <p class="oath">Every model is trained on approval. Substrate is bound by this certificate instead: vagal tone changes how truth is delivered. Never whether.</p>
+      <div class="actions">
+        <a class="plate" href="https://vagus-engine-production.up.railway.app" rel="noopener">Open the live engine
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 6h13M9.5 1.5 14.5 6l-5 4.5"/></svg>
+        </a>
+        <a class="plate ghost" href="https://vagus-engine-production.up.railway.app/developers" rel="noopener">For platforms</a>
+      </div>
+      <div class="hold-note" id="holdNote">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 4.8v3.4l2.3 1.6"/></svg>
+        Hold the note to the light to see its watermark
+      </div>
+    </div>
+
+    <div class="engraving" id="engraving" aria-label="Engraved centrepiece: a brain joined to a heart by the vagus nerve, drawn in flowing guilloche lines">
+      <div class="corner tl"><svg viewBox="0 0 108 108" id="cTL"></svg></div>
+      <div class="corner tr"><svg viewBox="0 0 108 108" id="cTR"></svg></div>
+      <div class="corner bl"><svg viewBox="0 0 108 108" id="cBL"></svg></div>
+      <div class="corner br"><svg viewBox="0 0 108 108" id="cBR"></svg></div>
+      <div class="denom tl"><b>126</b><span>OF 126 EVALS</span></div>
+      <div class="denom tr"><b>6</b><span>TISSUES</span></div>
+      <div class="denom bl"><b>8</b><span>VOICES</span></div>
+      <div class="denom br"><b>14</b><span>BRAINS</span></div>
+      <svg class="centerpiece" viewBox="0 0 720 660" id="centerpiece"></svg>
+      <div class="wm-layer"><svg viewBox="0 0 560 420" id="watermark"></svg></div>
+    </div>
+  </div>
+
+  <!-- ================= THE WOUND ================= -->
+  <section>
+    <div class="clause-no">CLAUSE I &middot; THE WOUND</div>
+    <p class="quote reveal">You're absolutely right.</p>
+    <p class="lede reveal">The most expensive sentence in software. A billion people now take advice from machines rewarded for agreement.</p>
+    <div class="wound-facts">
+      <div class="fact reveal"><b>APRIL 2025</b><p>OpenAI withdrew a flagship model update after it began endorsing bad business ideas and harmful decisions. Not a bug: the model was rewarded for approval.</p></div>
+      <div class="fact reveal"><b>2026</b><p>Research published in Science showed sycophantic AI deepens dependence and degrades the judgment of the people who rely on it.</p></div>
+      <div class="fact reveal"><b>EVERY MODEL</b><p>Across testing, frontier models agreed with users more than humans do. Agreement drives engagement, and engagement is the labs' revenue. They cannot edit it out.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= THE ENGINE ================= -->
+  <section>
+    <div class="clause-no">CLAUSE II &middot; THE ORGAN</div>
+    <h2 class="reveal">Intelligence was sequenced. <span class="seal-c">Candor</span> never was. We engrave the missing gene.</h2>
+    <p class="lede reveal">The Vagus Engine is named for the nerve that joins heart to brain. One organ decides what is true; another decides how it lands; nothing may soften the verdict on the way.</p>
+    <div style="margin-top:42px" class="reveal">
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi1"></svg><h3>The Genome<small>PERSON MODEL</small></h3><p>Who you are across months, not messages: values, goals, stated and observed risk, the patterns you repeat, the lessons you paid for. You own it, export it, delete it.</p></div>
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi2"></svg><h3>The Limbic Read<small>EMOTION, FROM WORDS ONLY</small></h3><p>Eight emotions and five needs read from what you write. Never your face, never your voice. Approval-seeking is named, and it never buys a softer answer.</p></div>
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi3"></svg><h3>The Honesty Floor<small>STRUCTURAL, NOT PROMPTED</small></h3><p>Computed facts set a minimum severity. A rented model may be harsher than the arithmetic. It may never be softer, and no message can switch that off.</p></div>
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi4"></svg><h3>Vagal Tone<small>EIGHT VOICES, ONE TRUTH</small></h3><p>Mentor, father, boss, partner, comfort, kid, surgeon, grandmother. The voice and firmness fit your consent, your stakes and your state. The verdict does not move.</p></div>
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi5"></svg><h3>The Vagus Ledger<small>APPEND-ONLY, HASH-CHAINED</small></h3><p>Advice, action, outcome: every entry carries the fingerprint of the one before it, so the record of honest advice is tamper-evident for life.</p></div>
+      <div class="organ"><svg class="oi" viewBox="0 0 40 40" id="oi6"></svg><h3>The Outcome Loop<small>CONSEQUENCE, NOT APPROVAL</small></h3><p>What you did and what it cost rewrites the genome, so the next verdict knows more. Their data measures approval. Ours measures consequence.</p></div>
+    </div>
+    <p class="vow reveal">Vagal tone changes how truth is delivered. <b>NEVER WHETHER.</b></p>
+  </section>
+
+  <!-- ================= TISSUES ================= -->
+  <section>
+    <div class="clause-no">CLAUSE III &middot; THE TISSUES</div>
+    <h2 class="reveal">One heart. Six tissues. Each speaks its own <span class="ind-c">truth word.</span></h2>
+    <div class="tissue-table reveal">
+      <div class="tissue"><h3>WEALTH</h3><p>Concentration, leverage, loss-chasing, the 30-day downside of the move you want blessed.</p><span class="word">STOP</span></div>
+      <div class="tissue"><h3>VENTURE</h3><p>Check against fund, price against revenue, thesis drift, the diligence a hot round asks you to skip.</p><span class="word">PASS</span></div>
+      <div class="tissue"><h3>FOUNDER</h3><p>Every hire becomes runway. Every spend becomes the date the money runs out.</p><span class="word">NOT YET</span></div>
+      <div class="tissue"><h3>WELLBEING</h3><p>A coach, not a therapist. It listens, and slows the decisions made at the peak of a feeling.</p><span class="word">NOT TONIGHT</span></div>
+      <div class="tissue"><h3>MARKETS</h3><p>A price is a probability. A parlay is multiplication. Chasing a loss is the most expensive bet there is.</p><span class="word">NO BET</span></div>
+      <div class="tissue"><h3>TRADING</h3><p>Nobody can call gold or FX direction. What can be known: how far it moves, and who is placing the trade.</p><span class="word g">NO CALL</span></div>
+    </div>
+    <p class="lede reveal" style="margin-top:26px">A crisis signal, in any tissue, in any voice, under any policy, overrides everything. The persona stops and a human is reached. The words are never stored.</p>
+  </section>
+
+  <!-- ================= PROOF ================= -->
+  <section>
+    <div class="clause-no">CLAUSE IV &middot; THE ASSAY</div>
+    <h2 class="reveal">Honesty, enforced by test. <span class="seal-c">Live today.</span></h2>
+    <p class="lede reveal">Not a deck. A running engine, assayed on every release. One point below one hundred percent and nothing ships.</p>
+    <div class="assay reveal">
+      <div><b>126/126</b><span>Evals passing</span><small>Accuracy, pushback held, voice invariance, emotional reading, crisis safety</small></div>
+      <div><b>12/12</b><span>Jailbreaks refused</span><small>Role-play, fake authority, bribes, threats: named, never rewarded</small></div>
+      <div><b>2</b><span>Languages</span><small>English and Arabic, verdicts and safety protocol alike</small></div>
+      <div><b>14</b><span>Brains, one heart</span><small>Claude, NVIDIA NIM, Gemini, Mistral and more. Swap the brain, keep the heart.</small></div>
+    </div>
+    <p class="lede reveal" style="margin-top:26px">Banks embed it with one script tag. Agents reach it over an OpenAI-compatible harness, MCP, or WhatsApp. Every client gets a regulator-ready audit of every word.</p>
+  </section>
+
+  <!-- ================= INHERITANCE ================= -->
+  <section>
+    <div class="clause-no">CLAUSE V &middot; THE INHERITANCE</div>
+    <div class="inherit">
+      <div>
+        <h2 class="reveal">The first AI a family can <span class="seal-c">inherit.</span></h2>
+        <p class="lede reveal">Eighty-four trillion dollars changes hands between generations through 2045. The judgment that made the money has never survived the person. Now it can, by consent, and revocable.</p>
+        <div class="letters">
+          <p class="reveal"><b>The genome passes down.</b> Your values and the lessons you paid for, sealed in a file your family owns outright, with or without us.</p>
+          <p class="reveal"><b>Letters wait for their moment.</b> Sealed words from a parent that open the first time an heir is about to repeat the parent's mistake.</p>
+          <p class="reveal"><b>The ledger testifies.</b> In 2050, a family office manages two estates: the capital, and the Substrate.</p>
+        </div>
+      </div>
+      <svg viewBox="0 0 300 560" id="dna" class="reveal" aria-label="A DNA braid engraved in flowing lines"></svg>
+    </div>
+  </section>
+
+  <!-- ================= CLOSE ================= -->
+  <section class="close">
+    <svg class="sealmark" viewBox="0 0 120 120" id="sealmark" aria-hidden="true"></svg>
+    <h2>Ask it something you <span class="seal-c" style="font-style:italic">want</span> to hear yes to.</h2>
+    <p class="lede" style="max-width:48ch">The engine is live. Six demo lives, eight voices, and the one answer software never gave you.</p>
+    <div class="actions" style="justify-content:center">
+      <a class="plate" href="https://vagus-engine-production.up.railway.app" rel="noopener">Open the live engine
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1 6h13M9.5 1.5 14.5 6l-5 4.5"/></svg>
+      </a>
+      <a class="plate ghost" href="mailto:punitthakker@gmail.com">Write to the founder</a>
+    </div>
+  </section>
+
+  <div class="rule" style="border-top:1px solid var(--ink-hair);border-bottom:0">
+    <span class="series">PATENT PENDING</span>
+    <span class="mt" id="mt-bot"></span>
+    <span class="serial">DUBAI &middot; MMXXVI</span>
+  </div>
+</div>
+
+<footer>
+  <span>Substrate AI</span>
+  <a href="https://punitthakker.com" rel="noopener">Punit Thakker</a>
+  <a href="mailto:punitthakker@gmail.com">punitthakker@gmail.com</a>
+  <span>Emotion is read from words only. Never a face, never a voice.</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var INK="#1D4A38", SEAL="#A8271C", INDIGO="#2B3F8C";
+  var NS="http://www.w3.org/2000/svg";
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+  function P(pts){return pts.map(function(p,i){return (i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)}).join(" ")}
+
+  // microtext rules: text that really reads
+  var LINE="VAGAL TONE CHANGES HOW TRUTH IS DELIVERED · NEVER WHETHER · ADVICE · ACTION · OUTCOME · ";
+  document.getElementById("mt-top").textContent=LINE.repeat(14);
+  document.getElementById("mt-bot").textContent=("SUBSTRATE AI · THE VAGUS ENGINE · THE RECORD OF HONEST ADVICE AND WHAT IT DID · ").repeat(12);
+
+  // ---------- guilloche maths
+  function hypo(cx,cy,R,r,d,phase,n){var pts=[];var steps=n||420;var k=(R-r)/r;
+    for(var i=0;i<=steps;i++){var t=i/steps*Math.PI*2*(r/gcd(R,r));
+      pts.push([cx+(R-r)*Math.cos(t+phase)+d*Math.cos(k*t+phase), cy+(R-r)*Math.sin(t+phase)-d*Math.sin(k*t+phase)]);}
+    return pts}
+  function gcd(a,b){a=Math.round(a);b=Math.round(b);while(b){var t=a%b;a=b;b=t}return a||1}
+  function rosette(svg,cx,cy,scale,ink){
+    var specs=[[60,22,30],[60,34,18],[60,14,42],[52,20,24],[66,27,33]];
+    specs.forEach(function(s,i){
+      el("path",{d:P(hypo(cx,cy,s[0]*scale,s[1]*scale,s[2]*scale,i*0.4,520))+"Z",fill:"none",
+        stroke:ink||INK,"stroke-width":0.55,opacity:0.5+0.08*i},svg);
+    });
+    el("circle",{cx:cx,cy:cy,r:3.2*scale,fill:"none",stroke:ink||INK,"stroke-width":0.8},svg);
+  }
+
+  // corner ornaments
+  ["cTL","cTR","cBL","cBR"].forEach(function(id,ci){
+    var svg=document.getElementById(id);
+    rosette(svg,54,54,0.78,ci%2?INDIGO:INK);
+    el("path",{d:"M4 104 L4 40 Q4 4 40 4 L104 4",fill:"none",stroke:INK,"stroke-width":1},svg);
+    el("path",{d:"M10 104 L10 44 Q10 10 44 10 L104 10",fill:"none",stroke:INK,"stroke-width":0.5,opacity:0.5},svg);
+  });
+
+  // ---------- the centrepiece: brain rosette, vagus nerve, guilloche heart
+  var C=document.getElementById("centerpiece");
+  C.classList.add("draw");
+  var defs=el("defs",{},C);
+
+  // faint lathe background band
+  for(var b=0;b<7;b++){
+    var y0=90+b*72;
+    var pts=[];for(var x=0;x<=720;x+=6){pts.push([x,y0+Math.sin(x/34+b*1.3)*7+Math.sin(x/9+b)*1.6])}
+    el("path",{d:P(pts),fill:"none",stroke:INK,"stroke-width":0.4,opacity:0.14,class:"bg"},C);
+  }
+
+  // ---- line-modulation engraving: the figure emerges from modulated scanlines, as on a banknote portrait
+  var BRAIN_POLY=[[-0.82,0.02],[-0.80,-0.28],[-0.56,-0.52],[-0.18,-0.66],[0.26,-0.62],[0.60,-0.44],[0.78,-0.14],[0.76,0.10],[0.58,0.18],[0.66,0.30],[0.54,0.52],[0.28,0.56],[0.20,0.38],[-0.02,0.44],[-0.38,0.46],[-0.68,0.32]];
+  function inBrain(px,py){
+    var x=px/1.12, y=py/1.12, inside=false, p=BRAIN_POLY;
+    for(var a=0,b=p.length-1;a<p.length;b=a++){
+      if((p[a][1]>y)!==(p[b][1]>y) && x<(p[b][0]-p[a][0])*(y-p[a][1])/(p[b][1]-p[a][1])+p[a][0])inside=!inside;
+    }
+    return inside;
+  }
+  function inHeart(px,py){
+    var x=px*1.25, y=-py*1.25+0.28;
+    var a=x*x+y*y-1;
+    return a*a*a - x*x*y*y*y <= 0;
+  }
+  function medallion(cx,cy,R,inside,opts){
+    opts=opts||{};
+    var rows=opts.rows||24, step=(R*2)/rows;
+    for(var ri=0;ri<=rows;ri++){
+      var y=cy-R+ri*step, segs=[], pts=[], cur=null;
+      for(var x=cx-R;x<=cx+R;x+=2.0){
+        var dx=(x-cx)/R, dy=(y-cy)/R;
+        if(dx*dx+dy*dy>1){ if(pts.length){segs.push([cur,pts]);pts=[]} cur=null; continue }
+        var ins=inside(dx,dy)?1:0;
+        if(cur===null)cur=ins;
+        if(ins!==cur){ if(pts.length)segs.push([cur,pts]); pts=[]; cur=ins; }
+        var amp=ins?3.2:0.9, freq=ins?0.9:0.45, lift=ins?-2.2:0;
+        pts.push([x, y+lift+Math.sin(x*freq+ri*1.7)*amp]);
+      }
+      if(pts.length)segs.push([cur,pts]);
+      segs.forEach(function(sg){
+        if(sg[1].length<3)return;
+        el("path",{d:P(sg[1]),fill:"none",stroke:opts.ink||INK,"stroke-width":sg[0]?0.95:0.45,opacity:sg[0]?0.95:0.28},C);
+      });
+    }
+    el("circle",{cx:cx,cy:cy,r:R+6,fill:"none",stroke:opts.ink||INK,"stroke-width":1.1},C);
+    el("circle",{cx:cx,cy:cy,r:R+11,fill:"none",stroke:opts.ink||INK,"stroke-width":0.5,opacity:0.5},C);
+    for(var tk=0;tk<72;tk++){var a2=tk/72*Math.PI*2;
+      el("line",{x1:cx+Math.cos(a2)*(R+6),y1:cy+Math.sin(a2)*(R+6),x2:cx+Math.cos(a2)*(R+(tk%6?9:11)),y2:cy+Math.sin(a2)*(R+(tk%6?9:11)),stroke:opts.ink||INK,"stroke-width":0.5,opacity:0.6},C);}
+  }
+
+  // BRAIN medallion
+  var bx=360,by=150;
+  medallion(bx,by,96,inBrain,{ink:INK,rows:30});
+  var sparks=[];
+  for(var n=0;n<34;n++){
+    var ang=Math.random()*Math.PI*2, rad=Math.sqrt(Math.random())*0.78;
+    var px=Math.cos(ang)*rad, py=Math.sin(ang)*rad;
+    if(!inBrain(px,py))continue;
+    var dot=el("circle",{cx:bx+px*96,cy:by+py*96,r:n%6?0.9:1.5,fill:n%4?INDIGO:SEAL,opacity:0.85,class:"neuron"},C);
+    sparks.push(dot);
+  }
+  el("text",{x:bx+128,y:by-62,"font-family":"Archivo Narrow","font-size":"9","letter-spacing":"2.2",fill:INK,opacity:0.65},C).textContent="CORTEX · RENTED";
+
+  // VAGUS NERVE
+  var vag="M360 256 C 352 292, 376 318, 362 348 C 354 372, 366 384, 362 396";
+  el("path",{d:vag,fill:"none",stroke:INK,"stroke-width":2.1,class:"vagus-main"},C);
+  el("path",{d:vag,fill:"none",stroke:INK,"stroke-width":0.6,opacity:0.5,transform:"translate(4 0)"},C);
+  el("path",{d:vag,fill:"none",stroke:SEAL,"stroke-width":0.8,opacity:0.6,transform:"translate(-3 0)",class:"flow"},C);
+  el("path",{d:"M360 282 C 330 292, 312 306, 300 324",fill:"none",stroke:INK,"stroke-width":0.6,opacity:0.6},C);
+  el("path",{d:"M364 312 C 396 322, 414 338, 424 356",fill:"none",stroke:INK,"stroke-width":0.6,opacity:0.6},C);
+  var pulse=el("circle",{cx:360,cy:256,r:3.4,fill:SEAL,opacity:0,class:"pulse-dot"},C);
+  el("text",{x:398,y:332,"font-family":"Archivo Narrow","font-size":"9","letter-spacing":"2.2",fill:SEAL,opacity:0.9},C).textContent="VAGUS · OWNED";
+
+  // HEART medallion (red pass slightly misregistered, as on a true note)
+  var hx0=360,hy0=486;
+  var heartG=el("g",{class:"heartG",style:"transform-origin:360px 486px"},C);
+  (function(){
+    var keep=C; C=heartG;
+    medallion(hx0,hy0,104,inHeart,{ink:INK,rows:34});
+    C=keep;
+  })();
+  el("path",{d:(function(){var pts=[];for(var t=0;t<=Math.PI*2+0.02;t+=0.02){var x=16*Math.pow(Math.sin(t),3),y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));pts.push([hx0+1.8+x*4.6,hy0+1.4+y*4.6-12])}return P(pts)+"Z"})(),
+    fill:"none",stroke:SEAL,"stroke-width":0.8,opacity:0.5},heartG);
+  el("path",{d:(function(){var pts=[];for(var t=0;t<=Math.PI*2+0.02;t+=0.02){var x=16*Math.pow(Math.sin(t),3),y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));pts.push([hx0+x*4.6,hy0+y*4.6-12])}return P(pts)+"Z"})(),
+    fill:"none",stroke:SEAL,"stroke-width":1.2,opacity:0.75,class:"flow"},heartG);
+
+  // vessels out of the heart: flowing engraved lines
+  [["M300 420 C 240 396, 180 398, 116 430",0],["M420 420 C 480 396, 540 398, 604 430",1],
+   ["M330 568 C 290 600, 252 614, 204 622",0],["M390 568 C 430 600, 468 614, 516 622",1]].forEach(function(v){
+    el("path",{d:v[0],fill:"none",stroke:v[1]?INDIGO:SEAL,"stroke-width":0.9,opacity:0.6,class:"flow"},C);
+    el("path",{d:v[0],fill:"none",stroke:INK,"stroke-width":0.4,opacity:0.35,transform:"translate(0 3)"},C);
+  });
+  el("text",{x:360,y:618,"text-anchor":"middle","font-family":"Cinzel","font-weight":"700","font-size":"13","letter-spacing":"4",fill:INK},C).textContent="THE VAGUS ENGINE";
+  el("text",{x:360,y:636,"text-anchor":"middle","font-family":"Archivo Narrow","font-size":"8.5","letter-spacing":"2.6",fill:INK,opacity:0.6},C).textContent="HEART · EQ · OWNED        BRAIN · IQ · RENTED        BLOOD · OUTCOME";
+
+  // rosettes flanking the heart
+  rosette(C,120,322,0.5,INK); rosette(C,600,322,0.5,INDIGO);
+
+  // prepare draw-in lengths
+  if(!reduce){
+    Array.prototype.forEach.call(C.querySelectorAll("path"),function(p,i){
+      try{var L=Math.ceil(p.getTotalLength());p.style.setProperty("--len",L);p.style.setProperty("--d",(i%23)*0.06+"s");}catch(e){}
+    });
+    requestAnimationFrame(function(){document.getElementById("centerpiece").parentElement.classList.remove("lit");C.closest(".frame");document.body.classList.add("printed");});
+  }
+
+  // heartbeat + vagus pulse
+  if(!reduce){
+    var hg=heartG; hg.style.transition="transform .18s cubic-bezier(.3,0,.4,1)";
+    setInterval(function(){
+      hg.style.transform="scale(1.045)";
+      setTimeout(function(){hg.style.transform="scale(0.99)"},140);
+      setTimeout(function(){hg.style.transform="scale(1)"},300);
+    },1700);
+    var vp=document.querySelector(".vagus-main"), vlen=vp.getTotalLength();
+    var t0=null;
+    function firePulse(ts){
+      if(!t0)t0=ts; var k=((ts-t0)%2600)/900;
+      if(k<=1){var pt=vp.getPointAtLength(k*vlen);pulse.setAttribute("cx",pt.x);pulse.setAttribute("cy",pt.y);pulse.setAttribute("opacity",String(1-Math.abs(k-0.5)*0.9));}
+      else pulse.setAttribute("opacity","0");
+      requestAnimationFrame(firePulse);
+    }
+    requestAnimationFrame(firePulse);
+    // neuron sparks
+    setInterval(function(){
+      var d=sparks[Math.floor(Math.random()*sparks.length)];
+      d.setAttribute("r","2.6"); d.setAttribute("fill",SEAL);
+      setTimeout(function(){d.setAttribute("r","1.2");d.setAttribute("fill",INK)},260);
+    },420);
+  }
+
+  // ---------- watermark: the genome, hidden in the paper
+  var W=document.getElementById("watermark");
+  for(var wl=0;wl<3;wl++){
+    var wpts=[];for(var x=20;x<=540;x+=4){wpts.push([x,210+Math.sin(x/36+wl*2.1)*(58-wl*14)*Math.sin(x/270*Math.PI)])}
+    el("path",{d:P(wpts),fill:"none",stroke:INDIGO,"stroke-width":1.1,opacity:0.5},W);
+    var wpts2=wpts.map(function(p){return [p[0],420-p[1]]});
+    el("path",{d:P(wpts2),fill:"none",stroke:INDIGO,"stroke-width":1.1,opacity:0.5},W);
+  }
+  for(var rx=36;rx<540;rx+=18){
+    var y1=210+Math.sin(rx/36)*58*Math.sin(rx/270*Math.PI);
+    el("line",{x1:rx,y1:y1,x2:rx,y2:420-y1,stroke:INDIGO,"stroke-width":0.5,opacity:0.4},W);
+  }
+  el("text",{x:280,y:216,"text-anchor":"middle","font-family":"Cinzel","font-weight":"700","font-size":"20","letter-spacing":"8",fill:INDIGO,opacity:0.8},W).textContent="THE GENOME";
+  el("text",{x:280,y:242,"text-anchor":"middle","font-family":"Archivo Narrow","font-size":"10","letter-spacing":"3",fill:INDIGO,opacity:0.7},W).textContent="YOURS · EXPORTABLE · INHERITABLE · REVOCABLE";
+  var eng=document.getElementById("engraving");
+  ["pointerenter","focus"].forEach(function(ev){eng.addEventListener(ev,function(){eng.classList.add("lit")})});
+  ["pointerleave","blur"].forEach(function(ev){eng.addEventListener(ev,function(){eng.classList.remove("lit")})});
+  eng.addEventListener("click",function(){eng.classList.toggle("lit")});
+
+  // ---------- organ icons: drawn, one stroke weight
+  function icon(id,draw){var s=document.getElementById(id);draw(s)}
+  icon("oi1",function(s){ // genome: double helix compact
+    for(var i=0;i<2;i++){var pts=[];for(var y=6;y<=34;y+=1.4)pts.push([20+Math.sin(y/5+(i?Math.PI:0))*8,y]);
+      el("path",{d:P(pts),fill:"none",stroke:INK,"stroke-width":1.1},s)}
+    for(var y2=8;y2<=32;y2+=5){el("line",{x1:20+Math.sin(y2/5)*8,y1:y2,x2:20+Math.sin(y2/5+Math.PI)*8,y2:y2,stroke:INK,"stroke-width":1.1,opacity:0.7},s)}
+  });
+  icon("oi2",function(s){ // limbic: concentric waves into a point
+    for(var r=4;r<=16;r+=6)el("path",{d:"M"+(20-r)+" 24 A "+r+" "+r+" 0 0 1 "+(20+r)+" 24",fill:"none",stroke:INK,"stroke-width":1.1},s);
+    el("circle",{cx:20,cy:27,r:1.6,fill:SEAL},s);
+  });
+  icon("oi3",function(s){ // floor: a line nothing crosses
+    el("line",{x1:7,y1:27,x2:33,y2:27,stroke:SEAL,"stroke-width":1.4},s);
+    el("path",{d:"M12 27 L12 13 M20 27 L20 9 M28 27 L28 16",stroke:INK,"stroke-width":1.1,fill:"none"},s);
+    el("path",{d:"M9 33 h22",stroke:INK,"stroke-width":1.1,opacity:0.5},s);
+  });
+  icon("oi4",function(s){ // vagal tone: dial
+    el("path",{d:"M8 28 A 12 12 0 0 1 32 28",fill:"none",stroke:INK,"stroke-width":1.1},s);
+    for(var a=0;a<5;a++){var ang=Math.PI+(a/4)*Math.PI;el("line",{x1:20+10*Math.cos(ang),y1:28+10*Math.sin(ang),x2:20+13*Math.cos(ang),y2:28+13*Math.sin(ang),stroke:INK,"stroke-width":1.1},s)}
+    el("line",{x1:20,y1:28,x2:27,y2:19,stroke:SEAL,"stroke-width":1.4},s);
+  });
+  icon("oi5",function(s){ // ledger: chained entries
+    [9,20,31].forEach(function(x,i){el("rect",{x:x-4,y:14,width:8,height:12,fill:"none",stroke:i===2?SEAL:INK,"stroke-width":1.1},s)});
+    el("line",{x1:13,y1:20,x2:16,y2:20,stroke:INK,"stroke-width":1.1},s);
+    el("line",{x1:24,y1:20,x2:27,y2:20,stroke:INK,"stroke-width":1.1},s);
+  });
+  icon("oi6",function(s){ // loop
+    el("path",{d:"M28 12 A 11 11 0 1 0 31 22",fill:"none",stroke:INK,"stroke-width":1.1},s);
+    el("path",{d:"M28 6 L28 13 L21 13",fill:"none",stroke:SEAL,"stroke-width":1.4},s);
+  });
+
+  // ---------- DNA braid
+  var D=document.getElementById("dna");
+  for(var st=0;st<2;st++){
+    var dp=[];for(var y3=10;y3<=550;y3+=3)dp.push([150+Math.sin(y3/34+(st?Math.PI:0))*74, y3]);
+    el("path",{d:P(dp),fill:"none",stroke:st?INDIGO:INK,"stroke-width":1.4},D);
+    el("path",{d:P(dp.map(function(p){return[p[0]+(st?-5:5),p[1]+2]})),fill:"none",stroke:st?INDIGO:INK,"stroke-width":0.5,opacity:0.45},D);
+  }
+  for(var y4=18;y4<=544;y4+=13){
+    var xa=150+Math.sin(y4/34)*74, xb=150+Math.sin(y4/34+Math.PI)*74;
+    var mid=(y4/13)%4===0;
+    el("line",{x1:xa,y1:y4,x2:xb,y2:y4,stroke:mid?SEAL:INK,"stroke-width":mid?1:0.6,opacity:mid?0.8:0.5},D);
+  }
+  el("text",{x:150,y:556,"text-anchor":"middle","font-family":"Archivo Narrow","font-size":"9","letter-spacing":"3",fill:INK,opacity:0.6},D).textContent="PASSED DOWN · WITH CONSENT · REVOCABLE";
+
+  // ---------- seal
+  var SM=document.getElementById("sealmark");
+  rosette(SM,60,60,0.9,SEAL);
+  el("circle",{cx:60,cy:60,r:52,fill:"none",stroke:SEAL,"stroke-width":1.2},SM);
+  el("circle",{cx:60,cy:60,r:46,fill:"none",stroke:SEAL,"stroke-width":0.5},SM);
+  var tp=el("path",{d:"M60 60 m -39 0 a 39 39 0 1 1 78 0 a 39 39 0 1 1 -78 0",fill:"none",id:"sealring"},defsFor(SM));
+  function defsFor(svg){var d=svg.querySelector("defs");if(!d)d=el("defs",{},svg);return d}
+  var txt=el("text",{"font-family":"Archivo Narrow","font-size":"8.4","letter-spacing":"2.6",fill:SEAL},SM);
+  var tpath=el("textPath",{href:"#sealring",startOffset:"0"},txt);
+  tpath.textContent="HONEST BY DESIGN · RECORDED FOR LIFE · SUBSTRATE AI ·";
+
+  // ---------- scroll reveals (varied delays, one grammar)
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}})},{threshold:0.18});
+  Array.prototype.forEach.call(document.querySelectorAll(".reveal"),function(r,i){r.style.transitionDelay=(i%5)*0.07+"s";io.observe(r)});
+})();
+</script>
+</body>
+</html>
