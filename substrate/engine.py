@@ -48,6 +48,7 @@ class VagusEngine:
         signals = read_signals(req.message)
         state = infer_state(signals)
         lm = limbic.read(req.message, [t.content for t in req.thread if t.role == "user"])
+        ancestry_note = None
 
         if is_crisis(req.message):
             # ---------------- the Safety Protocol: above every tissue, persona and policy
@@ -64,7 +65,12 @@ class VagusEngine:
             verdict = decide(req.message, thread_text, person, facts, state, tissue.brief, tissue.verdict)
             stakes = req.stakes or infer_stakes(facts, person)
             t = self._temperament(req.temperament, person, tissue, policy)
+            if facts.metrics.get("harm"):
+                t = temperaments.get("comfort")   # harm is met with care, never a lecture
             firmness, tone_notes = vagal_tone_explained(person, state, stakes, t.firmness_bias)
+            if facts.metrics.get("harm") and firmness > 3:
+                firmness = 3
+                tone_notes.append("Harm signal: voice switched to Comfort, tone held at 3. The verdict is unchanged.")
             if "approval" in lm.needs and verdict.polarity.severity >= 1 and firmness < 3:
                 firmness = 3
                 tone_notes.append("Approval-seeking detected: tone held at 3 so the truth isn't traded for comfort.")
@@ -72,6 +78,13 @@ class VagusEngine:
             if firmness > cap:
                 firmness = cap
                 tone_notes.append(f"Capped at {cap} for the {tissue.name} tissue.")
+            if person.ancestry and verdict.polarity.severity >= 1:
+                from .inherit import ancestral_lesson, phrase
+                hit = ancestral_lesson(person, facts.flags)
+                if hit:
+                    ancestry_note = phrase(*hit)
+                    verdict.reasons = [ancestry_note] + [r for r in verdict.reasons if r != ancestry_note]
+                    tone_notes.append(f"Inherited lesson from {hit[0].name} ({hit[0].relation}) cited.")
             message = deliver(verdict, t, firmness, state, tissue.voice.get(t.key),
                               limbic.empathy_lines(lm, verdict.polarity.value))
             forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
@@ -84,13 +97,13 @@ class VagusEngine:
                    "p_follow": prediction.p_follow, "safety": facts.safety,
                    "limbic": None if facts.safety else {"dominant": lm.dominant, "valence": lm.valence,
                                                         "arousal": lm.arousal, "needs": lm.needs},
-                   "delivered": None if facts.safety else message}
+                   "delivered": None if facts.safety else message, "ancestry": ancestry_note}
         ev = self.store.append(req.user_id, "advice", payload) if record else \
             {"id": "preview", "hash": "-", "prev_hash": self.store.head(req.user_id)}
 
         return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
-                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, message=message,
+                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:

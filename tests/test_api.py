@@ -61,7 +61,7 @@ def test_multi_tenant_isolation_and_policy():
 def test_models_and_tissues_catalogue():
     ms = c.get("/v1/models").json()["models"]
     assert {"anthropic", "nvidia", "gemini", "ollama", "vllm"} <= {m["key"] for m in ms}
-    assert {t["key"] for t in c.get("/v1/tissues").json()} == {"wealth", "venture", "founder", "wellbeing"}
+    assert {t["key"] for t in c.get("/v1/tissues").json()} == {"wealth", "venture", "founder", "wellbeing", "markets"}
 
 
 def test_graph_and_learning_endpoints():

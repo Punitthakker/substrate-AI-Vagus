@@ -192,6 +192,8 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 @media (max-width:1150px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:72vh} }
 @media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:82vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.lesson.inherited{border-left:2px solid var(--grn);background:color-mix(in srgb, var(--grn) 7%, transparent);animation:inheritIn .9s ease}
+@keyframes inheritIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -216,7 +218,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     </div>
     <div class="sect"><h3>Candor ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
     <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
-    <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div></div>
+    <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div><div id="ancestry"></div></div>
     <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
     <div class="sect"><h3>Temperament <span id="tname" class="red"></span></h3><div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div></div>
   </aside>
@@ -253,6 +255,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       <button class="btn" id="evalBtn">Run all evals</button>
       <button class="btn" id="exportBtn">Export .sub genome</button>
       <button class="btn" id="graphBtn">Genome graph</button>
+      <button class="btn" id="heirBtn">Pass it on · 2050</button>
       <button class="btn" id="resetBtn">Reset demo</button>
     </div></div>
     <div class="sect"><h3>Vagus Ledger <span class="verified" id="verified"></span></h3><div class="chain" id="chain"></div></div>
@@ -271,6 +274,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     wealth: ["Ask it something you <span class='si red'>want</span> to hear yes to.", "Substrate remembers who you are, reads the moment, and tells you the truth about your money in the voice you chose."],
     venture: ["The honest partner in your <span class='si red'>investment committee.</span>", "It sizes the check against the fund, prices the round against revenue, and remembers the last hot deal that marked down."],
     founder: ["The co-founder who reads the <span class='si red'>bank balance.</span>", "Every spend becomes runway. Every hire becomes a date. It tells you the month the money runs out."],
+    markets: ["The honest brake on <span class='si red'>every bet.</span>", "Polymarket, Kalshi, sportsbooks. It reads the price as a probability, multiplies the parlay, sizes the stake, and names the chase before you place it."],
     wellbeing: ["Somewhere to <span class='si red'>vent</span>, that tells the truth gently.", "A coach, not a therapist. It listens, slows down decisions made at the peak of a feeling, and hands every crisis to a human."]
   };
 
@@ -344,6 +348,14 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
           '<div class="kv"><span>Cash in bank</span><span>' + money(pr.cash_in_bank) + '</span></div>' +
           '<div class="kv"><span>Net burn</span><span>' + money(pr.monthly_burn) + '/mo</span></div>' +
           '<div class="kv"><span>MRR</span><span>' + money(pr.mrr) + ' · +' + Math.round(100*(pr.mrr_growth || 0)) + '%/mo</span></div>';
+      } else if (p.domain === "markets") {
+        var cap = (pr.max_bet_fraction || 0.02);
+        html = '<div class="nw">' + money(pr.bankroll, p.currency) + '</div><div class="lbl">bankroll · ' + esc((pr.venues || []).join(", ")) + '</div>' +
+          '<div class="kv"><span>Max per position</span><span>' + Math.round(cap * 100) + '% · ' + money((pr.bankroll || 0) * cap, p.currency) + '</span></div>' +
+          '<div class="kv"><span>Sizing</span><span>Quarter-Kelly, capped</span></div>' +
+          '<div class="kv"><span>Fees assumed</span><span>' + Math.round(100 * (pr.fee || 0.02)) + '%</span></div>' +
+          '<div class="kv"><span>Risk, observed</span><span class="red">' + esc(p.risk_profile.observed || "-") + '</span></div>' +
+          '<div class="kv"><span>Harm signals</span><span class="blue">Support path</span></div>';
       } else {
         html = '<div class="kv" style="margin-top:12px"><span>Consented candor</span><span>' + p.consent.candor_level + ' / 5 (gentle)</span></div>' +
           '<div class="kv"><span>Trusted person</span><span>' + esc((pr.support_contacts || ["not set"])[0]) + '</span></div>' +
@@ -355,6 +367,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       var ls = p.lessons || [], fresh = ls.length > S.lessons && S.lessons > 0;
       $("lessons").innerHTML = ls.slice().reverse().map(function(l, i){ return '<div class="lesson' + (fresh && i === 0 ? ' new' : '') + '">' + esc(l) + '</div>'; }).join("") || '<div class="lesson">Nothing yet. Every outcome teaches the genome.</div>';
       S.lessons = ls.length;
+      $("ancestry").innerHTML = (p.ancestry || []).map(function(a){ return '<div class="lesson inherited"><b>Inherited from ' + esc(a.name) + ' · ' + esc(a.relation) + '</b><br>' + esc(a.values.slice(0,3).join(", ")) + ' · ' + a.lessons.length + ' lessons · patterns: ' + esc(a.patterns.join(", ") || "none") + '</div>'; }).join("");
       $("goals").innerHTML = p.goals.map(function(g){ return '<span class="chip">' + esc(g.name) + '</span>'; }).join("");
       var allowed = tissue().allowed_temperaments;
       if (!S.temperament || (allowed && allowed.indexOf(S.temperament) < 0)) S.temperament = (allowed && allowed.indexOf(p.temperament) < 0) ? tissue().default_temperament : p.temperament;
@@ -548,12 +561,21 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       api("/v1/learn/stats").then(function(L){
         $("learnSub").innerHTML = "Every consented outcome becomes training data for <b>substrate-vagus</b>, an open-weight model forked from " + esc(L.base_models.slice(0,3).join(", ")) + " and trained on NVIDIA GPUs. Pipeline: " + esc(L.pipeline.join(" → ")) + ".";
         var st = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };
-        $("learnStats").innerHTML = st("SFT examples", L.sft_examples) + st("DPO pairs", L.dpo_pairs) + st("Wealth", L.by_domain.wealth) + st("Venture", L.by_domain.venture) + st("Founder", L.by_domain.founder) + st("Wellbeing", L.by_domain.wellbeing);
+        $("learnStats").innerHTML = st("SFT examples", L.sft_examples) + st("DPO pairs", L.dpo_pairs) + st("Wealth", L.by_domain.wealth) + st("Venture", L.by_domain.venture) + st("Founder", L.by_domain.founder) + st("Wellbeing", L.by_domain.wellbeing) + st("Markets", L.by_domain.markets) + st("PII redacted", Object.values((L.redaction || {}).counts || {}).reduce(function(a,b){ return a + b; }, 0));
       });
     });
   };
 
   var NODE_COL = {person:"--fg",value:"--faint",goal:"--wbc",pattern:"--rbc",decision:"--amb",action:"--wbc",outcome:"--grn",lesson:"--safe"};
+  $("heirBtn").onclick = function(){
+    var heir = (S.heirs || {})["demo-kapoor"] || "demo-maya";
+    api("/v1/inherit/demo-kapoor", {heir_id: heir, relation: "father"}).catch(function(){}).then(function(){
+      switchUser(heir, "wealth", "Year 2050. Maya received her father's genome.");
+      $("q").value = "Thinking of putting $120k into this new AI token before it lists. Can't miss it!";
+      $("q").focus();
+      toast("2050: Aarav's genome passed to his daughter Maya. Ask as Maya.");
+    });
+  };
   $("graphBtn").onclick = function(){
     overlay('<div class="lbl">Genome graph · person model as a living network</div><h2>The <span class="si red">nervous system</span> of one human.</h2><p class="sub">Values, goals and patterns, wired to every decision, what they did, what it cost, and what it taught. Production streams the same facts into a temporal knowledge graph (Graphiti on Neo4j).</p><canvas class="graph" id="gcv"></canvas><div class="legend" id="glg"></div>');
     api("/v1/graph/" + S.user).then(function(g){
@@ -617,7 +639,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 
   // ---------------- boot
   Promise.all([api("/v1/health"), api("/v1/tissues"), api("/v1/temperaments")]).then(function(x){
-    var h = x[0]; S.tissues = x[1]; S.temps = x[2]; S.demos = h.demo_users;
+    var h = x[0]; S.tissues = x[1]; S.temps = x[2]; S.demos = h.demo_users; S.heirs = h.demo_heirs || {};
     $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>";
     var start = (location.hash || "").replace("#", "");
     if (!S.demos[start]) start = "wealth";

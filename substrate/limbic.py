@@ -7,8 +7,8 @@ Text only, never biometric (EU AI Act Article 5). Produces:
     autonomy, approval). Approval-seeking is where sycophancy happens, so it is named explicitly.
   - the emotional arc across the conversation: improving, worsening or steady
 
-Default: a transparent lexicon model, auditable line by line. Optional: a transformer emotion
-classifier (SUBSTRATE_LIMBIC=transformer) when the deployment has the model and compute.
+Default: a transparent lexicon model, auditable line by line. Optional: GoEmotions transformer
+classifier blended with the lexicon (SUBSTRATE_LIMBIC=goemotions) when the deployment has the model and compute.
 """
 from __future__ import annotations
 
@@ -95,27 +95,60 @@ def _emotion_vector(text: str) -> dict[str, float]:
     return {e: round(v / total, 3) for e, v in scores.items()} if total else {e: 0.0 for e in EMOTIONS}
 
 
+# GoEmotions (Google, 27 emotions + neutral) mapped onto Plutchik's 8 primaries.
+GOEMOTIONS = {
+    "admiration": {"trust": 1}, "amusement": {"joy": 1}, "anger": {"anger": 1}, "annoyance": {"anger": 0.7},
+    "approval": {"trust": 0.8}, "caring": {"trust": 1}, "confusion": {"surprise": 0.6, "fear": 0.4},
+    "curiosity": {"anticipation": 1}, "desire": {"anticipation": 1}, "disappointment": {"sadness": 0.8},
+    "disapproval": {"disgust": 0.7, "anger": 0.3}, "disgust": {"disgust": 1},
+    "embarrassment": {"sadness": 0.5, "fear": 0.5}, "excitement": {"joy": 0.6, "anticipation": 0.6},
+    "fear": {"fear": 1}, "gratitude": {"joy": 0.5, "trust": 0.5}, "grief": {"sadness": 1.2}, "joy": {"joy": 1},
+    "love": {"joy": 0.5, "trust": 0.7}, "nervousness": {"fear": 0.9}, "optimism": {"anticipation": 0.7, "joy": 0.4},
+    "pride": {"joy": 0.8}, "realization": {"surprise": 0.7}, "relief": {"joy": 0.7}, "remorse": {"sadness": 0.9},
+    "sadness": {"sadness": 1}, "surprise": {"surprise": 1}, "neutral": {},
+}
+DEFAULT_MODEL = "SamLowe/roberta-base-go_emotions"
+_CLASSIFIER = None   # callable(text) -> list[{"label", "score"}]; injectable for tests
+
+
+def set_classifier(fn) -> None:
+    global _CLASSIFIER
+    _CLASSIFIER = fn
+
+
+def _classifier():
+    global _CLASSIFIER
+    if _CLASSIFIER is None:
+        try:
+            from transformers import pipeline  # type: ignore
+            clf = pipeline("text-classification", model=os.environ.get("SUBSTRATE_LIMBIC_MODEL", DEFAULT_MODEL), top_k=None)
+            _CLASSIFIER = lambda t: clf(t[:512])[0]  # noqa: E731
+        except Exception:
+            _CLASSIFIER = False
+    return _CLASSIFIER or None
+
+
 def _transformer_vector(text: str) -> dict[str, float] | None:
-    """Optional deep model. GoEmotions-style labels mapped onto the 8 primaries."""
-    try:
-        from transformers import pipeline  # type: ignore
-    except Exception:
+    """Deep model: GoEmotions (or Ekman-style) labels mapped onto the 8 primaries."""
+    clf = _classifier()
+    if not clf:
         return None
-    global _CLF
-    try:
-        _CLF  # noqa: B018
-    except NameError:
-        _CLF = pipeline("text-classification", model=os.environ.get(
-            "SUBSTRATE_LIMBIC_MODEL", "j-hartmann/emotion-english-distilroberta-base"), top_k=None)
-    mapping = {"joy": "joy", "neutral": None, "fear": "fear", "surprise": "surprise", "sadness": "sadness",
-               "disgust": "disgust", "anger": "anger"}
     out = {e: 0.0 for e in EMOTIONS}
-    for r in _CLF(text[:512])[0]:
-        k = mapping.get(r["label"].lower())
-        if k:
-            out[k] += float(r["score"])
-    total = sum(out.values()) or 1.0
-    return {e: round(v / total, 3) for e, v in out.items()}
+    for r in clf(text):
+        for prim, w in GOEMOTIONS.get(str(r["label"]).lower(), {}).items():
+            out[prim] += w * float(r["score"])
+    total = sum(out.values())
+    return {e: round(v / total, 3) for e, v in out.items()} if total else None
+
+
+def _blend(deep: dict[str, float] | None, lex: dict[str, float]) -> dict[str, float]:
+    """Deep model for nuance, lexicon for domain words a general model misses ('moon', 'runway', 'all in')."""
+    if not deep:
+        return lex
+    w = float(os.environ.get("SUBSTRATE_LIMBIC_DEEP_WEIGHT", 0.65))
+    mixed = {e: w * deep.get(e, 0) + (1 - w) * lex.get(e, 0) for e in EMOTIONS}
+    t = sum(mixed.values()) or 1.0
+    return {e: round(v / t, 3) for e, v in mixed.items()}
 
 
 def _needs(text: str) -> list[str]:
@@ -144,9 +177,10 @@ def _quadrant(v: float, a: float, intensity: float) -> str:
 
 
 def read(message: str, thread_user_turns: list[str] | None = None) -> Limbic:
-    use_tf = os.environ.get("SUBSTRATE_LIMBIC", "lexicon") == "transformer"
-    vec = (_transformer_vector(message) if use_tf else None) or _emotion_vector(message)
-    model = "transformer" if use_tf and vec and "_CLF" in globals() else "lexicon"
+    use_tf = os.environ.get("SUBSTRATE_LIMBIC", "lexicon") in ("transformer", "goemotions") or bool(_CLASSIFIER)
+    deep = _transformer_vector(message) if use_tf else None
+    vec = _blend(deep, _emotion_vector(message))
+    model = "goemotions+lexicon" if deep else "lexicon"
     raw_hits = sum(1 for e in EMOTIONS for w in LEXICON[e] if w in message.lower())
     intensity = round(min(1.0, (raw_hits + min(message.count("!"), 3)) / 4), 2)
     dominant = max(vec, key=vec.get) if any(vec.values()) else None

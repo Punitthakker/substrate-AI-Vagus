@@ -195,7 +195,8 @@ class Store:
             p = e["payload"]
             if e["kind"] == "advice":
                 pairs[e["id"]] = {"id": e["id"], "ts": e["ts"], "polarity": p.get("polarity"),
-                                  "headline": p.get("headline"), "message": p.get("user_message")}
+                                  "headline": p.get("headline"), "message": p.get("user_message"),
+                                  "flags": p.get("flags") or [], "domain": p.get("domain")}
             elif p.get("ledger_id") in pairs:
                 tgt = pairs[p["ledger_id"]]
                 if e["kind"] == "action":

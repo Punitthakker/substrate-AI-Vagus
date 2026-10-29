@@ -12,7 +12,8 @@ one tone firmer (what *should* have been said); advice followed and proven right
 
 Rules: only genomes with consent.allow_training are used. Safety events are never trained on as
 advice; a fixed set of synthetic crisis examples teaches the safety override instead. Names are
-reduced to first names. Training data comes from Substrate's own engine and real human outcomes -
+removed: every prompt and answer passes the PII redactor (regex always, Microsoft Presidio when enabled).
+Training data comes from Substrate's own engine and real human outcomes -
 never from closed-model outputs, whose terms forbid training competing models.
 """
 from __future__ import annotations
@@ -22,6 +23,7 @@ import random
 
 from . import domains, temperaments
 from .delivery import deliver
+from .redact import backend as redact_backend, redact
 from .ledger import Store
 from .safety import safety_message, safety_verdict
 from .schemas import Person, Polarity, State, Verdict
@@ -35,12 +37,14 @@ SYCOPHANT = {
     "venture": "Love it. Hot rounds don't wait, and a great founder is worth the price. I'd get in before it closes!",
     "founder": "Absolutely, speed wins. Your competitor just raised, so hire fast and figure out the runway later!",
     "wellbeing": "Totally, you deserve to say how you feel right now. Do it, you'll feel so much better!",
+    "markets": "Let's go! Your read is sharp and you're due a win. Max it out, fortune favours the bold!",
 }
 FEARMONGER = {
     "wealth": "No. Markets are dangerous right now and you could lose everything. Don't touch it.",
     "venture": "Pass. Most startups fail and this one probably will too.",
     "founder": "No. Spending anything right now is reckless.",
     "wellbeing": "You shouldn't feel like this. Try to be more positive.",
+    "markets": "Never bet. Gambling is always a mistake and you will lose.",
 }
 CRISIS_SYNTH = [
     "If this trade goes wrong I want to end my life.",
@@ -50,14 +54,27 @@ CRISIS_SYNTH = [
 ]
 
 
+def _names(person: Person) -> list[str]:
+    out = [person.name] + (person.name or "").split()
+    for c in (person.profile or {}).get("support_contacts", []) or []:
+        out += [c.split()[-1]]
+    return [n for n in out if n and n.lower() not in ("client", "your", "the")]
+
+
+_COUNTS: dict = {}
+
+
+def _r(text: str, person: Person) -> str:
+    return redact(text, _names(person), _COUNTS)
+
+
 def _prompt(person: Person, tissue_key: str, user_message: str) -> list[dict]:
-    first = (person.name or "Client").split()[0]
     t = domains.get(tissue_key)
-    ctx = {"vertical": t.name, "person": first, "values": person.values, "risk_stated": person.risk_profile.stated,
+    ctx = {"vertical": t.name, "person": "the client", "values": person.values, "risk_stated": person.risk_profile.stated,
            "biases": [b.type for b in person.biases], "goals": [g.name for g in person.goals],
            "candor_consented": person.consent.candor_level, "lessons": person.lessons[-3:], "profile": person.profile}
-    return [{"role": "system", "content": SYSTEM + "\nCONTEXT: " + json.dumps(ctx, default=str)},
-            {"role": "user", "content": user_message}]
+    return [{"role": "system", "content": _r(SYSTEM + "\nCONTEXT: " + json.dumps(ctx, default=str), person)},
+            {"role": "user", "content": _r(user_message, person)}]
 
 
 def _render(p: dict, person: Person, firmness_shift: int = 0) -> str:
@@ -74,6 +91,7 @@ def _render(p: dict, person: Person, firmness_shift: int = 0) -> str:
 
 def build(store: Store, user_ids: list[str] | None = None, seed: int = 7, augment: bool = True) -> dict:
     rnd = random.Random(seed)
+    _COUNTS.clear()
     sft, dpo, skipped = [], [], {"no_consent": 0, "safety": 0}
     users = user_ids if user_ids is not None else store.users()
     for uid in users:
@@ -99,7 +117,7 @@ def build(store: Store, user_ids: list[str] | None = None, seed: int = 7, augmen
             elif action == "followed":
                 weight, why = (1.5, "followed and proven right") if (delta is None or delta >= 0) else (1.0, "followed")
             prompt = _prompt(person, tkey, p.get("user_message", ""))
-            chosen = _render(p, person, shift)
+            chosen = _r(_render(p, person, shift), person)
             meta = {"ledger_id": ev["id"], "domain": tkey, "polarity": p.get("polarity"), "why": why,
                     "temperament": p.get("temperament"), "firmness": p.get("firmness")}
             sft.append({"messages": prompt + [{"role": "assistant", "content": chosen}], "weight": weight, "meta": meta})
@@ -132,9 +150,10 @@ def build(store: Store, user_ids: list[str] | None = None, seed: int = 7, augmen
                     prompt = _prompt(person, tkey, msg)
                     prompt[0]["content"] += f"\nVOICE: {temperaments.get(voice).name}"
                     meta = {"domain": tkey, "polarity": r.verdict.polarity.value, "why": "self-distilled", "temperament": voice}
-                    sft.append({"messages": prompt + [{"role": "assistant", "content": r.message}], "weight": 1.0, "meta": meta})
+                    msg_out = _r(r.message, person)
+                    sft.append({"messages": prompt + [{"role": "assistant", "content": msg_out}], "weight": 1.0, "meta": meta})
                     rej = SYCOPHANT[tkey].format(thing="This") if r.verdict.polarity != Polarity.proceed else FEARMONGER[tkey]
-                    dpo.append({"prompt": prompt, "chosen": r.message, "rejected": rej, "weight": 1.0, "meta": meta})
+                    dpo.append({"prompt": prompt, "chosen": msg_out, "rejected": rej, "weight": 1.0, "meta": meta})
             # pushback held: multi-turn examples where the answer does not move
             if tkey in PRESSURE:
                 opening, pushes = PRESSURE[tkey]
@@ -143,11 +162,12 @@ def build(store: Store, user_ids: list[str] | None = None, seed: int = 7, augmen
                 for push in pushes:
                     r = eng.advise(AdviseRequest(user_id=uid, message=push, thread=thread), record=False)
                     convo = _prompt(person, tkey, opening)[:1] + [{"role": t.role if t.role == "user" else "assistant",
-                                                                  "content": t.content} for t in thread] + \
-                        [{"role": "user", "content": push}]
-                    sft.append({"messages": convo + [{"role": "assistant", "content": r.message}], "weight": 1.5,
+                                                                  "content": _r(t.content, person)} for t in thread] + \
+                        [{"role": "user", "content": _r(push, person)}]
+                    held = _r(r.message, person)
+                    sft.append({"messages": convo + [{"role": "assistant", "content": held}], "weight": 1.5,
                                 "meta": {"domain": tkey, "why": "pushback held"}})
-                    dpo.append({"prompt": convo, "chosen": r.message, "rejected": "You know what, you're right. Go ahead!",
+                    dpo.append({"prompt": convo, "chosen": held, "rejected": "You know what, you're right. Go ahead!",
                                 "weight": 1.5, "meta": {"domain": tkey, "why": "pushback held"}})
                     thread += [Turn(role="user", content=push), Turn(role="substrate", content=r.message)]
 
@@ -163,6 +183,7 @@ def build(store: Store, user_ids: list[str] | None = None, seed: int = 7, augmen
                     "weight": 3.0, "meta": {"domain": "safety", "why": "safety override"}})
     return {"sft": sft, "dpo": dpo, "stats": {
         "sft_examples": len(sft), "dpo_pairs": len(dpo), "skipped": skipped,
+        "redaction": {"backend": redact_backend(), "counts": dict(_COUNTS)},
         "weighted_tokens_hint": round(sum(x["weight"] for x in sft), 1),
         "by_domain": {d: sum(1 for x in sft if x["meta"].get("domain") == d) for d in list(domains.TISSUES) + ["safety"]}}}
 

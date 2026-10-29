@@ -24,7 +24,7 @@ TIMEOUT = float(os.environ.get("SUBSTRATE_MODEL_TIMEOUT", 30))
 class Brain:
     key: str
     name: str
-    kind: str                 # anthropic | openai-compatible | ollama
+    kind: str                 # anthropic | openai-compatible | ollama | litellm
     base_url: str
     key_env: str | None
     model_env: str
@@ -39,6 +39,8 @@ class Brain:
         return (os.environ.get(self.url_env) if self.url_env else None) or self.base_url
 
     def configured(self) -> bool:
+        if self.kind == "litellm":
+            return bool(os.environ.get(self.model_env) or (self.url_env and os.environ.get(self.url_env)))
         if self.key_env:
             return bool(os.environ.get(self.key_env))
         return bool(self.url_env and os.environ.get(self.url_env))   # self-hosted: configured by URL
@@ -68,6 +70,9 @@ REGISTRY: dict[str, Brain] = {b.key: b for b in [
           "Bank data centre, GPU", url_env="VLLM_URL"),
     Brain("bionicgpt", "BionicGPT (self-hosted)", "openai-compatible", "", None, "BIONIC_MODEL", "default",
           "Private enterprise chat platform", url_env="BIONIC_URL"),
+    Brain("litellm", "LiteLLM gateway (100+ providers)", "litellm", "", None, "LITELLM_MODEL", "",
+          "Any provider via one gateway: set LITELLM_MODEL (e.g. bedrock/..., azure/..., vertex_ai/...) or LITELLM_PROXY_URL",
+          "LITELLM_PROXY_URL"),
     Brain("ollama", "Ollama (local)", "ollama", "http://localhost:11434", None, "OLLAMA_MODEL", "llama3.1",
           "Laptop or on-prem, fully offline", url_env="OLLAMA_URL"),
 ]}
@@ -121,6 +126,17 @@ def _call(b: Brain, system: str, user: str) -> tuple[str, str]:
                              "format": "json", "options": {"temperature": 0.2}})
         r.raise_for_status()
         return r.json().get("response", ""), f"ollama:{model}"
+    if b.kind == "litellm":
+        msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        if b.url():   # a running LiteLLM proxy speaks the OpenAI protocol
+            r = httpx.post(f"{b.url().rstrip('/')}/chat/completions", timeout=TIMEOUT,
+                           headers={"authorization": f"Bearer {os.environ.get('LITELLM_API_KEY', 'sk-litellm')}"},
+                           json={"model": model or "default", "temperature": 0.2, "messages": msgs})
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]["content"], f"litellm:{model or 'proxy'}"
+        import litellm  # type: ignore
+        resp = litellm.completion(model=model, messages=msgs, temperature=0.2, timeout=TIMEOUT)
+        return resp.choices[0].message.content, f"litellm:{model}"
     key = os.environ.get(b.key_env or "", "") or "not-needed-on-prem"
     r = httpx.post(f"{b.url().rstrip('/')}/chat/completions", timeout=TIMEOUT,
                    headers={"authorization": f"Bearer {key}"},

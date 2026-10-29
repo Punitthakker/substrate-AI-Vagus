@@ -64,11 +64,25 @@ class Goal(BaseModel):
     priority: int = 1
 
 
+class Ancestor(BaseModel):
+    """What an heir received: the elder's values and the lessons they paid for. Never their money or messages."""
+    from_user: str
+    name: str                          # first name only
+    relation: str = "family"
+    vintage: str = ""
+    scope: str = "values"
+    values: list[str] = Field(default_factory=list)
+    lessons: list[str] = Field(default_factory=list)
+    patterns: list[str] = Field(default_factory=list)
+    checksum: str = ""
+    received: str = ""
+
+
 class Person(BaseModel):
     """The genome: who this human is across months, not messages. User-owned, exportable, deletable."""
     user_id: str = ""
     name: str = "Client"
-    domain: Literal["wealth", "venture", "founder", "wellbeing"] = "wealth"
+    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
     vintage: str = ""
     consent: Consent = Field(default_factory=Consent)
     temperament: str = "mentor"
@@ -84,6 +98,8 @@ class Person(BaseModel):
     # learned by the outcome loop
     adherence: dict[str, dict[str, int]] = Field(default_factory=dict)
     lessons: list[str] = Field(default_factory=list)
+    # inherited: genomes passed down, revocable by the elder
+    ancestry: list[Ancestor] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------- engine wire types
@@ -172,6 +188,7 @@ class AdviseResponse(BaseModel):
     verdict: Verdict
     prediction: Optional[Prediction] = None
     limbic: Optional[Limbic] = None
+    ancestry: Optional[str] = None     # the elder's lesson cited, if the heir is repeating their pattern
     message: str
     hash: str
     prev_hash: str

@@ -24,7 +24,7 @@ class Policy(BaseModel):
     allowed_temperaments: list[str] = Field(default_factory=lambda: [
         "mentor", "father", "boss", "partner", "comfort", "kid", "surgeon", "grandmother"])
     max_firmness: int = Field(5, ge=1, le=5)
-    domains: list[str] = Field(default_factory=lambda: ["wealth", "venture", "founder", "wellbeing"])
+    domains: list[str] = Field(default_factory=lambda: ["wealth", "venture", "founder", "wellbeing", "markets"])
     crisis_region: str = "AE"
 
 

@@ -26,13 +26,15 @@ from substrate.brains import active_brain, catalogue as model_catalogue, council
 from substrate.engine import VagusEngine
 from substrate.evals import run as run_evals
 from substrate.export import export_sub, verify_sub
+from substrate.inherit import InheritanceError, inherit, revoke
+from substrate.markets_api import BetMath, analyze as bet_analyze, polymarket_price
 from substrate.graph import build_graph, to_graphiti_episodes
 from substrate.learn import build as build_dataset
 from substrate.ledger import Store, verify_chain
 from substrate.policy import DEFAULT, Policy
 from substrate.predict import insights as person_insights
 from substrate.schemas import AdviseRequest, Consent, Goal, OutcomeRequest, Person, Position, RiskProfile
-from substrate.seed import DEMO_USER, DEMO_USERS, seed
+from substrate.seed import DEMO_HEIRS, DEMO_USER, DEMO_USERS, seed
 
 STATIC = Path(__file__).parent / "static"
 store = Store()
@@ -123,7 +125,7 @@ def health():
     return {"ok": True, "engine": "vagus", "version": __version__, "brain": active_brain(),
             "council": council_members(), "models_configured": sum(m["configured"] for m in models),
             "models_available": len(models), "tissues": list(domains.TISSUES), "temperaments": len(temperaments.TEMPERAMENTS),
-            "demo_users": DEMO_USERS}
+            "demo_users": DEMO_USERS, "demo_heirs": {k: v[0] for k, v in DEMO_HEIRS.items()}}
 
 
 @app.get("/v1/temperaments")
@@ -183,7 +185,7 @@ class Holding(BaseModel):
 
 class GuestRequest(BaseModel):
     name: str = Field("Guest", max_length=60)
-    domain: Literal["wealth", "venture", "founder", "wellbeing"] = "wealth"
+    domain: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
     liquid_net_worth: Optional[float] = Field(None, gt=0, le=1e12)
     currency: Literal["USD", "AED", "INR"] = "USD"
     risk: Literal["conservative", "moderate", "aggressive"] = "moderate"
@@ -198,7 +200,8 @@ class GuestRequest(BaseModel):
 def create_guest(g: GuestRequest):
     """Try it on yourself: a sandboxed genome in any tissue, open without a key, never mixed with client data."""
     uid = f"guest-{secrets.token_hex(4)}"
-    allowed = {"fund_size", "thesis", "cash_in_bank", "monthly_burn", "mrr", "company", "support_contacts"}
+    allowed = {"fund_size", "thesis", "cash_in_bank", "monthly_burn", "mrr", "company", "support_contacts",
+               "bankroll", "max_bet_fraction"}
     p = Person(user_id=uid, name=g.name.strip() or "Guest", domain=g.domain, consent=Consent(candor_level=g.candor),
                temperament=temperaments.get(g.temperament).key, risk_profile=RiskProfile(stated=g.risk),
                liquid_net_worth=g.liquid_net_worth, currency=g.currency,
@@ -227,6 +230,22 @@ def compare(req: AdviseRequest, c: Ctx = Depends(ctx)):
         return engine.compare(req, policy=policy)
     except KeyError as e:
         raise HTTPException(404, str(e))
+
+
+@app.post("/v1/markets/analyze")
+def markets_analyze(b: BetMath):
+    """Stateless bet arithmetic: price to probability, parlay legs, round robins, fees, Kelly, bankroll share.
+    No genome, no personal data. For platforms that want an honest pre-bet panel."""
+    return bet_analyze(b)
+
+
+@app.get("/v1/markets/polymarket/{slug}")
+def markets_polymarket(slug: str, outcome: str = "Yes"):
+    """Live price for a Polymarket market slug via the public Gamma API (best effort)."""
+    try:
+        return polymarket_price(slug, outcome)
+    except Exception as e:
+        raise HTTPException(502, f"Polymarket price unavailable: {type(e).__name__}")
 
 
 @app.post("/v1/outcome")
@@ -273,6 +292,36 @@ def export(user_id: str, c: Ctx = Depends(ctx)):
 @app.post("/v1/export/verify")
 def verify(doc: dict):
     return verify_sub(doc)
+
+
+class InheritRequest(BaseModel):
+    heir_id: str
+    relation: str = Field("family", max_length=30)
+    sub: Optional[dict] = Field(None, description="A .sub document. Omit to inherit from the elder's live genome.")
+
+
+@app.post("/v1/inherit/{elder_id}")
+def inherit_genome(elder_id: str, req: InheritRequest, c: Ctx = Depends(ctx)):
+    """Pass a genome down: the heir receives the elder's values and the lessons they paid for (per consent)."""
+    authorize(req.heir_id, c)
+    try:
+        if req.sub is None:
+            authorize(elder_id, c)
+            doc = export_sub(store, elder_id)
+        else:
+            doc = req.sub
+        a = inherit(store, doc, req.heir_id, req.relation)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    except InheritanceError as e:
+        raise HTTPException(403, str(e))
+    return {"ok": True, "heir": req.heir_id, "ancestor": a}
+
+
+@app.delete("/v1/inherit/{elder_id}/{heir_id}")
+def revoke_inheritance(elder_id: str, heir_id: str, c: Ctx = Depends(ctx)):
+    authorize(heir_id, c)
+    return {"ok": revoke(store, heir_id, elder_id)}
 
 
 @app.get("/v1/graph/{user_id}")

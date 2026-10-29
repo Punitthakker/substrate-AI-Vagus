@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from .base import Tissue
 from .founder import Founder
+from .markets import Markets
 from .venture import Venture
 from .wealth import Wealth
 from .wellbeing import Wellbeing
 
-TISSUES: dict[str, Tissue] = {t.key: t for t in [Wealth(), Venture(), Founder(), Wellbeing()]}
+TISSUES: dict[str, Tissue] = {t.key: t for t in [Wealth(), Venture(), Founder(), Wellbeing(), Markets()]}
 
 
 def get(key: str | None) -> Tissue:

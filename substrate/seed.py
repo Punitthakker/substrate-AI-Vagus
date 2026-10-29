@@ -5,14 +5,15 @@ from .ledger import Store
 from .schemas import Bias, Consent, Goal, Inheritance, Person, Position, RiskProfile
 
 DEMO_USER = "demo-kapoor"
-DEMO_USERS = {"wealth": "demo-kapoor", "venture": "demo-haddad", "founder": "demo-mehra", "wellbeing": "demo-sara"}
+DEMO_HEIRS = {"demo-kapoor": ("demo-maya", "father")}
+DEMO_USERS = {"wealth": "demo-kapoor", "venture": "demo-haddad", "founder": "demo-mehra", "wellbeing": "demo-sara", "markets": "demo-rahman"}
 
 
 def _people() -> dict[str, Person]:
     return {
         "demo-kapoor": Person(
             user_id="demo-kapoor", name="Aarav Kapoor", domain="wealth", vintage="2026-10-29",
-            consent=Consent(candor_level=4, allow_training=True, inheritance=Inheritance(heirs=["kapoor-heir-01"], scope="values+ledger")),
+            consent=Consent(candor_level=4, allow_training=True, inheritance=Inheritance(heirs=["demo-maya"], scope="values+ledger")),
             temperament="mentor", values=["family security", "children's education", "long-horizon compounding"],
             risk_profile=RiskProfile(stated="moderate", observed="aggressive"), liquid_net_worth=1_200_000,
             positions=[Position(asset="Global Equity Index Fund", value=480_000, kind="fund"),
@@ -61,6 +62,30 @@ def _people() -> dict[str, Person]:
             goals=[Goal(name="Sleep before midnight", priority=1), Goal(name="Set boundaries at work", priority=2)],
             decision_style="Spirals at night, clearer in the morning.",
             lessons=["2026-10-12: waited until morning before replying to her manager. Glad she did."]),
+        "demo-rahman": Person(
+            user_id="demo-rahman", name="Zayd Rahman", domain="markets", vintage="2026-10-29",
+            consent=Consent(candor_level=4, allow_training=True), temperament="surgeon",
+            values=["discipline", "data over gut", "never bet the rent"],
+            risk_profile=RiskProfile(stated="moderate", observed="aggressive"),
+            profile={"bankroll": 25_000, "max_bet_fraction": 0.02, "fee": 0.02,
+                     "venues": ["Polymarket", "Kalshi", "sportsbook"]},
+            biases=[Bias(type="chasing", evidence=["L-seed-mk01"], last_seen="2026-09-14"),
+                    Bias(type="parlay-math", evidence=["L-seed-mk01"], last_seen="2026-09-14")],
+            goals=[Goal(name="Keep betting a hobby, under 2% a position", priority=1),
+                   Goal(name="Positive closing-line value over 2026", priority=2)],
+            decision_style="Sharp when calm. Chases after a losing weekend, mostly after midnight.",
+            adherence={"5": {"followed": 0, "ignored": 1}, "3": {"followed": 1, "ignored": 0}},
+            lessons=["2026-09-15: ignored a NO BET (Don't chase it.) on a 7-leg parlay and lost $6k.",
+                     "2026-10-06: followed a SIZE DOWN on a Polymarket position. Lost $150 instead of $1.5k."]),
+        "demo-maya": Person(
+            user_id="demo-maya", name="Maya Kapoor", domain="wealth", vintage="2050-01-01",
+            consent=Consent(candor_level=4, allow_training=True), temperament="mentor",
+            values=["curiosity", "independence"], risk_profile=RiskProfile(stated="moderate"),
+            liquid_net_worth=300_000,
+            positions=[Position(asset="Global Equity Index Fund", value=220_000, kind="fund"),
+                       Position(asset="Cash", value=80_000, kind="cash")],
+            goals=[Goal(name="Buy a first home by 2055", priority=1)],
+            decision_style="Inherited her father's instinct for big swings."),
     }
 
 
@@ -74,6 +99,13 @@ def seed(store: Store, reset: bool = False, only: str | None = None) -> None:
             continue
         store.put_person(person)
         _history(store, uid)
+    # the inheritance demo: Aarav's genome passed to his daughter Maya (2050)
+    from .export import export_sub
+    from .inherit import inherit
+    for elder, (heir, relation) in DEMO_HEIRS.items():
+        e, h = store.get_person(elder), store.get_person(heir)
+        if e and h and not h.ancestry:
+            inherit(store, export_sub(store, elder), heir, relation)
 
 
 def _history(store: Store, uid: str) -> None:
@@ -120,3 +152,21 @@ def _history(store: Store, uid: str) -> None:
                                 "temperament": "comfort", "stakes": "medium", "flags": ["impulse"]},
                 event_id="L-seed-wb01", ts="2026-10-11T23:48:00Z")
         A(uid, "action", {"ledger_id": adv["id"], "taken": "followed"}, ts="2026-10-12T08:10:00Z")
+    elif uid == "demo-rahman":
+        adv = A(uid, "advice", {"user_message": "Down $4k this weekend. 7-leg parlay, $6k, need to win it back tonight.",
+                                "domain": "markets", "polarity": "stop", "label": "NO BET", "headline": "No bet. Don't chase it.",
+                                "reasons": ["7 legs at 70% each hit together 8.2% of the time, not 70%."], "model": "rule-core",
+                                "floor_applied": False, "state": "stressed", "firmness": 5, "temperament": "surgeon",
+                                "stakes": "high", "flags": ["chasing", "parlay-math", "bankroll"]},
+                event_id="L-seed-mk01", ts="2026-09-14T01:12:00Z")
+        A(uid, "action", {"ledger_id": adv["id"], "taken": "ignored"}, ts="2026-09-14T01:20:00Z")
+        A(uid, "outcome", {"ledger_id": adv["id"], "type": "pnl", "value_delta": -6_000, "horizon": "1d",
+                           "note": "Parlay lost on leg 5."}, ts="2026-09-15T09:00:00Z")
+        adv2 = A(uid, "advice", {"user_message": "Polymarket YES at 55c, I think 60%. $1,500 on it.", "domain": "markets",
+                                 "polarity": "caution", "label": "SIZE DOWN", "headline": "Size down. The idea may be fine, the size isn't.",
+                                 "reasons": ["A quarter-Kelly stake on your own numbers is about $150."], "model": "rule-core",
+                                 "floor_applied": False, "state": "calm", "firmness": 3, "temperament": "surgeon",
+                                 "stakes": "medium", "flags": ["oversized"]}, event_id="L-seed-mk02", ts="2026-10-05T19:00:00Z")
+        A(uid, "action", {"ledger_id": adv2["id"], "taken": "followed"}, ts="2026-10-05T19:05:00Z")
+        A(uid, "outcome", {"ledger_id": adv2["id"], "type": "pnl", "value_delta": -150, "horizon": "1d",
+                           "note": "Resolved NO. Small loss, as sized."}, ts="2026-10-06T09:00:00Z")

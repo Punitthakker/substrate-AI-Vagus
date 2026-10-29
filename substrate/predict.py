@@ -54,10 +54,14 @@ def predict(person: Person, state: State, firmness: int, facts: Facts, verdict: 
     escalate = None
     if facts.safety:
         escalate = "Safety protocol active: route to a trained human now."
+    elif facts.domain == "markets" and facts.metrics.get("harm"):
+        escalate = "Gambling-harm signal: offer support (gamblingtherapy.org) and suggest a cooling-off limit."
     elif verdict.polarity.severity == 2 and p < 0.4:
         escalate = "Low chance this advice is followed on a high-stakes call: escalate to a human advisor today."
     elif facts.domain == "wellbeing" and (facts.metrics.get("persistent") or facts.metrics.get("distress_turns", 0) >= 3):
         escalate = "Sustained distress: suggest professional support (doctor, therapist or trusted person)."
+    elif facts.domain == "markets" and "chasing" in facts.flags:
+        escalate = "Chasing losses: suggest a cooling-off period or a deposit limit on the platform."
     return Prediction(p_follow=p, drivers=drivers, forecasts=forecasts, escalate=escalate)
 
 
