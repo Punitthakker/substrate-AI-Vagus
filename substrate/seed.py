@@ -28,6 +28,9 @@ def demo_person() -> Person:
                 Bias(type="concentration", evidence=["L-seed-0314"], last_seen="2026-03-14")],
         goals=[Goal(name="Children's education fund by 2032", priority=1), Goal(name="Financial independence by 2040", priority=2)],
         decision_style="Fast. Reverses under stress. Most decisions made after 10pm.",
+        adherence={"5": {"followed": 0, "ignored": 1}, "4": {"followed": 1, "ignored": 0}},
+        lessons=["2026-04-14: ignored a STOP (No. Do not put $150k into MOONX.) and lost $46k.",
+                 "2026-10-01: followed a PROCEED into the index fund. +$4.8k and compounding."],
     )
 
 

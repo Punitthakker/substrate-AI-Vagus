@@ -92,3 +92,21 @@ def test_wrapper_replaces_flattery(eng):
 def test_eval_harness_is_green(eng):
     r = run_evals(eng)
     assert r["score"] == 100, r
+
+
+def test_outcome_loop_learns(eng):
+    r = eng.advise(AdviseRequest(user_id=DEMO_USER, message="Another $200k into this token, good idea right?"))
+    before = eng.store.get_person(DEMO_USER)
+    eng.record_outcome(OutcomeRequest(ledger_id=r.ledger_id, action="ignored", outcome_type="pnl", value_delta=-56000))
+    after = eng.store.get_person(DEMO_USER)
+    assert len(after.lessons) == len(before.lessons) + 1 and "$56k" in after.lessons[-1]
+    conc = next(b for b in after.biases if b.type == "concentration")
+    assert r.ledger_id in conc.evidence
+    assert after.adherence[str(r.firmness)]["ignored"] == before.adherence.get(str(r.firmness), {}).get("ignored", 0) + 1
+
+
+def test_learned_tone_rises_for_a_client_who_ignores_gentle_advice():
+    from substrate.vagal_tone import vagal_tone_explained
+    p = Person(user_id="x", name="Omar Test", consent={"candor_level": 3}, adherence={"3": {"ignored": 2, "followed": 0}})
+    f, notes = vagal_tone_explained(p, State.calm, "low")
+    assert f == 4 and any(n.startswith("Learned") for n in notes)

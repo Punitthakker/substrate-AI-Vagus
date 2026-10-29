@@ -76,6 +76,9 @@ class Person(BaseModel):
     biases: list[Bias] = Field(default_factory=list)
     goals: list[Goal] = Field(default_factory=list)
     decision_style: Optional[str] = None
+    # learned by the outcome loop: how often advice at each firmness level was followed or ignored
+    adherence: dict[str, dict[str, int]] = Field(default_factory=dict)
+    lessons: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------- engine wire types
@@ -131,6 +134,7 @@ class AdviseResponse(BaseModel):
     signals: Signals
     stakes: Literal["low", "medium", "high"]
     firmness: int
+    tone_notes: list[str] = Field(default_factory=list)
     temperament: str
     facts: Facts
     verdict: Verdict

@@ -147,6 +147,15 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 .evrow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--hair);font-size:13px}
 .evrow i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px}
 .score{font-family:var(--disp);font-weight:900;font-size:64px;color:var(--grn);line-height:1;margin-top:18px}
+.lesson{font-size:12px;color:var(--dim);padding:6px 0;border-bottom:1px dashed var(--hair)}
+.lesson.new{color:var(--fg);animation:flash 1.6s ease}
+@keyframes flash{0%{background:color-mix(in srgb,var(--rbc) 25%,transparent)}100%{background:transparent}}
+.gform{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:22px;max-width:900px}
+.gform label{display:flex;flex-direction:column;gap:6px;font-size:10px;letter-spacing:2.5px;color:var(--faint);text-transform:uppercase}
+.gform input,.gform select{background:var(--soft);border:1px solid var(--hair);border-radius:10px;padding:11px 12px;color:var(--fg);font:inherit;font-size:14px;letter-spacing:0;text-transform:none}
+.hold{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px;max-width:900px;margin-top:10px}
+.gactions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.gactions .btn{padding:12px 18px}
 
 @media (max-width:1100px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:70vh} }
 @media (max-width:720px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .hsub,.badge{display:none} .center{order:-1;min-height:82vh} header{gap:12px} }
@@ -160,6 +169,7 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
   <span class="hsub">Vagus Engine &middot; live console</span>
   <span class="hsp"></span>
   <span class="badge" id="brain">BRAIN <b>...</b></span>
+  <button class="iconbtn" id="userBtn" type="button">TRY IT ON YOURSELF</button>
   <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">THEME</button>
 </header>
 
@@ -182,7 +192,8 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
       <div class="kv"><span>Consented candor</span><span id="cc"></span></div>
       <div class="kv"><span>Heirs</span><span id="heirs"></span></div>
     </div>
-    <div class="sect"><h3>Known patterns</h3><div class="chips" id="biases"></div></div>
+    <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
+    <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div></div>
     <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
     <div class="sect">
       <h3>Temperament <span id="tname" class="red"></span></h3>
@@ -218,6 +229,7 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
       <h3>Vagal tone <span id="toneN">-</span></h3>
       <div class="tone" id="tone"></div>
       <div class="tone-l"><span>GENTLE</span><span>FIRM</span></div>
+      <div class="sig" id="toneNotes"></div>
     </div>
     <div class="sect">
       <h3>Verdict <span id="model"></span></h3>
@@ -256,8 +268,9 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 
 <script>
 (function(){
-  var USER = "demo-kapoor";
-  var state = {temperament: null, thread: [], last: null, temps: []};
+  var DEMO = "demo-kapoor", USER = DEMO;
+  try { var g = localStorage.getItem("sub-guest"); if (g && location.hash === "#me") USER = g; } catch(e){}
+  var state = {temperament: null, thread: [], last: null, temps: [], lessons: 0};
   var $ = function(id){ return document.getElementById(id); };
   var COLORS = ["var(--wbc)","var(--rbc)","var(--grn)","var(--faint)","var(--amb)"];
   var SCEN = [
@@ -306,8 +319,8 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
     return api("/v1/person/" + USER).then(function(p){
       $("pname").textContent = p.name; $("pstyle").textContent = p.decision_style || "";
       $("vintage").textContent = "v." + p.vintage;
-      $("nw").textContent = money(p.liquid_net_worth);
-      var total = p.positions.reduce(function(a,x){ return a + x.value; }, 0);
+      $("nw").textContent = p.liquid_net_worth ? money(p.liquid_net_worth) : "-";
+      var total = p.positions.reduce(function(a,x){ return a + x.value; }, 0) || 1;
       $("bar").innerHTML = p.positions.map(function(x,i){ return '<i style="flex:' + x.value + ';background:' + COLORS[i % COLORS.length] + '"></i>'; }).join("");
       $("positions").innerHTML = p.positions.map(function(x,i){
         return '<div class="pos"><span><i style="background:' + COLORS[i % COLORS.length] + '"></i>' + esc(x.asset) + '</span><span>' + money(x.value) + ' &middot; ' + Math.round(100*x.value/total) + '%</span></div>';
@@ -315,7 +328,11 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
       $("rs").textContent = p.risk_profile.stated; $("ro").textContent = p.risk_profile.observed || "-";
       $("cc").textContent = p.consent.candor_level + " / 5";
       $("heirs").textContent = p.consent.inheritance.heirs.length + " · " + p.consent.inheritance.scope;
-      $("biases").innerHTML = p.biases.map(function(b){ return '<span class="chip warn">' + esc(b.type) + '</span>'; }).join("");
+      $("biases").innerHTML = p.biases.map(function(b){ return '<span class="chip warn">' + esc(b.type) + ' &middot; ' + b.evidence.length + '</span>'; }).join("") || '<span class="chip">none on record yet</span>';
+      var ls = p.lessons || [], fresh = ls.length > state.lessons && state.lessons > 0;
+      $("lessons").innerHTML = ls.slice().reverse().map(function(l, i){ return '<div class="lesson' + (fresh && i === 0 ? ' new' : '') + '">' + esc(l) + '</div>'; }).join("") || '<div class="lesson">Nothing yet. Every outcome teaches the genome.</div>';
+      state.lessons = ls.length;
+      $("resetBtn").textContent = USER === DEMO ? "Reset demo" : "Back to demo client";
       $("goals").innerHTML = p.goals.map(function(g){ return '<span class="chip">' + esc(g.name) + '</span>'; }).join("");
       if (!state.temperament) state.temperament = p.temperament;
       renderTemps();
@@ -348,6 +365,7 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
     $("sig").textContent = bits.length ? bits.join(" · ") : "No strong signal.";
     Array.prototype.forEach.call($("tone").children, function(el, i){ el.classList.toggle("on", i < r.firmness); });
     $("toneN").textContent = r.firmness + " / 5 · stakes " + r.stakes;
+    $("toneNotes").innerHTML = (r.tone_notes || []).map(function(n){ return n.indexOf("Learned") === 0 ? '<b class="red">' + esc(n) + '</b>' : esc(n); }).join(" ");
     $("pol").className = "pol " + r.verdict.polarity; $("pol").textContent = r.verdict.polarity.toUpperCase();
     $("vh").textContent = r.verdict.headline;
     $("model").textContent = r.verdict.model;
@@ -402,7 +420,10 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
     var body = {ledger_id: state.last.ledger_id, action: action};
     if (action === "ignored" && state.last.verdict.polarity !== "proceed") { body.outcome_type = "pnl"; body.value_delta = -Math.round((state.last.facts.amount || 50000) * 0.28); body.note = "Simulated 30-day outcome"; }
     if (action === "followed") { body.outcome_type = "avoided-loss"; body.note = "Capital protected"; }
-    api("/v1/outcome", body).then(function(){ toast("Recorded to the Vagus Ledger. Next time, Substrate remembers."); loadLedger(); $("followed").disabled = $("ignored").disabled = true; });
+    api("/v1/outcome", body).then(function(){
+      toast(action === "ignored" ? "Outcome recorded. The genome just learned from it." : "Recorded. Capital protected, and the genome knows it.");
+      loadLedger(); loadPerson(); $("followed").disabled = $("ignored").disabled = true;
+    });
   }
   $("followed").onclick = function(){ outcome("followed"); };
   $("ignored").onclick = function(){ outcome("ignored"); };
@@ -443,12 +464,49 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
     });
   };
 
+  function switchUser(id, msg){
+    USER = id; state.thread = []; state.last = null; state.temperament = null; state.lessons = 0;
+    $("log").innerHTML = ""; $("followed").disabled = $("ignored").disabled = true;
+    try { history.replaceState(null, "", id === DEMO ? location.pathname : "#me"); } catch(e){}
+    toast(msg); loadPerson(); loadLedger();
+  }
   $("resetBtn").onclick = function(){
-    api("/v1/demo/reset", {}).then(function(){
-      state.thread = []; state.last = null;
-      $("log").innerHTML = ""; toast("Demo reset. Genome and ledger restored.");
-      loadPerson(); loadLedger();
-    });
+    if (USER !== DEMO) { switchUser(DEMO, "Back to the demo client."); return; }
+    api("/v1/demo/reset", {}).then(function(){ switchUser(DEMO, "Demo reset. Genome and ledger restored."); });
+  };
+
+  // ---------------- try it on yourself
+  $("userBtn").onclick = function(){
+    var opts = state.temps.map(function(t){ return '<option value="' + t.key + '">' + esc(t.name) + '</option>'; }).join("");
+    var kinds = ["token","stock","fund","property","cash","bond","other"].map(function(k){ return '<option>' + k + '</option>'; }).join("");
+    function row(a, v, k){ return '<div class="hold"><input placeholder="Holding, e.g. Bitcoin" value="' + a + '"><input type="number" min="0" placeholder="Value" value="' + v + '"><select>' + kinds.replace("<option>" + k + "</option>", "<option selected>" + k + "</option>") + '</select></div>'; }
+    overlay('<div class="lbl">Sandboxed guest genome · not stored with client data</div><h2>Try it on <span class="si red">yourself.</span></h2>' +
+      '<p class="sub">Give Substrate a rough picture of your money. It builds your genome in seconds, then tells you the truth about your next decision.</p>' +
+      '<form id="gf"><div class="gform">' +
+        '<label for="g-name">Your first name<input id="g-name" value="" placeholder="e.g. Omar" maxlength="60"></label>' +
+        '<label for="g-nw">Liquid net worth<input id="g-nw" type="number" min="1" value="500000" required></label>' +
+        '<label for="g-cur">Currency<select id="g-cur"><option>USD</option><option>AED</option><option>INR</option></select></label>' +
+        '<label for="g-risk">Your risk appetite<select id="g-risk"><option>conservative</option><option selected>moderate</option><option>aggressive</option></select></label>' +
+        '<label for="g-candor">Candor you can take (1 gentle, 5 brutal)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
+        '<label for="g-temp">Voice<select id="g-temp">' + opts + '</select></label>' +
+        '<label for="g-goal">One money goal<input id="g-goal" placeholder="e.g. Buy a home by 2029"></label>' +
+      '</div><div class="lbl" style="margin-top:22px">Holdings</div><div id="g-holds">' +
+        row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash") +
+      '</div><div class="gactions"><button class="btn primary" type="submit">Build my genome</button>' +
+      (USER !== DEMO ? '<button class="btn" type="button" id="g-back">Back to demo client</button>' : '') + '</div></form>');
+    if ($("g-back")) $("g-back").onclick = function(){ $("ov").hidden = true; switchUser(DEMO, "Back to the demo client."); };
+    $("gf").onsubmit = function(e){
+      e.preventDefault();
+      var holds = Array.prototype.map.call(document.querySelectorAll("#g-holds .hold"), function(h){
+        var f = h.querySelectorAll("input,select"); return {asset: f[0].value.trim(), value: +f[1].value || 0, kind: f[2].value};
+      }).filter(function(h){ return h.asset && h.value > 0; });
+      api("/v1/guest", {name: $("g-name").value.trim() || "Guest", liquid_net_worth: +$("g-nw").value, currency: $("g-cur").value,
+        risk: $("g-risk").value, candor: +$("g-candor").value || 3, temperament: $("g-temp").value,
+        holdings: holds, goals: $("g-goal").value.trim() ? [$("g-goal").value.trim()] : []}).then(function(r){
+          try { localStorage.setItem("sub-guest", r.user_id); } catch(e){}
+          $("ov").hidden = true; switchUser(r.user_id, "Your genome is live. Ask it something you want to hear yes to.");
+        }).catch(function(err){ toast("Could not build the genome: " + err.message); });
+    };
   };
 
   // ---------------- boot

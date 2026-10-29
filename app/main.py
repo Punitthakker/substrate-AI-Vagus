@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import os
+import secrets
+import time
+from collections import defaultdict, deque
 from pathlib import Path
+from typing import Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,11 +33,33 @@ app = FastAPI(title="Substrate AI - Vagus Engine", version=__version__,
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+def is_public(user_id: str) -> bool:
+    return user_id == DEMO_USER or user_id.startswith("guest-")
+
+
 def guard(user_id: str, key: str | None) -> None:
-    """Optional API key. The public demo genome stays open so the console and embed always work."""
+    """Optional API key. The demo genome and sandboxed guest genomes stay open; everything else is protected."""
     required = os.environ.get("SUBSTRATE_API_KEY")
-    if required and user_id != DEMO_USER and key != required:
+    if required and not is_public(user_id) and key != required:
         raise HTTPException(401, "Missing or invalid x-substrate-key header.")
+
+
+# ---------------------------------------------------------------- rate limit (public demo protection)
+RATE = int(os.environ.get("SUBSTRATE_RATE_PER_MIN", "40"))
+_hits: dict[str, deque] = defaultdict(deque)
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    if request.method == "POST" and request.url.path.startswith("/v1/"):
+        ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "?")).split(",")[0].strip()
+        q, t = _hits[ip], time.monotonic()
+        while q and t - q[0] > 60:
+            q.popleft()
+        if len(q) >= RATE:
+            return JSONResponse({"detail": "Slow down: rate limit reached. Try again in a minute."}, status_code=429)
+        q.append(t)
+    return await call_next(request)
 
 
 def keyhdr(x_substrate_key: str | None = Header(default=None)) -> str | None:
@@ -68,6 +95,37 @@ def get_person(user_id: str, key=Depends(keyhdr)):
     if not p:
         raise HTTPException(404, "person not found")
     return p
+
+
+class Holding(BaseModel):
+    asset: str = Field(min_length=1, max_length=60)
+    value: float = Field(ge=0, le=1e12)
+    kind: Literal["token", "stock", "fund", "property", "cash", "bond", "other"] = "other"
+
+
+class GuestRequest(BaseModel):
+    name: str = Field("Guest", max_length=60)
+    liquid_net_worth: float = Field(gt=0, le=1e12)
+    currency: Literal["USD", "AED", "INR"] = "USD"
+    risk: Literal["conservative", "moderate", "aggressive"] = "moderate"
+    candor: int = Field(3, ge=1, le=5)
+    temperament: str = "mentor"
+    holdings: list[Holding] = Field(default_factory=list, max_length=8)
+    goals: list[str] = Field(default_factory=list, max_length=4)
+
+
+@app.post("/v1/guest")
+def create_guest(g: GuestRequest):
+    """Try it on yourself: a sandboxed genome, open without a key, never mixed with client data."""
+    from substrate.schemas import Consent, Goal, Position, RiskProfile
+    user_id = f"guest-{secrets.token_hex(4)}"
+    p = Person(user_id=user_id, name=g.name.strip() or "Guest", consent=Consent(candor_level=g.candor),
+               temperament=temperaments.get(g.temperament).key, risk_profile=RiskProfile(stated=g.risk),
+               liquid_net_worth=g.liquid_net_worth, currency=g.currency,
+               positions=[Position(**h.model_dump()) for h in g.holdings],
+               goals=[Goal(name=x[:80], priority=i + 1) for i, x in enumerate(g.goals) if x.strip()])
+    store.put_person(p)
+    return {"user_id": user_id, "person": p}
 
 
 @app.delete("/v1/person/{user_id}")
