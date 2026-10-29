@@ -48,7 +48,7 @@ class Brain:
 
 REGISTRY: dict[str, Brain] = {b.key: b for b in [
     Brain("anthropic", "Anthropic Claude", "anthropic", "https://api.anthropic.com/v1", "ANTHROPIC_API_KEY",
-          "ANTHROPIC_MODEL", "claude-sonnet-4-5", "Primary brain"),
+          "ANTHROPIC_MODEL", "claude-sonnet-5-5", "Primary brain"),
     Brain("openai", "OpenAI", "openai-compatible", "https://api.openai.com/v1", "OPENAI_API_KEY",
           "OPENAI_MODEL", "gpt-4o", "", url_env="OPENAI_BASE_URL"),
     Brain("nvidia", "NVIDIA NIM", "openai-compatible", "https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY",
@@ -65,7 +65,7 @@ REGISTRY: dict[str, Brain] = {b.key: b for b in [
     Brain("together", "Together AI", "openai-compatible", "https://api.together.xyz/v1", "TOGETHER_API_KEY",
           "TOGETHER_MODEL", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
     Brain("openrouter", "OpenRouter", "openai-compatible", "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY",
-          "OPENROUTER_MODEL", "anthropic/claude-sonnet-4.5", "Any model through one key"),
+          "OPENROUTER_MODEL", "anthropic/claude-sonnet-5.5", "Any model through one key"),
     Brain("vllm", "vLLM (self-hosted)", "openai-compatible", "", None, "VLLM_MODEL", "Qwen/Qwen2.5-32B-Instruct",
           "Bank data centre, GPU", url_env="VLLM_URL"),
     Brain("bionicgpt", "BionicGPT (self-hosted)", "openai-compatible", "", None, "BIONIC_MODEL", "default",
