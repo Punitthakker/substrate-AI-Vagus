@@ -152,7 +152,8 @@ class VagusEngine:
                 label = "PACT HOLDS"
 
         if lang == "ar":
-            message = i18n.deliver_ar(label, verdict.polarity.value, message, facts.safety)
+            message = i18n.deliver_ar(label, verdict.polarity.value, message, facts.safety, verdict.headline,
+                                      verdict.reasons, legacy.render(legacy.Letter(**letter_out)) if letter_out else "")
         prediction = predict(person, state, firmness, facts, verdict, forecasts)
         payload = {"user_message": logged_msg, "domain": tissue.key, "polarity": verdict.polarity.value, "label": label,
                    "headline": verdict.headline, "reasons": [] if facts.safety else verdict.reasons,

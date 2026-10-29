@@ -109,12 +109,27 @@ CLOSE = {
 }
 
 
-def deliver_ar(label: str, polarity: str, english_message: str, safety: bool = False) -> str:
+def deliver_ar(label: str, polarity: str, english_message: str, safety: bool = False,
+               headline: str = "", reasons: list[str] | None = None, letter: str = "") -> str:
+    """Arabic end to end: label, headline, every reason (numbers preserved), closing. Unrendered lines, if any,
+    follow in English, marked, so nothing the tissue computed is ever dropped."""
+    from .i18n_ar import to_ar
     if safety:
         return SAFETY_AR
-    head = SPECIAL.get(label) or SUMMARY.get(polarity, SUMMARY["caution"])
-    ar = f"**{LABELS.get(label, label)}**\n\n{head}"
-    note = "_This advice is recorded in your Vagus Ledger._"
-    details = english_message.replace(note, "").strip()
-    return (f"{ar}\n\n{CLOSE.get(polarity, '')}\n\n_التفاصيل والأرقام (بالإنجليزية):_\n\n{details}\n\n"
-            f"_هذه النصيحة مسجّلة في سجلّك._")
+    head_ar = to_ar(headline) or SPECIAL.get(label) or SUMMARY.get(polarity, SUMMARY["caution"])
+    parts = [f"**{LABELS.get(label, label)}**", f"**{head_ar}**"]
+    if label in SPECIAL and to_ar(headline):
+        parts.append(SPECIAL[label])
+    done, rest = [], []
+    for r in reasons or []:
+        a = to_ar(r)
+        (done if a else rest).append(a or r)
+    if done:
+        parts.append("ما أراه:\n" + "\n".join(f"- {x}" for x in done))
+    parts.append(CLOSE.get(polarity, ""))
+    if letter:
+        parts.append(letter)
+    if rest:
+        parts.append("_بالإنجليزية:_\n" + "\n".join(f"- {x}" for x in rest))
+    parts.append("_هذه النصيحة مسجّلة في سجلّك._")
+    return "\n\n".join(p for p in parts if p)

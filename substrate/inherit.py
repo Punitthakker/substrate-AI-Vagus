@@ -40,10 +40,11 @@ def inherit(store: Store, doc: dict, heir_id: str, relation: str = "family") -> 
     g = doc["genome"]
     consent = doc.get("consent") or g.get("consent") or {}
     inh = consent.get("inheritance") or {}
-    if heir_id not in (inh.get("heirs") or []):
+    from .accounts import is_heir
+    if not is_heir(store, inh.get("heirs") or [], heir_id):
         raise InheritanceError(f"'{heir_id}' is not a named heir of this genome.")
     elder = store.get_person(g["user_id"])
-    if elder and heir_id not in elder.consent.inheritance.heirs:
+    if elder and not is_heir(store, elder.consent.inheritance.heirs, heir_id):
         raise InheritanceError("The elder has revoked this inheritance.")
     heir = store.get_person(heir_id)
     if not heir:

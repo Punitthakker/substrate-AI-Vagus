@@ -11,6 +11,7 @@ import json
 import os
 import sqlite3
 import threading
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -46,9 +47,12 @@ class Store:
     """SQLite: zero cost, zero ops. Swap for Postgres behind the same methods when a bank signs."""
 
     def __init__(self, path: str | None = None):
+        from .db import PG, connect
         self.path = path or os.environ.get("SUBSTRATE_DB", "substrate.db")
-        self.db = sqlite3.connect(self.path, check_same_thread=False)
-        self.db.execute("pragma journal_mode=wal")
+        self.db = connect(path)
+        self.engine = "postgres" if isinstance(self.db, PG) else "sqlite"
+        if self.engine == "sqlite":
+            self.db.execute("pragma journal_mode=wal")
         self.db.executescript("""
             create table if not exists persons (user_id text primary key, body text not null);
             create table if not exists events (
@@ -63,7 +67,42 @@ class Store:
                                                 max_uses integer not null, uses integer not null default 0,
                                                 expires text not null, created text not null);
         """)
+        try:   # one successor per link: concurrent appends to one ledger cannot fork the chain
+            self.db.execute("create unique index if not exists ux_events_chain on events(user_id, prev_hash)")
+        except sqlite3.IntegrityError:
+            pass   # a legacy database with an old fork keeps working; new writes still serialise per process
         self.db.commit()
+        if self.engine == "postgres" and os.environ.get("SUBSTRATE_MIGRATE_SQLITE", "1") == "1":
+            self._migrate_from_sqlite()
+
+    def _migrate_from_sqlite(self) -> None:
+        """First boot on Postgres: copy an existing SQLite volume across, once, keeping every hash intact."""
+        src_path = os.environ.get("SUBSTRATE_DB", "substrate.db")
+        if not os.path.exists(src_path) or self.db.execute("select count(*) from persons").fetchone()[0]:
+            return
+        from . import desk, embed, legacy, webhooks
+        from .accounts import init as accounts_init
+        for init in (legacy.init, desk.init, embed.init, webhooks.init, accounts_init):
+            init(self)
+        src = sqlite3.connect(src_path)
+        tables = ["persons", "tenants", "owners", "invites", "pkeys", "desk", "letters", "webhooks", "accounts", "kv"]
+        for t in tables:
+            try:
+                rows = src.execute(f"select * from {t}").fetchall()
+            except sqlite3.OperationalError:
+                continue
+            for r in rows:
+                cols = ",".join("?" * len(r))
+                try:
+                    self.db.execute(f"insert into {t} values ({cols})", r)
+                except Exception:
+                    pass
+        for r in src.execute("select id,user_id,kind,ts,body,prev_hash,hash from events order by seq").fetchall():
+            try:
+                self.db.execute("insert into events (id,user_id,kind,ts,body,prev_hash,hash) values (?,?,?,?,?,?,?)", r)
+            except Exception:
+                pass
+        src.close()
 
     # ---------------- invite links
     def create_invite(self, tissue: str, label: str, max_uses: int, expires: str) -> str:
@@ -197,15 +236,22 @@ class Store:
         return row[0] if row else GENESIS
 
     def append(self, user_id: str, kind: str, payload: dict, event_id: str | None = None, ts: str | None = None) -> dict:
-        with _lock:
-            ev = {"id": event_id or f"{'L' if kind == 'advice' else kind[0].upper()}-{uuid.uuid4().hex[:8]}",
-                  "user_id": user_id, "kind": kind, "ts": ts or now(), "payload": payload,
-                  "prev_hash": self.head(user_id)}
-            ev["hash"] = event_hash(ev)
-            self.db.execute("insert into events (id,user_id,kind,ts,body,prev_hash,hash) values (?,?,?,?,?,?,?)",
-                            (ev["id"], user_id, kind, ev["ts"], canonical(payload), ev["prev_hash"], ev["hash"]))
-            self.db.commit()
-            return ev
+        eid = event_id or f"{'L' if kind == 'advice' else kind[0].upper()}-{uuid.uuid4().hex[:8]}"
+        for attempt in range(8):
+            with _lock:
+                ev = {"id": eid, "user_id": user_id, "kind": kind, "ts": ts or now(), "payload": payload,
+                      "prev_hash": self.head(user_id)}
+                ev["hash"] = event_hash(ev)
+                try:
+                    self.db.execute("insert into events (id,user_id,kind,ts,body,prev_hash,hash) values (?,?,?,?,?,?,?)",
+                                    (ev["id"], user_id, kind, ev["ts"], canonical(payload), ev["prev_hash"], ev["hash"]))
+                    self.db.commit()
+                    return ev
+                except sqlite3.IntegrityError:
+                    if self.get_event(eid):
+                        raise           # the id itself already exists: a real duplicate, not a race
+            time.sleep(0.01 * (attempt + 1))   # another server appended first: re-read the head and retry
+        raise RuntimeError("Ledger busy: could not append after retries.")
 
     def events(self, user_id: str, limit: int | None = None) -> list[dict]:
         q = "select id,user_id,kind,ts,body,prev_hash,hash from events where user_id=? order by seq"

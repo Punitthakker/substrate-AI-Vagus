@@ -73,7 +73,8 @@ class Letter(BaseModel):
 
 def init(store: Store) -> None:
     store.db.execute("create table if not exists letters (id text primary key, to_user text not null, "
-                     "from_user text not null, body text not null)")
+                     "from_user text not null, body text not null"
+                     + (", seq bigserial)" if getattr(store, "engine", "sqlite") == "postgres" else ")"))
     store.db.commit()
 
 

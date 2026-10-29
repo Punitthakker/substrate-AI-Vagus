@@ -42,6 +42,9 @@ STATIC = Path(__file__).parent / "static"
 store = Store()
 seed(store)
 engine = VagusEngine(store)
+if not os.environ.get("PYTEST_CURRENT_TEST") and "pytest" not in os.environ.get("_", ""):
+    from substrate import selfcheck as _sc
+    _sc.start(store)   # proves Polymarket, ECB FX, Mem0 and the database from where we actually run
 
 app = FastAPI(title="Substrate AI - Vagus Engine", version=__version__,
               description="The emotional chromosome of AI. Vagal tone changes how truth is delivered. Never whether.")
@@ -51,12 +54,19 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 # ---------------------------------------------------------------- auth + tenancy
 
 class Ctx(BaseModel):
-    role: Literal["public", "tenant", "master", "admin"] = "public"
+    role: Literal["public", "tenant", "master", "admin", "user"] = "public"
     tenant: Optional[dict] = None
+    user: Optional[dict] = None          # signed-in person: {"user_id", "email"}
 
 
-def ctx(x_substrate_key: str | None = Header(default=None)) -> Ctx:
+def ctx(x_substrate_key: str | None = Header(default=None), authorization: str | None = Header(default=None)) -> Ctx:
     if not x_substrate_key:
+        if authorization and authorization.lower().startswith("bearer sess_"):
+            from substrate import accounts
+            u = accounts.verify(store, authorization.split(" ", 1)[1].strip())
+            if not u:
+                raise HTTPException(401, "Session expired. Please sign in again.")
+            return Ctx(role="user", user=u)
         return Ctx()
     admin, master = os.environ.get("SUBSTRATE_ADMIN_KEY"), os.environ.get("SUBSTRATE_API_KEY")
     if admin and secrets.compare_digest(x_substrate_key, admin):
@@ -73,6 +83,9 @@ def is_public(user_id: str) -> bool:
     return user_id.startswith(("demo-", "guest-"))
 
 
+PRIVATE_PREFIXES = ("u-", "wa-", "ext-")   # account, WhatsApp and platform genomes are never public
+
+
 def locked_down() -> bool:
     return bool(os.environ.get("SUBSTRATE_API_KEY") or os.environ.get("SUBSTRATE_ADMIN_KEY"))
 
@@ -84,6 +97,12 @@ def authorize(user_id: str, c: Ctx) -> Policy:
     owner = store.owner(user_id)
     if c.role in ("admin", "master"):
         return _policy_of(owner)
+    if c.role == "user":
+        if c.user["user_id"] != user_id:
+            raise HTTPException(403, "You can only open your own genome.")
+        return DEFAULT
+    if user_id.startswith(PRIVATE_PREFIXES) and c.role != "tenant":
+        raise HTTPException(401, "Sign in or use a key to open this genome.")
     if c.role == "tenant":
         if owner and owner != c.tenant["id"]:
             raise HTTPException(403, "This genome belongs to another tenant.")
@@ -159,6 +178,57 @@ def put_person(user_id: str, person: Person, c: Ctx = Depends(ctx)):
         store.set_owner(user_id, c.tenant["id"])
     person.user_id = user_id
     return store.put_person(person)
+
+
+class PersonPatch(BaseModel):
+    """What a person (or their platform) may edit. Learned fields (patterns, lessons, adherence) stay the engine's."""
+    name: Optional[str] = Field(None, max_length=60)
+    domain: Optional[Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"]] = None
+    temperament: Optional[str] = None
+    values: Optional[list[str]] = Field(None, max_length=8)
+    goals: Optional[list[str]] = Field(None, max_length=6)
+    risk: Optional[Literal["conservative", "moderate", "aggressive"]] = None
+    liquid_net_worth: Optional[float] = Field(None, ge=0, le=1e12)
+    currency: Optional[Literal["USD", "AED", "INR"]] = None
+    holdings: Optional[list[Holding]] = Field(None, max_length=12)
+    profile: Optional[dict] = None
+    candor: Optional[int] = Field(None, ge=1, le=5)
+    allow_training: Optional[bool] = None
+    heirs: Optional[list[str]] = Field(None, max_length=10)
+    inheritance_scope: Optional[Literal["values", "values+ledger", "full"]] = None
+    decision_style: Optional[str] = Field(None, max_length=200)
+
+
+PROFILE_KEYS = {"fund_size", "fund_name", "deployed", "typical_check", "reserves_ratio", "thesis", "cash_in_bank",
+                "monthly_burn", "mrr", "mrr_growth", "company", "support_contacts", "bankroll", "max_bet_fraction",
+                "fee", "venues", "account_size", "leverage", "default_pair", "platforms", "utc_offset", "birth_year",
+                "region"}
+
+
+@app.patch("/v1/person/{user_id}")
+def patch_person(user_id: str, u: PersonPatch, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    p = store.get_person(user_id)
+    if not p:
+        raise HTTPException(404, user_id)
+    if u.name is not None: p.name = u.name.strip() or p.name
+    if u.domain: p.domain = u.domain
+    if u.temperament: p.temperament = temperaments.get(u.temperament).key
+    if u.values is not None: p.values = [v.strip()[:60] for v in u.values if v.strip()]
+    if u.goals is not None: p.goals = [Goal(name=g.strip()[:80], priority=i + 1) for i, g in enumerate(u.goals) if g.strip()]
+    if u.risk: p.risk_profile.stated = u.risk
+    if u.liquid_net_worth is not None: p.liquid_net_worth = u.liquid_net_worth
+    if u.currency: p.currency = u.currency
+    if u.holdings is not None: p.positions = [Position(**h.model_dump()) for h in u.holdings if h.value > 0]
+    if u.profile is not None:
+        p.profile = {**(p.profile or {}), **{k: v for k, v in u.profile.items() if k in PROFILE_KEYS}}
+    if u.candor: p.consent.candor_level = u.candor
+    if u.allow_training is not None: p.consent.allow_training = u.allow_training
+    if u.heirs is not None: p.consent.inheritance.heirs = [h.strip()[:120] for h in u.heirs if h.strip()]
+    if u.inheritance_scope: p.consent.inheritance.scope = u.inheritance_scope
+    if u.decision_style is not None: p.decision_style = u.decision_style
+    store.put_person(p)
+    return p
 
 
 @app.get("/v1/person/{user_id}")
@@ -409,12 +479,14 @@ class LetterRequest(BaseModel):
 def write_letter(req: LetterRequest, c: Ctx = Depends(ctx)):
     """Seal a letter for an heir. It opens on a date, an age, or the moment they need it."""
     authorize(req.from_user, c)
-    authorize(req.to_user, c)
+    if c.role != "user":
+        authorize(req.to_user, c)
     from substrate import legacy
     elder = store.get_person(req.from_user)
     if not elder or not store.get_person(req.to_user):
         raise HTTPException(404, "Both the author and the heir need a genome.")
-    if req.to_user not in elder.consent.inheritance.heirs:
+    from substrate.accounts import is_heir
+    if not is_heir(store, elder.consent.inheritance.heirs, req.to_user):
         raise HTTPException(403, f"'{req.to_user}' is not a named heir of {req.from_user}.")
     lt = legacy.write(store, legacy.Letter(from_user=req.from_user, from_name=(elder.name or "").split()[0] or "Family",
                                            to_user=req.to_user, relation=req.relation, title=req.title, body=req.body,
@@ -554,6 +626,73 @@ def openai_models():
                                        "substrate-wellbeing", "substrate-markets"]]}
 
 
+# ---------------------------------------------------------------- accounts
+
+class SignUp(BaseModel):
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=1, max_length=200)
+    name: str = Field("", max_length=60)
+    tissue: Literal["wealth", "venture", "founder", "wellbeing", "markets", "trading"] = "wealth"
+
+
+class SignIn(BaseModel):
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=1, max_length=200)
+
+
+@app.post("/v1/auth/signup", tags=["accounts"])
+def auth_signup(req: SignUp):
+    """Create an account and its private genome. Returns a session token (Authorization: Bearer sess_...)."""
+    from substrate import accounts
+    try:
+        return accounts.signup(store, req.email, req.password, req.name, req.tissue)
+    except accounts.AuthError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/v1/auth/login", tags=["accounts"])
+def auth_login(req: SignIn):
+    from substrate import accounts
+    try:
+        return accounts.login(store, req.email, req.password)
+    except accounts.AuthError as e:
+        raise HTTPException(401, str(e))
+
+
+@app.get("/v1/auth/me", tags=["accounts"])
+def auth_me(c: Ctx = Depends(ctx)):
+    if c.role != "user":
+        raise HTTPException(401, "Not signed in.")
+    p = store.get_person(c.user["user_id"])
+    return {**c.user, "person": p}
+
+
+@app.post("/v1/auth/logout", tags=["accounts"])
+def auth_logout(c: Ctx = Depends(ctx)):
+    """Signs out everywhere: every session for this account stops working."""
+    from substrate import accounts
+    if c.role != "user":
+        raise HTTPException(401, "Not signed in.")
+    accounts.logout_everywhere(store, c.user["email"])
+    return {"ok": True}
+
+
+class PwChange(BaseModel):
+    old: str = Field(..., max_length=200)
+    new: str = Field(..., max_length=200)
+
+
+@app.post("/v1/auth/password", tags=["accounts"])
+def auth_password(req: PwChange, c: Ctx = Depends(ctx)):
+    from substrate import accounts
+    if c.role != "user":
+        raise HTTPException(401, "Not signed in.")
+    try:
+        return accounts.change_password(store, c.user["email"], req.old, req.new)
+    except accounts.AuthError as e:
+        raise HTTPException(400, str(e))
+
+
 class InheritRequest(BaseModel):
     heir_id: str
     relation: str = Field("family", max_length=30)
@@ -563,7 +702,8 @@ class InheritRequest(BaseModel):
 @app.post("/v1/inherit/{elder_id}")
 def inherit_genome(elder_id: str, req: InheritRequest, c: Ctx = Depends(ctx)):
     """Pass a genome down: the heir receives the elder's values and the lessons they paid for (per consent)."""
-    authorize(req.heir_id, c)
+    if not (c.role == "user" and c.user["user_id"] == elder_id):
+        authorize(req.heir_id, c)   # an elder passes their genome on; the heir doesn't need to be signed in
     try:
         if req.sub is None:
             authorize(elder_id, c)
@@ -754,6 +894,15 @@ def wa_simulate(s: WaSim):
     if locked_down() and not os.environ.get("SUBSTRATE_DEMO_PK"):
         raise HTTPException(403, "Simulator disabled on locked deployments.")
     return {"replies": whatsapp.handle(store, engine, s.phone, s.text, s.button_id)}
+
+
+@app.get("/v1/admin/selfcheck", tags=["enterprise"])
+def selfcheck(c: Ctx = Depends(ctx), rerun: bool = False):
+    """Reachability of the database, Polymarket, the ECB FX feed, Mem0, brains and WhatsApp, from this server."""
+    if locked_down() and c.role not in ("admin", "master"):
+        raise HTTPException(403, "Admin or master key required.")
+    from substrate import selfcheck as sc
+    return sc.run(store) if rerun or not sc.LAST else sc.LAST
 
 
 class TenantRequest(BaseModel):
