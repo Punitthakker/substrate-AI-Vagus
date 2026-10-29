@@ -1004,7 +1004,10 @@ def set_policy(policy: Policy, c: Ctx = Depends(ctx)):
 # ---------------------------------------------------------------- proof
 
 @app.post("/v1/evals/run", include_in_schema=False)
-def evals():
+def evals(c: Ctx = Depends(ctx)):
+    """With a paid brain configured, an eval run costs real money: admin only on locked deployments."""
+    if locked_down() and c.role not in ("admin", "master"):
+        raise HTTPException(403, "Admin key required to run evals on this deployment.")
     return run_evals()
 
 
