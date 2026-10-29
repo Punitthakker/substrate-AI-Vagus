@@ -6,6 +6,7 @@ honest advice is tamper-evident and verifiable on its own - including inside an 
 from __future__ import annotations
 
 import hashlib
+import secrets
 import json
 import os
 import sqlite3
@@ -55,8 +56,89 @@ class Store:
                 id text unique not null, user_id text not null, kind text not null,
                 ts text not null, body text not null, prev_hash text not null, hash text not null);
             create index if not exists ix_events_user on events(user_id, seq);
+            create table if not exists tenants (id text primary key, name text not null, key_hash text unique not null,
+                                                policy text not null, created text not null);
+            create table if not exists owners (user_id text primary key, tenant_id text not null);
         """)
         self.db.commit()
+
+    # ---------------- enterprise tenancy
+    @staticmethod
+    def _h(raw: str) -> str:
+        return hashlib.sha256(raw.encode()).hexdigest()
+
+    def create_tenant(self, name: str, policy: dict) -> tuple[str, str]:
+        tid = f"tn_{uuid.uuid4().hex[:10]}"
+        raw = f"sk_sub_{secrets.token_urlsafe(24)}"   # shown once, stored hashed
+        with _lock:
+            self.db.execute("insert into tenants values (?,?,?,?,?)", (tid, name, self._h(raw), canonical(policy), now()))
+            self.db.commit()
+        return tid, raw
+
+    def tenant_by_key(self, raw: str | None) -> dict | None:
+        if not raw:
+            return None
+        r = self.db.execute("select id,name,policy,created from tenants where key_hash=?", (self._h(raw),)).fetchone()
+        return {"id": r[0], "name": r[1], "policy": json.loads(r[2]), "created": r[3]} if r else None
+
+    def tenants(self) -> list[dict]:
+        return [{"id": r[0], "name": r[1], "policy": json.loads(r[2]), "created": r[3]}
+                for r in self.db.execute("select id,name,policy,created from tenants order by created")]
+
+    def set_policy(self, tenant_id: str, policy: dict) -> None:
+        with _lock:
+            self.db.execute("update tenants set policy=? where id=?", (canonical(policy), tenant_id))
+            self.db.commit()
+
+    def owner(self, user_id: str) -> str | None:
+        r = self.db.execute("select tenant_id from owners where user_id=?", (user_id,)).fetchone()
+        return r[0] if r else None
+
+    def set_owner(self, user_id: str, tenant_id: str) -> None:
+        with _lock:
+            self.db.execute("insert or replace into owners values (?,?)", (user_id, tenant_id))
+            self.db.commit()
+
+    def users(self, tenant_id: str | None = None, public: bool = False) -> list[str]:
+        if tenant_id:
+            return [r[0] for r in self.db.execute("select user_id from owners where tenant_id=?", (tenant_id,))]
+        rows = [r[0] for r in self.db.execute("select user_id from persons")]
+        return [u for u in rows if u.startswith(("demo-", "guest-"))] if public else rows
+
+    def metrics(self, user_ids: list[str]) -> dict:
+        """Operational truth for a tenant: what Substrate said, what humans did, what it cost them."""
+        if not user_ids:
+            return {"advice": 0}
+        q = ",".join("?" * len(user_ids))
+        rows = self.db.execute(f"select id,kind,body from events where user_id in ({q})", user_ids).fetchall()
+        adv, actions, outcomes = {}, {}, {}
+        for eid, kind, body in rows:
+            p = json.loads(body)
+            if kind == "advice":
+                adv[eid] = p
+            elif kind == "action":
+                actions[p.get("ledger_id")] = p.get("taken")
+            elif kind == "outcome":
+                outcomes[p.get("ledger_id")] = p.get("value_delta")
+        by_pol, by_dom, firm, pf = {}, {}, [], []
+        for p in adv.values():
+            by_pol[p.get("polarity", "?")] = by_pol.get(p.get("polarity", "?"), 0) + 1
+            by_dom[p.get("domain", "wealth")] = by_dom.get(p.get("domain", "wealth"), 0) + 1
+            if p.get("firmness"):
+                firm.append(p["firmness"])
+            if p.get("p_follow") is not None:
+                pf.append(p["p_follow"])
+        followed = sum(1 for a in actions.values() if a == "followed")
+        ignored = sum(1 for a in actions.values() if a == "ignored")
+        cost = sum(-(outcomes.get(k) or 0) for k, a in actions.items() if a == "ignored" and (outcomes.get(k) or 0) < 0)
+        return {"advice": len(adv), "by_polarity": by_pol, "by_domain": by_dom,
+                "floor_engagements": sum(1 for p in adv.values() if p.get("floor_applied")),
+                "safety_events": sum(1 for p in adv.values() if p.get("safety")),
+                "avg_firmness": round(sum(firm) / len(firm), 2) if firm else None,
+                "avg_p_follow": round(sum(pf) / len(pf), 2) if pf else None,
+                "followed": followed, "ignored": ignored,
+                "follow_rate": round(followed / (followed + ignored), 2) if followed + ignored else None,
+                "cost_of_ignoring": cost, "humans": len(user_ids)}
 
     # ---------------- genome
     def put_person(self, p: Person) -> Person:

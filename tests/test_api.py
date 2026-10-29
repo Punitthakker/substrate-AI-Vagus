@@ -3,6 +3,7 @@ import tempfile
 
 os.environ["SUBSTRATE_DB"] = os.path.join(tempfile.mkdtemp(), "api.db")
 os.environ["SUBSTRATE_API_KEY"] = "test-key"
+os.environ["SUBSTRATE_ADMIN_KEY"] = "admin-key"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -36,3 +37,28 @@ def test_outcome_endpoint_updates_genome():
     c.post("/v1/outcome", json={"ledger_id": r["ledger_id"], "action": "ignored", "outcome_type": "pnl", "value_delta": -10000})
     p = c.get("/v1/person/demo-kapoor").json()
     assert any("$10k" in l for l in p["lessons"])
+
+
+def test_multi_tenant_isolation_and_policy():
+    A = {"x-substrate-key": "admin-key"}
+    bank = c.post("/v1/admin/tenants", json={"name": "Gulf Private Bank",
+                  "policy": {"allowed_temperaments": ["mentor", "surgeon"], "concentration_stop_pct": 15}}, headers=A).json()
+    fund = c.post("/v1/admin/tenants", json={"name": "Falcon Ventures"}, headers=A).json()
+    B, F = {"x-substrate-key": bank["api_key"]}, {"x-substrate-key": fund["api_key"]}
+    body = {"name": "HNW Client", "liquid_net_worth": 1000000, "risk_profile": {"stated": "moderate"},
+            "positions": [{"asset": "Apple", "value": 50000, "kind": "stock"}]}
+    assert c.put("/v1/person/bank-001", json=body, headers=B).status_code == 200
+    assert c.get("/v1/person/bank-001", headers=F).status_code == 403          # other tenant cannot see it
+    assert c.get("/v1/person/bank-001").status_code == 401                     # nor can the public
+    r = c.post("/v1/advise", json={"user_id": "bank-001", "message": "Put another $120k into Apple", "temperament": "boss"},
+               headers=B).json()
+    assert r["temperament"] in ("mentor", "surgeon")                            # bank policy bans the Boss
+    assert r["verdict"]["polarity"] == "stop"                                   # 17% breaches the bank's 15% limit
+    m = c.get("/v1/metrics", headers=B).json()
+    assert m["scope"] == "Gulf Private Bank" and m["advice"] == 1
+
+
+def test_models_and_tissues_catalogue():
+    ms = c.get("/v1/models").json()["models"]
+    assert {"anthropic", "nvidia", "gemini", "ollama", "vllm"} <= {m["key"] for m in ms}
+    assert {t["key"] for t in c.get("/v1/tissues").json()} == {"wealth", "venture", "founder", "wellbeing"}

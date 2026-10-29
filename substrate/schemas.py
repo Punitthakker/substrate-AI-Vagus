@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -65,6 +65,7 @@ class Person(BaseModel):
     """The genome: who this human is across months, not messages. User-owned, exportable, deletable."""
     user_id: str = ""
     name: str = "Client"
+    domain: Literal["wealth", "venture", "founder", "wellbeing"] = "wealth"
     vintage: str = ""
     consent: Consent = Field(default_factory=Consent)
     temperament: str = "mentor"
@@ -76,7 +77,8 @@ class Person(BaseModel):
     biases: list[Bias] = Field(default_factory=list)
     goals: list[Goal] = Field(default_factory=list)
     decision_style: Optional[str] = None
-    # learned by the outcome loop: how often advice at each firmness level was followed or ignored
+    profile: dict[str, Any] = Field(default_factory=dict, description="Domain-specific facts: fund size, burn, support contacts...")
+    # learned by the outcome loop
     adherence: dict[str, dict[str, int]] = Field(default_factory=dict)
     lessons: list[str] = Field(default_factory=list)
 
@@ -94,6 +96,7 @@ class Signals(BaseModel):
 
 class Facts(BaseModel):
     """Hard numbers computed before any model is consulted. The basis of the Honesty Floor."""
+    domain: str = "wealth"
     amount: Optional[float] = None
     asset: Optional[str] = None
     existing_exposure: Optional[float] = None
@@ -103,8 +106,17 @@ class Facts(BaseModel):
     fomo: bool = False
     profile_breach: bool = False
     prior_ignored: list[dict] = Field(default_factory=list)
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    safety: bool = False
     floor: Polarity = Polarity.proceed
     flags: list[str] = Field(default_factory=list)
+
+
+class CouncilVote(BaseModel):
+    model: str
+    polarity: Optional[Polarity] = None
+    ok: bool = True
+    error: Optional[str] = None
 
 
 class Verdict(BaseModel):
@@ -113,6 +125,20 @@ class Verdict(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     model: str = "rule-core"
     floor_applied: bool = False
+    council: list[CouncilVote] = Field(default_factory=list)
+
+
+class Forecast(BaseModel):
+    label: str
+    value: str
+    note: str = ""
+
+
+class Prediction(BaseModel):
+    p_follow: float
+    drivers: list[str] = Field(default_factory=list)
+    forecasts: list[Forecast] = Field(default_factory=list)
+    escalate: Optional[str] = None
 
 
 class Turn(BaseModel):
@@ -130,6 +156,9 @@ class AdviseRequest(BaseModel):
 
 class AdviseResponse(BaseModel):
     ledger_id: str
+    domain: str
+    label: str
+    safety: bool = False
     state: State
     signals: Signals
     stakes: Literal["low", "medium", "high"]
@@ -138,6 +167,7 @@ class AdviseResponse(BaseModel):
     temperament: str
     facts: Facts
     verdict: Verdict
+    prediction: Optional[Prediction] = None
     message: str
     hash: str
     prev_hash: str

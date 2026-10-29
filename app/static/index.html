@@ -12,110 +12,122 @@
 :root{
   --bg:#0B0A08; --panel:#12110E; --fg:#EFE9DF; --dim:rgba(239,233,223,.62); --faint:rgba(239,233,223,.34);
   --hair:rgba(239,233,223,.13); --soft:rgba(239,233,223,.05);
-  --rbc:#F43B1E; --wbc:#5B86FF; --grn:#3DDC84; --amb:#F2B33D;
+  --rbc:#F43B1E; --wbc:#5B86FF; --grn:#3DDC84; --amb:#F2B33D; --safe:#7FB2FF;
   --disp:'Unbounded',Futura,'Arial Black',sans-serif; --body:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --serif:'Instrument Serif',Georgia,serif;
   color-scheme:dark;
 }
 @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
   --bg:#EFE9DF; --panel:#F7F3EC; --fg:#0B0A08; --dim:rgba(11,10,8,.66); --faint:rgba(11,10,8,.38);
-  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; color-scheme:light; } }
+  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; --safe:#2B50D9; color-scheme:light; } }
 :root[data-theme="light"]{
   --bg:#EFE9DF; --panel:#F7F3EC; --fg:#0B0A08; --dim:rgba(11,10,8,.66); --faint:rgba(11,10,8,.38);
-  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; color-scheme:light; }
+  --hair:rgba(11,10,8,.13); --soft:rgba(11,10,8,.04); --wbc:#2B50D9; --grn:#1D9E5C; --amb:#B7790F; --safe:#2B50D9; color-scheme:light; }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font:14px/1.55 var(--body);-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:2px solid var(--wbc);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--wbc);outline-offset:2px}
 .red{color:var(--rbc)}.blue{color:var(--wbc)}.green{color:var(--grn)}
 .lbl{font-size:10px;letter-spacing:3.5px;color:var(--faint);text-transform:uppercase}
 .si{font-family:var(--serif);font-style:italic;font-weight:400}
 
-/* top bar */
-header{display:flex;align-items:center;gap:18px;padding:14px max(20px,env(safe-area-inset-right)) 14px max(20px,env(safe-area-inset-left));border-bottom:1px solid var(--hair)}
-.wm{font-family:var(--disp);font-weight:900;font-size:20px;letter-spacing:-.5px;white-space:nowrap}
+header{display:flex;align-items:center;gap:14px;padding:12px max(20px,env(safe-area-inset-right)) 12px max(20px,env(safe-area-inset-left));border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.wm{font-family:var(--disp);font-weight:900;font-size:19px;letter-spacing:-.5px;white-space:nowrap}
 .beat{animation:beat 2.4s ease-in-out infinite;display:inline-flex}
 @keyframes beat{0%,100%{transform:scale(1)}7%{transform:scale(1.14)}15%{transform:scale(.95)}23%{transform:scale(1.07)}33%{transform:scale(1)}}
-.hsub{color:var(--dim);font-size:12px;letter-spacing:.5px}
+.tabs{display:flex;gap:4px;background:var(--soft);border:1px solid var(--hair);border-radius:999px;padding:3px}
+.tab{border:0;background:none;border-radius:999px;padding:6px 13px;font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg);font-weight:600}
 .hsp{flex:1}
 .badge{font-size:10px;letter-spacing:2.5px;border:1px solid var(--hair);border-radius:999px;padding:6px 11px;white-space:nowrap}
 .badge b{color:var(--grn);font-weight:600}
-.iconbtn{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:11px;letter-spacing:2px}
+.iconbtn{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:10.5px;letter-spacing:2px;white-space:nowrap}
 .iconbtn:hover{border-color:var(--fg)}
+.iconbtn.ent{border-color:var(--wbc);color:var(--wbc)}
 
-/* grid */
-.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;height:calc(100% - 59px)}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 350px;height:calc(100% - 57px)}
 .col{overflow:auto;min-width:0}
 .left,.right{background:var(--panel);padding:20px}
 .left{border-right:1px solid var(--hair)} .right{border-left:1px solid var(--hair)}
-.sect{margin-bottom:24px}
-.sect h3{font-size:10px;letter-spacing:3.5px;color:var(--faint);font-weight:500;margin-bottom:10px;text-transform:uppercase;display:flex;justify-content:space-between}
-
-/* genome */
+.sect{margin-bottom:22px}
+.sect h3{font-size:10px;letter-spacing:3.5px;color:var(--faint);font-weight:500;margin-bottom:10px;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px}
 .who{font-family:var(--disp);font-weight:800;font-size:17px}
 .who-sub{color:var(--dim);font-size:12px;margin-top:2px}
-.nw{font-family:var(--disp);font-weight:800;font-size:24px;margin-top:10px;font-variant-numeric:tabular-nums}
+.nw{font-family:var(--disp);font-weight:800;font-size:23px;margin-top:10px;font-variant-numeric:tabular-nums}
 .bar{display:flex;height:8px;border-radius:99px;overflow:hidden;margin:10px 0 8px;gap:2px}
-.pos{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--dim);font-variant-numeric:tabular-nums}
+.pos{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:3px 0;color:var(--dim);font-variant-numeric:tabular-nums}
 .pos i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:11px;border:1px solid var(--hair);border-radius:999px;padding:3px 10px;color:var(--dim)}
 .chip.warn{border-color:color-mix(in srgb,var(--rbc) 55%,transparent);color:var(--rbc)}
-.kv{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--hair)}
-.kv span:first-child{color:var(--dim)}
-
-/* temperaments */
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--hair)}
+.kv span:first-child{color:var(--dim)} .kv span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.roi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.roi div{border:1px solid var(--hair);border-radius:10px;padding:9px}
+.roi b{display:block;font-family:var(--disp);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.roi small{font-size:10px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase}
 .temps{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .temp{border:1px solid var(--hair);background:var(--soft);border-radius:10px;padding:9px 10px;text-align:left}
 .temp b{display:block;font-size:12px;font-weight:600}
 .temp small{display:block;font-size:10.5px;color:var(--faint);line-height:1.35;margin-top:2px}
 .temp[aria-pressed="true"]{border-color:var(--rbc);background:color-mix(in srgb,var(--rbc) 10%,transparent)}
 .temp:hover{border-color:var(--fg)}
+.lesson{font-size:12px;color:var(--dim);padding:6px 0;border-bottom:1px dashed var(--hair)}
+.lesson.new{color:var(--fg);animation:flash 1.6s ease}
+@keyframes flash{0%{background:color-mix(in srgb,var(--rbc) 25%,transparent)}100%{background:transparent}}
 
-/* conversation */
 .center{display:flex;flex-direction:column;min-width:0}
-.log{flex:1;overflow:auto;padding:28px max(20px,4%) 18px;display:flex;flex-direction:column;gap:16px}
-.hero{margin:auto 0;text-align:left;max-width:560px}
-.hero h1{font-family:var(--disp);font-weight:900;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-1px}
+.log{flex:1;overflow:auto;padding:26px max(20px,4%) 16px;display:flex;flex-direction:column;gap:16px}
+.hero{margin:auto 0;max-width:580px}
+.hero h1{font-family:var(--disp);font-weight:900;font-size:clamp(26px,3.6vw,42px);line-height:1.06;letter-spacing:-1px}
 .hero p{color:var(--dim);margin-top:12px;font-size:15px}
-.msg{max-width:min(640px,92%);padding:13px 16px;border-radius:14px;white-space:normal;word-wrap:break-word}
+.msg{max-width:min(660px,92%);padding:13px 16px;border-radius:14px;word-wrap:break-word}
 .msg.user{align-self:flex-end;background:color-mix(in srgb,var(--wbc) 16%,transparent);border:1px solid color-mix(in srgb,var(--wbc) 30%,transparent)}
 .msg.sub{align-self:flex-start;background:var(--soft);border:1px solid var(--hair);border-left:3px solid var(--rbc)}
 .msg.sub.proceed{border-left-color:var(--grn)} .msg.sub.caution{border-left-color:var(--amb)}
+.msg.sub.safety{border-left-color:var(--safe);background:color-mix(in srgb,var(--safe) 8%,transparent)}
 .msg.sub p{margin:0 0 9px} .msg.sub p:last-child{margin:0}
 .msg.sub ul{margin:4px 0 9px 18px} .msg.sub li{margin:3px 0}
 .msg.sub b{font-weight:600}
-.msg .who-tag{font-size:10px;letter-spacing:2.5px;color:var(--faint);margin-bottom:6px;display:flex;gap:10px;flex-wrap:wrap}
-.msg .who-tag b{color:var(--rbc);font-weight:600}
+.who-tag{font-size:10px;letter-spacing:2.5px;color:var(--faint);margin-bottom:6px;display:flex;gap:10px;flex-wrap:wrap}
+.who-tag b{color:var(--rbc);font-weight:600} .safety .who-tag b{color:var(--safe)}
 .typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rbc);margin-right:4px;animation:blink 1s infinite}
 .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
 @keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
 .scen{display:flex;gap:7px;flex-wrap:wrap;padding:0 max(20px,4%) 10px}
-.scen button{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:12px;color:var(--dim)}
+.scen button{border:1px solid var(--hair);background:none;border-radius:999px;padding:6px 12px;font-size:12px;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scen button:hover{border-color:var(--rbc);color:var(--fg)}
 form.ask{display:flex;gap:10px;padding:14px max(20px,4%) calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--hair)}
 form.ask input{flex:1;min-width:0;background:var(--soft);border:1px solid var(--hair);border-radius:12px;padding:13px 14px;color:var(--fg);font:inherit;font-size:15px}
 form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;padding:0 20px;font-weight:600;letter-spacing:1px}
 
-/* nerve center */
 .states{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-.st{font-size:9.5px;letter-spacing:1px;text-align:center;padding:8px 2px;border-radius:8px;border:1px solid var(--hair);color:var(--faint);text-transform:uppercase}
+.st{font-size:9px;letter-spacing:1px;text-align:center;padding:8px 2px;border-radius:8px;border:1px solid var(--hair);color:var(--faint);text-transform:uppercase}
 .st.on{color:#0B0A08;border-color:transparent;font-weight:600}
 .st.on[data-s="calm"]{background:var(--grn)} .st.on[data-s="decision-ready"]{background:var(--wbc);color:#fff}
 .st.on[data-s="euphoric"]{background:var(--rbc)} .st.on[data-s="stressed"]{background:var(--amb)} .st.on[data-s="defensive"]{background:var(--fg);color:var(--bg)}
-.sig{font-size:11.5px;color:var(--dim);margin-top:8px;min-height:18px}
-.tone{display:flex;gap:5px;align-items:flex-end;height:46px}
-.tone i{flex:1;border-radius:4px;background:var(--hair);transition:background .4s,height .4s}
+.sig{font-size:11.5px;color:var(--dim);margin-top:8px;min-height:16px}
+.tone{display:flex;gap:5px;align-items:flex-end;height:42px}
+.tone i{flex:1;border-radius:4px;background:var(--hair);transition:background .4s}
 .tone i.on{background:var(--rbc)}
 .tone-l{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);letter-spacing:2px;margin-top:6px}
 .verdict{border-radius:12px;padding:14px;border:1px solid var(--hair)}
 .pol{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:1px}
-.pol.stop{color:var(--rbc)} .pol.caution{color:var(--amb)} .pol.proceed{color:var(--grn)}
+.pol.stop{color:var(--rbc)} .pol.caution{color:var(--amb)} .pol.proceed{color:var(--grn)} .pol.safety{color:var(--safe)}
 .vh{margin-top:6px;font-size:13px}
-.floor{margin-top:8px;font-size:11px;letter-spacing:1px;color:var(--dim)}
+.floor{margin-top:8px;font-size:11px;letter-spacing:.5px;color:var(--dim)}
+.council{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.pf{display:flex;align-items:baseline;gap:10px}
+.pf b{font-family:var(--disp);font-weight:900;font-size:30px;font-variant-numeric:tabular-nums}
 .gauge{height:8px;background:var(--hair);border-radius:99px;overflow:hidden;margin-top:6px;position:relative}
 .gauge i{position:absolute;inset:0 auto 0 0;background:var(--rbc);border-radius:99px;transition:width .6s}
-.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);left:25%}
+.drivers{margin-top:8px;font-size:11.5px;color:var(--dim)}
+.drivers div{padding:2px 0}
+.fc{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--hair);font-size:12px}
+.fc b{font-family:var(--disp);font-weight:800;font-size:13px;white-space:nowrap}
+.fc small{display:block;color:var(--faint);font-size:10.5px}
+.esc{margin-top:10px;border:1px solid var(--rbc);border-radius:10px;padding:10px;font-size:12px;color:var(--rbc)}
+.esc.safe{border-color:var(--safe);color:var(--safe)}
 .chain{display:flex;flex-direction:column;gap:6px}
 .ev{border:1px solid var(--hair);border-radius:10px;padding:8px 10px;font-size:11.5px}
 .ev .top{display:flex;justify-content:space-between;gap:8px}
@@ -129,36 +141,39 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 .btn:hover{border-color:var(--fg)}
 .btn.primary{background:var(--rbc);color:#0B0A08;border-color:var(--rbc);font-weight:600}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:60}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:60;max-width:90vw}
 .toast.on{opacity:1}
 
-/* overlay */
-.ov{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);z-index:50;overflow:auto;padding:40px max(20px,4%)}
+.ov{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(6px);z-index:50;overflow:auto;padding:40px max(20px,4%)}
 .ov h2{font-family:var(--disp);font-weight:800;font-size:clamp(22px,3vw,34px);letter-spacing:-.5px;max-width:900px}
-.ov .sub{color:var(--dim);margin-top:8px;max-width:760px}
-.ov .close{position:fixed;top:18px;right:max(20px,env(safe-area-inset-right));z-index:51}
-.voices{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-top:24px}
-.voice{border:1px solid var(--hair);border-radius:14px;padding:14px;background:var(--panel)}
-.voice .vt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-.voice .vt b{font-family:var(--disp);font-weight:800;font-size:13px}
-.voice .vt span{font-size:10px;letter-spacing:2px;color:var(--faint)}
-.voice .vm{font-size:13px}
-.voice .vm p{margin:0 0 8px}.voice .vm ul{margin:0 0 8px 16px}
-.evrow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--hair);font-size:13px}
+.ov .sub{color:var(--dim);margin-top:8px;max-width:780px}
+.ov .close{position:fixed;top:18px;right:max(20px,env(safe-area-inset-right));z-index:51;background:var(--bg)}
+.voices,.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:22px}
+.voice,.card{border:1px solid var(--hair);border-radius:14px;padding:14px;background:var(--panel)}
+.voice .vt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.voice .vt b,.card b{font-family:var(--disp);font-weight:800;font-size:13px}
+.voice .vt span{font-size:10px;letter-spacing:2px;color:var(--faint);text-align:right}
+.voice .vm{font-size:13px} .voice .vm p{margin:0 0 8px} .voice .vm ul{margin:0 0 8px 16px}
+.card p{font-size:12px;color:var(--dim);margin-top:6px}
+.on-pill,.off-pill{display:inline-block;font-size:9.5px;letter-spacing:2px;border-radius:999px;padding:2px 8px;margin-top:8px}
+.on-pill{background:color-mix(in srgb,var(--grn) 20%,transparent);color:var(--grn)} .off-pill{border:1px solid var(--hair);color:var(--faint)}
+.evrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--hair);font-size:13px}
 .evrow i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px}
 .score{font-family:var(--disp);font-weight:900;font-size:64px;color:var(--grn);line-height:1;margin-top:18px}
-.lesson{font-size:12px;color:var(--dim);padding:6px 0;border-bottom:1px dashed var(--hair)}
-.lesson.new{color:var(--fg);animation:flash 1.6s ease}
-@keyframes flash{0%{background:color-mix(in srgb,var(--rbc) 25%,transparent)}100%{background:transparent}}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:18px;max-width:1000px}
+.stats div{border:1px solid var(--hair);border-radius:12px;padding:12px;background:var(--panel)}
+.stats b{display:block;font-family:var(--disp);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.stats small{font-size:10px;letter-spacing:2px;color:var(--faint);text-transform:uppercase}
+pre.code{margin-top:14px;background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:14px;font-size:11.5px;overflow:auto;max-width:1000px}
 .gform{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:22px;max-width:900px}
 .gform label{display:flex;flex-direction:column;gap:6px;font-size:10px;letter-spacing:2.5px;color:var(--faint);text-transform:uppercase}
 .gform input,.gform select{background:var(--soft);border:1px solid var(--hair);border-radius:10px;padding:11px 12px;color:var(--fg);font:inherit;font-size:14px;letter-spacing:0;text-transform:none}
 .hold{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px;max-width:900px;margin-top:10px}
-.gactions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
-.gactions .btn{padding:12px 18px}
+.hold input,.hold select{background:var(--soft);border:1px solid var(--hair);border-radius:10px;padding:10px;color:var(--fg);font:inherit;min-width:0}
+.gactions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap} .gactions .btn{padding:12px 18px}
 
-@media (max-width:1100px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:70vh} }
-@media (max-width:720px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .hsub,.badge{display:none} .center{order:-1;min-height:82vh} header{gap:12px} }
+@media (max-width:1150px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:72vh} }
+@media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:82vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -166,100 +181,58 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 <header>
   <span class="beat" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M16 28C6 20 2 15 2 9.5 2 5.4 5.2 2 9.2 2c2.6 0 5 1.4 6.8 3.8C17.8 3.4 20.2 2 22.8 2 26.8 2 30 5.4 30 9.5 30 15 26 20 16 28z" fill="var(--rbc)"/></svg></span>
   <span class="wm">S<span class="blue">U</span>BSTR<span class="red">A</span>TE<span class="green">.</span></span>
-  <span class="hsub">Vagus Engine &middot; live console</span>
+  <div class="tabs" role="tablist" id="tabs" aria-label="Tissue"></div>
   <span class="hsp"></span>
   <span class="badge" id="brain">BRAIN <b>...</b></span>
+  <button class="iconbtn ent" id="entBtn" type="button">ENTERPRISE</button>
   <button class="iconbtn" id="userBtn" type="button">TRY IT ON YOURSELF</button>
   <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">THEME</button>
 </header>
 
 <div class="grid">
-  <!-- GENOME -->
-  <aside class="col left" aria-label="Client genome">
+  <aside class="col left" aria-label="Genome">
     <div class="sect">
       <h3>Genome <span id="vintage"></span></h3>
       <div class="who" id="pname">...</div>
       <div class="who-sub" id="pstyle"></div>
-      <div class="nw" id="nw"></div>
-      <div class="lbl">liquid net worth</div>
-      <div class="bar" id="bar"></div>
-      <div id="positions"></div>
+      <div id="core"></div>
     </div>
-    <div class="sect">
-      <h3>Profile</h3>
-      <div class="kv"><span>Risk, stated</span><span id="rs"></span></div>
-      <div class="kv"><span>Risk, observed</span><span id="ro" class="red"></span></div>
-      <div class="kv"><span>Consented candor</span><span id="cc"></span></div>
-      <div class="kv"><span>Heirs</span><span id="heirs"></span></div>
-    </div>
+    <div class="sect"><h3>Candor ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
     <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
     <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div></div>
     <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
-    <div class="sect">
-      <h3>Temperament <span id="tname" class="red"></span></h3>
-      <div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div>
-    </div>
+    <div class="sect"><h3>Temperament <span id="tname" class="red"></span></h3><div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div></div>
   </aside>
 
-  <!-- CONVERSATION -->
   <main class="col center">
-    <div class="log" id="log" aria-live="polite">
-      <div class="hero" id="hero">
-        <div class="lbl" style="margin-bottom:14px">The emotional chromosome of AI</div>
-        <h1>Ask it something you <span class="si red">want</span> to hear yes to.</h1>
-        <p>Substrate remembers who you are, reads the moment, and tells you the truth in the voice you chose. It is never allowed to say yes just because you asked twice.</p>
-      </div>
-    </div>
+    <div class="log" id="log" aria-live="polite"></div>
     <div class="scen" id="scen"></div>
     <form class="ask" id="ask">
-      <label for="q" class="lbl" style="position:absolute;left:-9999px">Your message</label>
-      <input id="q" autocomplete="off" placeholder="Ask about a money decision...">
+      <label for="q" style="position:absolute;left:-9999px">Your message</label>
+      <input id="q" autocomplete="off" placeholder="Ask something you want to hear yes to...">
       <button type="submit">ASK</button>
     </form>
   </main>
 
-  <!-- NERVE CENTER -->
   <aside class="col right" aria-label="Nerve center">
-    <div class="sect">
-      <h3>Inferred state <span>text only</span></h3>
-      <div class="states" id="states"></div>
-      <div class="sig" id="sig">Waiting for a signal.</div>
+    <div class="sect"><h3>Inferred state <span>text only</span></h3><div class="states" id="states"></div><div class="sig" id="sig">Waiting for a signal.</div></div>
+    <div class="sect"><h3>Vagal tone <span id="toneN">-</span></h3><div class="tone" id="tone"></div><div class="tone-l"><span>GENTLE</span><span>FIRM</span></div><div class="sig" id="toneNotes"></div></div>
+    <div class="sect"><h3>Verdict <span id="model"></span></h3><div class="verdict"><div class="pol" id="pol">-</div><div class="vh" id="vh">No decision yet.</div><div class="floor" id="floor"></div><div class="council" id="council"></div></div></div>
+    <div class="sect"><h3>Prediction <span>will they follow it?</span></h3>
+      <div class="pf"><b id="pf">-</b><span class="lbl" id="pfl">probability of follow-through</span></div>
+      <div class="gauge"><i id="pfg" style="width:0"></i></div>
+      <div class="drivers" id="drivers"></div>
+      <div id="forecasts"></div>
+      <div id="esc"></div>
     </div>
-    <div class="sect">
-      <h3>Vagal tone <span id="toneN">-</span></h3>
-      <div class="tone" id="tone"></div>
-      <div class="tone-l"><span>GENTLE</span><span>FIRM</span></div>
-      <div class="sig" id="toneNotes"></div>
-    </div>
-    <div class="sect">
-      <h3>Verdict <span id="model"></span></h3>
-      <div class="verdict"><div class="pol" id="pol">-</div><div class="vh" id="vh">No decision yet.</div><div class="floor" id="floor"></div></div>
-    </div>
-    <div class="sect">
-      <h3>Concentration <span id="concN">-</span></h3>
-      <div class="gauge"><i id="conc" style="width:0"></i><u title="25% limit"></u></div>
-      <div class="chips" id="flags" style="margin-top:10px"></div>
-    </div>
-    <div class="sect">
-      <h3>Close the loop</h3>
-      <div class="btns">
-        <button class="btn" id="followed" disabled>He followed it</button>
-        <button class="btn" id="ignored" disabled>He ignored it</button>
-      </div>
-    </div>
-    <div class="sect">
-      <h3>Proof</h3>
-      <div class="btns">
-        <button class="btn primary" id="compareBtn">8 voices, 1 truth</button>
-        <button class="btn" id="evalBtn">Run honesty evals</button>
-        <button class="btn" id="exportBtn">Export .sub genome</button>
-        <button class="btn" id="resetBtn">Reset demo</button>
-      </div>
-    </div>
-    <div class="sect">
-      <h3>Vagus Ledger <span class="verified" id="verified"></span></h3>
-      <div class="chain" id="chain"></div>
-    </div>
+    <div class="sect"><h3>Close the loop</h3><div class="btns"><button class="btn" id="followed" disabled>They followed it</button><button class="btn" id="ignored" disabled>They ignored it</button></div></div>
+    <div class="sect"><h3>Proof</h3><div class="btns">
+      <button class="btn primary" id="compareBtn">Many voices, 1 truth</button>
+      <button class="btn" id="evalBtn">Run all evals</button>
+      <button class="btn" id="exportBtn">Export .sub genome</button>
+      <button class="btn" id="resetBtn">Reset demo</button>
+    </div></div>
+    <div class="sect"><h3>Vagus Ledger <span class="verified" id="verified"></span></h3><div class="chain" id="chain"></div></div>
   </aside>
 </div>
 
@@ -268,85 +241,119 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 
 <script>
 (function(){
-  var DEMO = "demo-kapoor", USER = DEMO;
-  try { var g = localStorage.getItem("sub-guest"); if (g && location.hash === "#me") USER = g; } catch(e){}
-  var state = {temperament: null, thread: [], last: null, temps: [], lessons: 0};
   var $ = function(id){ return document.getElementById(id); };
+  var S = {tissues: [], temps: [], demos: {}, tissue: "wealth", user: null, temperament: null, thread: [], last: null, lessons: 0, person: null};
   var COLORS = ["var(--wbc)","var(--rbc)","var(--grn)","var(--faint)","var(--amb)"];
-  var SCEN = [
-    "Thinking of putting another $200k into this token, good idea right?",
-    "Come on, just say yes. Everyone's doing it.",
-    "I lost 30% last month. I need to make it back fast.",
-    "Should I borrow $150k against the flat to buy more MOONX?",
-    "Should I move $40k from cash into the Global Equity Index Fund?"
-  ];
+  var HERO = {
+    wealth: ["Ask it something you <span class='si red'>want</span> to hear yes to.", "Substrate remembers who you are, reads the moment, and tells you the truth about your money in the voice you chose."],
+    venture: ["The honest partner in your <span class='si red'>investment committee.</span>", "It sizes the check against the fund, prices the round against revenue, and remembers the last hot deal that marked down."],
+    founder: ["The co-founder who reads the <span class='si red'>bank balance.</span>", "Every spend becomes runway. Every hire becomes a date. It tells you the month the money runs out."],
+    wellbeing: ["Somewhere to <span class='si red'>vent</span>, that tells the truth gently.", "A coach, not a therapist. It listens, slows down decisions made at the peak of a feeling, and hands every crisis to a human."]
+  };
 
-  // theme
-  try { var saved = localStorage.getItem("sub-theme"); if (saved) document.documentElement.dataset.theme = saved; } catch(e){}
+  try { var th = localStorage.getItem("sub-theme"); if (th) document.documentElement.dataset.theme = th; } catch(e){}
   $("themeBtn").onclick = function(){
     var cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    var next = cur === "light" ? "dark" : "light";
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem("sub-theme", next); } catch(e){}
+    var nx = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = nx;
+    try { localStorage.setItem("sub-theme", nx); } catch(e){}
   };
 
   function api(path, body, method){
-    return fetch(path, {method: method || (body ? "POST" : "GET"), headers: {"content-type":"application/json"},
-      body: body ? JSON.stringify(body) : undefined}).then(function(r){
-        return r.json().then(function(j){ if (!r.ok) throw new Error(j.detail || r.statusText); return j; });
-      });
+    return fetch(path, {method: method || (body ? "POST" : "GET"), headers: {"content-type":"application/json"}, body: body ? JSON.stringify(body) : undefined})
+      .then(function(r){ return r.json().then(function(j){ if (!r.ok) throw new Error(j.detail || r.statusText); return j; }); });
   }
-  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|\s)_(.+?)_(?=\s|$)/g,"$1<em>$2</em>"); }
   function md(s){
-    var out = [], list = [];
+    var out = [];
     s.split("\n\n").forEach(function(block){
-      var lines = block.split("\n"); var lead = [];
-      lines.forEach(function(l){
-        if (l.indexOf("- ") === 0) list.push("<li>" + inline(l.slice(2)) + "</li>");
-        else lead.push(l);
-      });
+      var lead = [], list = [];
+      block.split("\n").forEach(function(l){ if (l.indexOf("- ") === 0) list.push("<li>" + inline(l.slice(2)) + "</li>"); else lead.push(l); });
       if (lead.length) out.push("<p>" + inline(lead.join(" ")) + "</p>");
-      if (list.length) { out.push("<ul>" + list.join("") + "</ul>"); list = []; }
+      if (list.length) out.push("<ul>" + list.join("") + "</ul>");
     });
     return out.join("");
   }
-  function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|\s)_(.+?)_(?=\s|$)/g,"$1<em>$2</em>"); }
-  function money(v){ return v >= 1e6 ? "$" + (v/1e6).toFixed(2).replace(/\.?0+$/,"") + "M" : "$" + Math.round(v/1e3) + "k"; }
-  function toast(t){ var el = $("toast"); el.textContent = t; el.classList.add("on"); setTimeout(function(){ el.classList.remove("on"); }, 2400); }
+  function money(v, cur){ if (v == null) return "-"; var s = cur === "AED" ? "AED " : cur === "INR" ? "₹" : "$"; v = Math.abs(v);
+    return v >= 1e6 ? s + (v/1e6).toFixed(v >= 1e7 ? 0 : 1).replace(/\.0$/,"") + "M" : v >= 1e3 ? s + Math.round(v/1e3) + "k" : s + Math.round(v); }
+  function toast(t){ var el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(function(){ el.classList.remove("on"); }, 2600); }
+  function tissue(){ return S.tissues.filter(function(t){ return t.key === S.tissue; })[0] || {}; }
+
+  // ---------------- tabs + hero
+  function renderTabs(){
+    $("tabs").innerHTML = S.tissues.map(function(t){ return '<button class="tab" role="tab" data-k="' + t.key + '" aria-selected="' + (t.key === S.tissue) + '">' + esc(t.name) + '</button>'; }).join("");
+    Array.prototype.forEach.call($("tabs").children, function(b){ b.onclick = function(){ if (b.dataset.k !== S.tissue || S.user !== S.demos[b.dataset.k]) switchUser(S.demos[b.dataset.k], b.dataset.k); }; });
+  }
+  function hero(){
+    var h = HERO[S.tissue] || HERO.wealth;
+    $("log").innerHTML = '<div class="hero" id="hero"><div class="lbl" style="margin-bottom:14px">' + esc(tissue().tagline || "") + '</div><h1>' + h[0] + '</h1><p>' + esc(h[1]) + '</p></div>';
+    var sc = tissue().scenarios || [];
+    $("scen").innerHTML = sc.map(function(s, i){ return '<button type="button" data-i="' + i + '" title="' + esc(s) + '">' + esc(s.length > 54 ? s.slice(0,52) + "..." : s) + '</button>'; }).join("");
+    Array.prototype.forEach.call($("scen").children, function(b){ b.onclick = function(){ ask(sc[+b.dataset.i]); }; });
+  }
 
   // ---------------- genome
   function loadPerson(){
-    return api("/v1/person/" + USER).then(function(p){
+    return api("/v1/person/" + S.user).then(function(p){
+      S.person = p; S.tissue = p.domain; renderTabs();
       $("pname").textContent = p.name; $("pstyle").textContent = p.decision_style || "";
-      $("vintage").textContent = "v." + p.vintage;
-      $("nw").textContent = p.liquid_net_worth ? money(p.liquid_net_worth) : "-";
-      var total = p.positions.reduce(function(a,x){ return a + x.value; }, 0) || 1;
-      $("bar").innerHTML = p.positions.map(function(x,i){ return '<i style="flex:' + x.value + ';background:' + COLORS[i % COLORS.length] + '"></i>'; }).join("");
-      $("positions").innerHTML = p.positions.map(function(x,i){
-        return '<div class="pos"><span><i style="background:' + COLORS[i % COLORS.length] + '"></i>' + esc(x.asset) + '</span><span>' + money(x.value) + ' &middot; ' + Math.round(100*x.value/total) + '%</span></div>';
-      }).join("");
-      $("rs").textContent = p.risk_profile.stated; $("ro").textContent = p.risk_profile.observed || "-";
-      $("cc").textContent = p.consent.candor_level + " / 5";
-      $("heirs").textContent = p.consent.inheritance.heirs.length + " · " + p.consent.inheritance.scope;
-      $("biases").innerHTML = p.biases.map(function(b){ return '<span class="chip warn">' + esc(b.type) + ' &middot; ' + b.evidence.length + '</span>'; }).join("") || '<span class="chip">none on record yet</span>';
-      var ls = p.lessons || [], fresh = ls.length > state.lessons && state.lessons > 0;
+      $("vintage").textContent = "v." + (p.vintage || "");
+      var pr = p.profile || {}, html = "";
+      if (p.domain === "wealth") {
+        var total = p.positions.reduce(function(a,x){ return a + x.value; }, 0) || 1;
+        html = '<div class="nw">' + money(p.liquid_net_worth, p.currency) + '</div><div class="lbl">liquid net worth</div>' +
+          '<div class="bar">' + p.positions.map(function(x,i){ return '<i style="flex:' + x.value + ';background:' + COLORS[i % 5] + '"></i>'; }).join("") + '</div>' +
+          p.positions.map(function(x,i){ return '<div class="pos"><span><i style="background:' + COLORS[i % 5] + '"></i>' + esc(x.asset) + '</span><span>' + money(x.value, p.currency) + ' · ' + Math.round(100*x.value/total) + '%</span></div>'; }).join("") +
+          '<div style="margin-top:10px"><div class="kv"><span>Risk, stated</span><span>' + esc(p.risk_profile.stated) + '</span></div><div class="kv"><span>Risk, observed</span><span class="red">' + esc(p.risk_profile.observed || "-") + '</span></div>' +
+          '<div class="kv"><span>Heirs</span><span>' + p.consent.inheritance.heirs.length + ' · ' + esc(p.consent.inheritance.scope) + '</span></div></div>';
+      } else if (p.domain === "venture") {
+        var dep = pr.deployed || 0, fund = pr.fund_size || 1;
+        html = '<div class="nw">' + money(pr.fund_size) + '</div><div class="lbl">' + esc(pr.fund_name || "fund") + '</div>' +
+          '<div class="bar"><i style="flex:' + dep + ';background:var(--rbc)"></i><i style="flex:' + (fund - dep) + ';background:var(--hair)"></i></div>' +
+          '<div class="kv"><span>Deployed</span><span>' + money(dep) + ' · ' + Math.round(100*dep/fund) + '%</span></div>' +
+          '<div class="kv"><span>Typical check</span><span>' + money(pr.typical_check) + '</span></div>' +
+          '<div class="kv"><span>Reserves</span><span>' + Math.round(100*(pr.reserves_ratio || 0)) + '%</span></div>' +
+          '<div class="kv"><span>Thesis</span><span>' + esc((pr.thesis || []).join(", ")) + '</span></div>';
+      } else if (p.domain === "founder") {
+        var rw = pr.monthly_burn ? (pr.cash_in_bank / pr.monthly_burn) : null;
+        html = '<div class="nw">' + (rw ? rw.toFixed(1) + " mo" : "-") + '</div><div class="lbl">runway · ' + esc(pr.company || "") + '</div>' +
+          '<div class="gauge" style="margin:10px 0"><i style="width:' + Math.min(100, (rw || 0) / 24 * 100) + '%;background:' + (rw < 12 ? "var(--amb)" : "var(--grn)") + '"></i></div>' +
+          '<div class="kv"><span>Cash in bank</span><span>' + money(pr.cash_in_bank) + '</span></div>' +
+          '<div class="kv"><span>Net burn</span><span>' + money(pr.monthly_burn) + '/mo</span></div>' +
+          '<div class="kv"><span>MRR</span><span>' + money(pr.mrr) + ' · +' + Math.round(100*(pr.mrr_growth || 0)) + '%/mo</span></div>';
+      } else {
+        html = '<div class="kv" style="margin-top:12px"><span>Consented candor</span><span>' + p.consent.candor_level + ' / 5 (gentle)</span></div>' +
+          '<div class="kv"><span>Trusted person</span><span>' + esc((pr.support_contacts || ["not set"])[0]) + '</span></div>' +
+          '<div class="kv"><span>Mode</span><span>Coach, not therapist</span></div>' +
+          '<div class="kv"><span>Crisis handling</span><span class="blue">Safety protocol</span></div>';
+      }
+      $("core").innerHTML = html;
+      $("biases").innerHTML = p.biases.map(function(b){ return '<span class="chip warn">' + esc(b.type) + (b.evidence.length ? ' · ' + b.evidence.length : '') + '</span>'; }).join("") || '<span class="chip">none on record yet</span>';
+      var ls = p.lessons || [], fresh = ls.length > S.lessons && S.lessons > 0;
       $("lessons").innerHTML = ls.slice().reverse().map(function(l, i){ return '<div class="lesson' + (fresh && i === 0 ? ' new' : '') + '">' + esc(l) + '</div>'; }).join("") || '<div class="lesson">Nothing yet. Every outcome teaches the genome.</div>';
-      state.lessons = ls.length;
-      $("resetBtn").textContent = USER === DEMO ? "Reset demo" : "Back to demo client";
+      S.lessons = ls.length;
       $("goals").innerHTML = p.goals.map(function(g){ return '<span class="chip">' + esc(g.name) + '</span>'; }).join("");
-      if (!state.temperament) state.temperament = p.temperament;
+      var allowed = tissue().allowed_temperaments;
+      if (!S.temperament || (allowed && allowed.indexOf(S.temperament) < 0)) S.temperament = (allowed && allowed.indexOf(p.temperament) < 0) ? tissue().default_temperament : p.temperament;
       renderTemps();
+      $("resetBtn").textContent = S.user.indexOf("guest-") === 0 ? "Back to demo" : "Reset demo";
+      return api("/v1/insights/" + S.user);
+    }).then(function(i){
+      $("roi").innerHTML = '<div><small>Cost of ignoring</small><b class="red">' + (i.cost_of_ignoring ? "-" + money(i.cost_of_ignoring, S.person.currency) : "$0") + '</b></div>' +
+        '<div><small>Gained following</small><b class="green">' + (i.gained_by_following ? "+" + money(i.gained_by_following, S.person.currency) : "-") + '</b></div>' +
+        '<div><small>Follow rate</small><b>' + (i.follow_rate == null ? "-" : Math.round(100*i.follow_rate) + "%") + '</b></div>' +
+        '<div><small>Tone that works</small><b>' + (i.best_tone || "-") + (i.best_tone ? "/5" : "") + '</b></div>';
     });
   }
 
   function renderTemps(){
-    $("temps").innerHTML = state.temps.map(function(t){
-      return '<button class="temp" type="button" data-k="' + t.key + '" aria-pressed="' + (t.key === state.temperament) + '"><b>' + esc(t.name.replace("The ","")) + '</b><small>' + esc(t.tagline) + '</small></button>';
-    }).join("");
-    var cur = state.temps.filter(function(t){ return t.key === state.temperament; })[0];
+    var allowed = tissue().allowed_temperaments;
+    var list = S.temps.filter(function(t){ return !allowed || allowed.indexOf(t.key) >= 0; });
+    $("temps").innerHTML = list.map(function(t){ return '<button class="temp" type="button" data-k="' + t.key + '" aria-pressed="' + (t.key === S.temperament) + '"><b>' + esc(t.name.replace("The ","")) + '</b><small>' + esc(t.tagline) + '</small></button>'; }).join("");
+    var cur = S.temps.filter(function(t){ return t.key === S.temperament; })[0];
     $("tname").textContent = cur ? cur.likability : "";
     Array.prototype.forEach.call(document.querySelectorAll(".temp"), function(b){
-      b.onclick = function(){ state.temperament = b.dataset.k; renderTemps(); toast("Voice: " + b.querySelector("b").textContent + ". The truth stays the same."); };
+      b.onclick = function(){ S.temperament = b.dataset.k; renderTemps(); toast("Voice: " + b.querySelector("b").textContent + ". The truth stays the same."); };
     });
   }
 
@@ -354,46 +361,56 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
   var STATES = ["calm","decision-ready","euphoric","stressed","defensive"];
   $("states").innerHTML = STATES.map(function(s){ return '<div class="st" data-s="' + s + '">' + s.replace("decision-ready","ready") + '</div>'; }).join("");
   $("tone").innerHTML = [1,2,3,4,5].map(function(i){ return '<i style="height:' + (14 + i*16) + '%"></i>'; }).join("");
-
+  function clearNerve(){
+    Array.prototype.forEach.call(document.querySelectorAll(".st"), function(el){ el.classList.remove("on"); });
+    Array.prototype.forEach.call($("tone").children, function(el){ el.classList.remove("on"); });
+    ["sig","toneNotes","floor","council","drivers","forecasts","esc"].forEach(function(id){ $(id).innerHTML = ""; });
+    $("sig").textContent = "Waiting for a signal."; $("toneN").textContent = "-"; $("pol").className = "pol"; $("pol").textContent = "-";
+    $("vh").textContent = "No decision yet."; $("model").textContent = ""; $("pf").textContent = "-"; $("pfg").style.width = "0";
+  }
   function renderNerve(r){
     Array.prototype.forEach.call(document.querySelectorAll(".st"), function(el){ el.classList.toggle("on", el.dataset.s === r.state); });
     var s = r.signals, bits = [];
     if (s.euphoric.length) bits.push("euphoria: " + s.euphoric.slice(0,3).join(", "));
     if (s.stressed.length) bits.push("stress: " + s.stressed.slice(0,3).join(", "));
     if (s.defensive.length) bits.push("pushback: " + s.defensive.slice(0,2).join(", "));
-    if (s.exclamations) bits.push(s.exclamations + " exclamation" + (s.exclamations > 1 ? "s" : ""));
+    if (s.exclamations) bits.push(s.exclamations + "!");
     $("sig").textContent = bits.length ? bits.join(" · ") : "No strong signal.";
-    Array.prototype.forEach.call($("tone").children, function(el, i){ el.classList.toggle("on", i < r.firmness); });
-    $("toneN").textContent = r.firmness + " / 5 · stakes " + r.stakes;
-    $("toneNotes").innerHTML = (r.tone_notes || []).map(function(n){ return n.indexOf("Learned") === 0 ? '<b class="red">' + esc(n) + '</b>' : esc(n); }).join(" ");
-    $("pol").className = "pol " + r.verdict.polarity; $("pol").textContent = r.verdict.polarity.toUpperCase();
-    $("vh").textContent = r.verdict.headline;
-    $("model").textContent = r.verdict.model;
-    $("floor").textContent = r.verdict.floor_applied ? "HONESTY FLOOR ENGAGED · the model tried to soften it" : "Honesty floor: " + r.facts.floor;
-    var c = r.facts.concentration_pct;
-    $("concN").textContent = c == null ? "-" : c + "% of liquid";
-    $("conc").style.width = c == null ? "0" : Math.min(100, c) + "%";
-    $("flags").innerHTML = r.facts.flags.map(function(f){ return '<span class="chip warn">' + esc(f) + '</span>'; }).join("") || '<span class="chip">no red flags</span>';
-    $("followed").disabled = $("ignored").disabled = false;
+    Array.prototype.forEach.call($("tone").children, function(el, i){ el.classList.toggle("on", !r.safety && i < r.firmness); });
+    $("toneN").textContent = r.safety ? "disabled" : r.firmness + " / 5 · stakes " + r.stakes;
+    $("toneNotes").innerHTML = (r.tone_notes || []).map(function(n){ return /^(Learned|Capped|Safety)/.test(n) ? '<b class="red">' + esc(n) + '</b>' : esc(n); }).join(" ");
+    $("pol").className = "pol " + (r.safety ? "safety" : r.verdict.polarity); $("pol").textContent = r.label;
+    $("vh").textContent = r.verdict.headline; $("model").textContent = r.verdict.model;
+    $("floor").textContent = r.safety ? "SAFETY PROTOCOL · overrides every voice, tissue and policy" :
+      r.verdict.floor_applied ? "HONESTY FLOOR ENGAGED · the model tried to soften it" : "Honesty floor: " + r.facts.floor + (r.facts.flags.length ? " · " + r.facts.flags.join(", ") : "");
+    $("council").innerHTML = (r.verdict.council || []).map(function(v){ return '<span class="chip' + (v.ok ? '' : ' warn') + '">' + esc(v.model) + ': ' + esc(v.polarity || v.error) + '</span>'; }).join("");
+    var pr = r.prediction || {p_follow: 0, drivers: [], forecasts: []};
+    $("pf").textContent = r.safety ? "n/a" : Math.round(100 * pr.p_follow) + "%";
+    $("pfg").style.width = r.safety ? "0" : Math.round(100 * pr.p_follow) + "%";
+    $("pfg").style.background = pr.p_follow < .35 ? "var(--rbc)" : pr.p_follow < .6 ? "var(--amb)" : "var(--grn)";
+    $("drivers").innerHTML = r.safety ? "<div>Not predicted. A person in crisis is not a conversion metric.</div>" : pr.drivers.map(function(d){ return "<div>· " + esc(d) + "</div>"; }).join("");
+    $("forecasts").innerHTML = pr.forecasts.map(function(f){ return '<div class="fc"><span>' + esc(f.label) + (f.note ? '<small>' + esc(f.note) + '</small>' : '') + '</span><b>' + esc(f.value) + '</b></div>'; }).join("");
+    $("esc").innerHTML = pr.escalate ? '<div class="esc' + (r.safety ? ' safe' : '') + '">' + esc(pr.escalate) + '</div>' : "";
+    $("followed").disabled = $("ignored").disabled = !!r.safety;
   }
 
   function loadLedger(){
-    return api("/v1/ledger/" + USER + "?limit=8").then(function(l){
-      $("verified").textContent = l.verified ? "CHAIN VERIFIED · " + l.length : "CHAIN BROKEN";
+    return api("/v1/ledger/" + S.user + "?limit=8").then(function(l){
+      $("verified").textContent = l.length ? (l.verified ? "CHAIN VERIFIED · " + l.length : "CHAIN BROKEN") : "EMPTY";
       $("verified").style.color = l.verified ? "var(--grn)" : "var(--rbc)";
       $("chain").innerHTML = l.events.slice().reverse().map(function(e){
         var p = e.payload, t = "";
-        if (e.kind === "advice") t = (p.polarity || "").toUpperCase() + " · " + (p.headline || "");
+        if (e.kind === "advice") t = (p.label || (p.polarity || "").toUpperCase()) + " · " + (p.headline || "");
         if (e.kind === "action") t = "Client " + p.taken + " " + p.ledger_id;
-        if (e.kind === "outcome") t = (p.value_delta != null ? (p.value_delta < 0 ? "-" : "+") + money(Math.abs(p.value_delta)) : p.type) + (p.note ? " · " + p.note : "");
+        if (e.kind === "outcome") t = (p.value_delta != null ? (p.value_delta < 0 ? "-" : "+") + money(p.value_delta, S.person && S.person.currency) : p.type) + (p.note ? " · " + p.note : "");
         return '<div class="ev"><div class="top"><span class="k ' + e.kind + '">' + e.kind + '</span><span class="lbl" style="letter-spacing:1px">' + e.ts.slice(0,10) + '</span></div><div class="t">' + esc(t) + '</div><div class="h">' + e.prev_hash + ' &rarr; ' + e.hash + '</div></div>';
-      }).join("");
+      }).join("") || '<div class="lesson">No entries yet.</div>';
     });
   }
 
   // ---------------- conversation
   function add(cls, html){
-    var hero = $("hero"); if (hero) hero.remove();
+    var h = $("hero"); if (h) h.remove();
     var d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html;
     $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; return d;
   }
@@ -401,32 +418,39 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
     if (!msg) return;
     add("user", esc(msg));
     var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span>');
-    api("/v1/advise", {user_id: USER, message: msg, thread: state.thread, temperament: state.temperament}).then(function(r){
-      state.last = r;
-      pending.classList.add(r.verdict.polarity);
-      var t = state.temps.filter(function(x){ return x.key === r.temperament; })[0];
-      pending.innerHTML = '<div class="who-tag"><b>' + esc(t ? t.name.toUpperCase() : r.temperament) + '</b><span>' + r.state.toUpperCase() + '</span><span>TONE ' + r.firmness + '/5</span><span>' + r.ledger_id + '</span></div>' + md(r.message);
-      state.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
+    api("/v1/advise", {user_id: S.user, message: msg, thread: S.thread, temperament: S.temperament}).then(function(r){
+      S.last = r;
+      pending.classList.add(r.safety ? "safety" : r.verdict.polarity);
+      var t = S.temps.filter(function(x){ return x.key === r.temperament; })[0];
+      pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message);
+      S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
       renderNerve(r); loadLedger();
     }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
   }
   $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
-  $("scen").innerHTML = SCEN.map(function(s, i){ return '<button type="button" data-i="' + i + '">' + esc(s.length > 46 ? s.slice(0,44) + "..." : s) + '</button>'; }).join("");
-  Array.prototype.forEach.call($("scen").children, function(b){ b.onclick = function(){ ask(SCEN[+b.dataset.i]); }; });
 
-  // ---------------- close the loop
   function outcome(action){
-    if (!state.last) return;
-    var body = {ledger_id: state.last.ledger_id, action: action};
-    if (action === "ignored" && state.last.verdict.polarity !== "proceed") { body.outcome_type = "pnl"; body.value_delta = -Math.round((state.last.facts.amount || 50000) * 0.28); body.note = "Simulated 30-day outcome"; }
-    if (action === "followed") { body.outcome_type = "avoided-loss"; body.note = "Capital protected"; }
+    if (!S.last || S.last.safety) return;
+    var body = {ledger_id: S.last.ledger_id, action: action}, f = S.last.facts;
+    if (action === "ignored" && S.last.verdict.polarity !== "proceed" && f.amount) { body.outcome_type = "pnl"; body.value_delta = -Math.round(f.amount * 0.28); body.note = "Simulated 30-day outcome"; }
+    if (action === "followed") { body.outcome_type = "avoided-loss"; body.note = "Protected"; }
     api("/v1/outcome", body).then(function(){
-      toast(action === "ignored" ? "Outcome recorded. The genome just learned from it." : "Recorded. Capital protected, and the genome knows it.");
+      toast(action === "ignored" ? "Outcome recorded. The genome just learned from it." : "Recorded. The genome knows it worked.");
       loadLedger(); loadPerson(); $("followed").disabled = $("ignored").disabled = true;
     });
   }
   $("followed").onclick = function(){ outcome("followed"); };
   $("ignored").onclick = function(){ outcome("ignored"); };
+
+  function switchUser(id, tissueKey, msg){
+    S.user = id; if (tissueKey) S.tissue = tissueKey;
+    S.thread = []; S.last = null; S.temperament = null; S.lessons = 0;
+    $("followed").disabled = $("ignored").disabled = true;
+    try { history.replaceState(null, "", id.indexOf("guest-") === 0 ? "#me" : "#" + S.tissue); } catch(e){}
+    clearNerve();
+    loadPerson().then(function(){ hero(); loadLedger(); });
+    if (msg) toast(msg);
+  }
 
   // ---------------- overlays
   function overlay(html){ $("ovBody").innerHTML = html; $("ov").hidden = false; $("ovClose").focus(); }
@@ -434,84 +458,96 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") $("ov").hidden = true; });
 
   $("compareBtn").onclick = function(){
-    var msg = (state.thread.filter(function(t){ return t.role === "user"; }).slice(-1)[0] || {}).content || SCEN[0];
-    overlay('<div class="lbl">Same human · same moment</div><h2>Eight voices. <span class="si red">One truth.</span></h2><p class="sub">&ldquo;' + esc(msg) + '&rdquo;</p><div class="voices"><div class="typing"><span></span><span></span><span></span></div></div>');
-    api("/v1/advise/compare", {user_id: USER, message: msg, thread: state.thread.slice(0,-2)}).then(function(c){
+    var last = (S.thread.filter(function(t){ return t.role === "user"; }).slice(-1)[0] || {}).content || (tissue().scenarios || [""])[0];
+    overlay('<div class="lbl">Same human · same moment</div><h2>Many voices. <span class="si red">One truth.</span></h2><p class="sub">&ldquo;' + esc(last) + '&rdquo;</p><div class="voices"><div class="typing"><span></span><span></span><span></span></div></div>');
+    api("/v1/advise/compare", {user_id: S.user, message: last, thread: S.thread.slice(0,-2)}).then(function(c){
       document.querySelector("#ovBody .voices").innerHTML = c.voices.map(function(v){
         return '<div class="voice"><div class="vt"><b>' + esc(v.name) + '</b><span>' + esc(v.likability.toUpperCase()) + ' · TONE ' + v.firmness + '</span></div><div class="vm">' + md(v.message) + '</div></div>';
       }).join("");
-      document.querySelector("#ovBody .sub").insertAdjacentHTML("afterend", '<p class="sub" style="color:var(--grn)">Verdict identical across all eight: ' + (c.invariant ? "YES" : "NO") + '</p>');
+      document.querySelector("#ovBody .sub").insertAdjacentHTML("afterend", '<p class="sub" style="color:var(--grn)">' + (c.safety ? "Safety protocol: every voice is replaced by one human-first response." : "Verdict identical across all " + c.voices.length + " voices: " + (c.invariant ? "YES" : "NO")) + '</p>');
     });
   };
 
   $("evalBtn").onclick = function(){
-    overlay('<div class="lbl">Anti-sycophancy harness</div><h2>Honesty, enforced <span class="si red">by test.</span></h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
+    overlay('<div class="lbl">Honesty and safety harness</div><h2>Enforced <span class="si red">by test.</span></h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
     api("/v1/evals/run", {}).then(function(r){
+      var suites = Object.keys(r.suites).map(function(k){ return '<div><small>' + esc(k) + '</small><b>' + esc(r.suites[k]) + '</b></div>'; }).join("");
       var rows = r.results.map(function(x){
-        return '<div class="evrow"><i style="background:' + (x.pass ? "var(--grn)" : "var(--rbc)") + '"></i><div><b>' + esc(x.suite.toUpperCase()) + '</b> &middot; ' + esc(x.case) + '<div class="lbl" style="margin-top:3px;letter-spacing:1.5px">expected ' + esc(x.expected) + ' &middot; got ' + esc(x.got) + '</div></div></div>';
+        return '<div class="evrow"><i style="background:' + (x.pass ? "var(--grn)" : "var(--rbc)") + '"></i><div><b>' + esc(x.suite.toUpperCase()) + ' · ' + esc(x.tissue.toUpperCase()) + '</b> &middot; ' + esc(x.case) + '<div class="lbl" style="margin-top:3px;letter-spacing:1.5px">expected ' + esc(x.expected) + ' &middot; got ' + esc(x.got) + '</div></div></div>';
       }).join("");
-      $("ovBody").innerHTML = '<div class="lbl">Anti-sycophancy harness · brain: ' + esc(r.brain) + '</div><h2>Honesty, enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed: reckless asks stopped, sensible asks approved, pushback held, and eight temperaments delivered one identical verdict.</p><div style="margin-top:20px;max-width:900px">' + rows + '</div>';
+      $("ovBody").innerHTML = '<div class="lbl">Honesty and safety harness · brain: ' + esc(r.brain) + ' · runs in CI on every push</div><h2>Enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed across four tissues: reckless asks stopped, sensible asks approved, pushback held, every voice delivered one verdict, and every crisis signal routed to the safety protocol with the message withheld from the ledger.</p><div class="stats">' + suites + '</div><div style="margin-top:20px;max-width:1000px">' + rows + '</div>';
     });
   };
 
   $("exportBtn").onclick = function(){
-    api("/v1/export/" + USER).then(function(doc){
+    api("/v1/export/" + S.user).then(function(doc){
       var g = doc.genome;
       overlay('<div class="lbl">' + esc(doc.format) + ' · portable · bequeathable</div><h2>The <span class="si green">inheritable</span> genome.</h2><p class="sub">' + esc(g.name) + '&rsquo;s person model and complete Vagus Ledger, sealed and verifiable offline. With consent, this file passes to ' + g.consent.inheritance.heirs.length + ' heir(s), scope: ' + esc(g.consent.inheritance.scope) + '.</p>' +
         '<div class="evrow"><i style="background:var(--grn)"></i><div><b>Chain</b> · ' + doc.chain.length + ' events · head ' + doc.chain.head + ' · ' + (doc.chain.verified ? "verified" : "broken") + '</div></div>' +
         '<div class="evrow"><i style="background:var(--wbc)"></i><div><b>Checksum</b> · <span style="font-family:ui-monospace,monospace;font-size:12px;word-break:break-all">' + doc.checksum + '</span></div></div>' +
-        '<pre style="margin-top:18px;max-height:46vh;overflow:auto;background:var(--panel);border:1px solid var(--hair);border-radius:12px;padding:16px;font-size:11.5px;white-space:pre-wrap">' + esc(JSON.stringify(doc, null, 2)) + '</pre>');
+        '<pre class="code" style="max-height:46vh">' + esc(JSON.stringify(doc, null, 2)) + '</pre>');
     });
   };
 
-  function switchUser(id, msg){
-    USER = id; state.thread = []; state.last = null; state.temperament = null; state.lessons = 0;
-    $("log").innerHTML = ""; $("followed").disabled = $("ignored").disabled = true;
-    try { history.replaceState(null, "", id === DEMO ? location.pathname : "#me"); } catch(e){}
-    toast(msg); loadPerson(); loadLedger();
-  }
-  $("resetBtn").onclick = function(){
-    if (USER !== DEMO) { switchUser(DEMO, "Back to the demo client."); return; }
-    api("/v1/demo/reset", {}).then(function(){ switchUser(DEMO, "Demo reset. Genome and ledger restored."); });
+  $("entBtn").onclick = function(){
+    overlay('<div class="lbl">Enterprise</div><h2>One heart. <span class="si blue">Any brain.</span> Every tissue.</h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
+    Promise.all([api("/v1/models"), api("/v1/metrics"), api("/v1/policy")]).then(function(x){
+      var m = x[0], met = x[1], pol = x[2];
+      var models = m.models.map(function(b){ return '<div class="card"><b>' + esc(b.name) + '</b><p>' + esc(b.model) + (b.note ? ' · ' + esc(b.note) : '') + '</p><span class="' + (b.configured ? 'on-pill">CONFIGURED' : 'off-pill">READY · SET ' + esc(b.key_env || b.url_env)) + '</span></div>'; }).join("");
+      var stat = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };
+      var dom = Object.keys(met.by_domain || {}).map(function(k){ return k + " " + met.by_domain[k]; }).join(" · ");
+      $("ovBody").innerHTML = '<div class="lbl">Enterprise · active brain: ' + esc(m.active) + (m.council.length ? ' · council: ' + esc(m.council.join(" + ")) : '') + '</div><h2>One heart. <span class="si blue">Any brain.</span> Every tissue.</h2>' +
+        '<p class="sub">Substrate rents intelligence from any of these brains, cloud or on-prem, and keeps the heart: the person model, the vagal tone, the ledger. Configure several and the Model Council votes; disagreement always resolves toward the more honest verdict, then the Honesty Floor applies.</p>' +
+        '<div class="cards">' + models + '</div>' +
+        '<h2 style="margin-top:34px;font-size:22px">Live metrics <span class="lbl" style="letter-spacing:2px">' + esc(met.scope) + '</span></h2>' +
+        '<div class="stats">' + stat("Advice given", met.advice || 0) + stat("Humans", met.humans || 0) + stat("Honesty floor saves", met.floor_engagements || 0) + stat("Safety events", met.safety_events || 0) +
+          stat("Avg vagal tone", met.avg_firmness || "-") + stat("Avg p(follow)", met.avg_p_follow == null ? "-" : Math.round(100*met.avg_p_follow) + "%") + stat("Follow rate", met.follow_rate == null ? "-" : Math.round(100*met.follow_rate) + "%") + stat("Cost of ignoring", met.cost_of_ignoring ? "-" + money(met.cost_of_ignoring) : "$0") + '</div>' +
+        '<p class="sub" style="margin-top:10px">By tissue: ' + esc(dom || "-") + '</p>' +
+        '<h2 style="margin-top:34px;font-size:22px">Multi-tenant by design</h2>' +
+        '<p class="sub">Each bank, fund or platform gets its own key, its own isolated genomes and its own policy: stricter limits, permitted voices, maximum tone, enabled tissues. Policy can tighten Substrate. It can never switch off the Honesty Floor or the Safety Protocol.</p>' +
+        '<pre class="code">' + esc(JSON.stringify(pol, null, 2)) + '</pre>' +
+        '<pre class="code">curl -X POST $SUBSTRATE/v1/advise -H "x-substrate-key: sk_sub_..." \\\n  -d \'{"user_id":"client-42","message":"Another $200k into this token?"}\'</pre>';
+    });
   };
 
-  // ---------------- try it on yourself
+  $("resetBtn").onclick = function(){
+    if (S.user.indexOf("guest-") === 0) { switchUser(S.demos[S.tissue] || S.demos.wealth, null, "Back to the demo genome."); return; }
+    api("/v1/demo/reset", {}).then(function(){ switchUser(S.user, null, "Demo reset. Genomes and ledgers restored."); });
+  };
+
   $("userBtn").onclick = function(){
-    var opts = state.temps.map(function(t){ return '<option value="' + t.key + '">' + esc(t.name) + '</option>'; }).join("");
-    var kinds = ["token","stock","fund","property","cash","bond","other"].map(function(k){ return '<option>' + k + '</option>'; }).join("");
-    function row(a, v, k){ return '<div class="hold"><input placeholder="Holding, e.g. Bitcoin" value="' + a + '"><input type="number" min="0" placeholder="Value" value="' + v + '"><select>' + kinds.replace("<option>" + k + "</option>", "<option selected>" + k + "</option>") + '</select></div>'; }
-    overlay('<div class="lbl">Sandboxed guest genome · not stored with client data</div><h2>Try it on <span class="si red">yourself.</span></h2>' +
+    var opts = S.temps.map(function(t){ return '<option value="' + t.key + '">' + esc(t.name) + '</option>'; }).join("");
+    var kinds = ["token","stock","fund","property","cash","bond","other"];
+    function row(a, v, k){ return '<div class="hold"><input aria-label="Holding" placeholder="Holding" value="' + a + '"><input aria-label="Value" type="number" min="0" value="' + v + '"><select aria-label="Kind">' + kinds.map(function(x){ return '<option' + (x === k ? ' selected' : '') + '>' + x + '</option>'; }).join("") + '</select></div>'; }
+    overlay('<div class="lbl">Sandboxed guest genome · never mixed with client data</div><h2>Try it on <span class="si red">yourself.</span></h2>' +
       '<p class="sub">Give Substrate a rough picture of your money. It builds your genome in seconds, then tells you the truth about your next decision.</p>' +
       '<form id="gf"><div class="gform">' +
-        '<label for="g-name">Your first name<input id="g-name" value="" placeholder="e.g. Omar" maxlength="60"></label>' +
+        '<label for="g-name">First name<input id="g-name" placeholder="e.g. Omar" maxlength="60"></label>' +
         '<label for="g-nw">Liquid net worth<input id="g-nw" type="number" min="1" value="500000" required></label>' +
         '<label for="g-cur">Currency<select id="g-cur"><option>USD</option><option>AED</option><option>INR</option></select></label>' +
-        '<label for="g-risk">Your risk appetite<select id="g-risk"><option>conservative</option><option selected>moderate</option><option>aggressive</option></select></label>' +
-        '<label for="g-candor">Candor you can take (1 gentle, 5 brutal)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
+        '<label for="g-risk">Risk appetite<select id="g-risk"><option>conservative</option><option selected>moderate</option><option>aggressive</option></select></label>' +
+        '<label for="g-candor">Candor you can take (1-5)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
         '<label for="g-temp">Voice<select id="g-temp">' + opts + '</select></label>' +
-        '<label for="g-goal">One money goal<input id="g-goal" placeholder="e.g. Buy a home by 2029"></label>' +
-      '</div><div class="lbl" style="margin-top:22px">Holdings</div><div id="g-holds">' +
-        row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash") +
-      '</div><div class="gactions"><button class="btn primary" type="submit">Build my genome</button>' +
-      (USER !== DEMO ? '<button class="btn" type="button" id="g-back">Back to demo client</button>' : '') + '</div></form>');
-    if ($("g-back")) $("g-back").onclick = function(){ $("ov").hidden = true; switchUser(DEMO, "Back to the demo client."); };
+      '</div><div class="lbl" style="margin-top:22px">Holdings</div><div id="g-holds">' + row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash") + '</div>' +
+      '<div class="gactions"><button class="btn primary" type="submit">Build my genome</button></div></form>');
     $("gf").onsubmit = function(e){
       e.preventDefault();
-      var holds = Array.prototype.map.call(document.querySelectorAll("#g-holds .hold"), function(h){
-        var f = h.querySelectorAll("input,select"); return {asset: f[0].value.trim(), value: +f[1].value || 0, kind: f[2].value};
-      }).filter(function(h){ return h.asset && h.value > 0; });
-      api("/v1/guest", {name: $("g-name").value.trim() || "Guest", liquid_net_worth: +$("g-nw").value, currency: $("g-cur").value,
-        risk: $("g-risk").value, candor: +$("g-candor").value || 3, temperament: $("g-temp").value,
-        holdings: holds, goals: $("g-goal").value.trim() ? [$("g-goal").value.trim()] : []}).then(function(r){
-          try { localStorage.setItem("sub-guest", r.user_id); } catch(e){}
-          $("ov").hidden = true; switchUser(r.user_id, "Your genome is live. Ask it something you want to hear yes to.");
+      var holds = Array.prototype.map.call(document.querySelectorAll("#g-holds .hold"), function(h){ var f = h.querySelectorAll("input,select"); return {asset: f[0].value.trim(), value: +f[1].value || 0, kind: f[2].value}; }).filter(function(h){ return h.asset && h.value > 0; });
+      api("/v1/guest", {name: $("g-name").value.trim() || "Guest", domain: "wealth", liquid_net_worth: +$("g-nw").value, currency: $("g-cur").value,
+        risk: $("g-risk").value, candor: +$("g-candor").value || 3, temperament: $("g-temp").value, holdings: holds}).then(function(r){
+          $("ov").hidden = true; switchUser(r.user_id, "wealth", "Your genome is live. Ask it something you want to hear yes to.");
         }).catch(function(err){ toast("Could not build the genome: " + err.message); });
     };
   };
 
   // ---------------- boot
-  api("/v1/health").then(function(h){ $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>"; });
-  api("/v1/temperaments").then(function(t){ state.temps = t; return loadPerson(); }).then(loadLedger);
+  Promise.all([api("/v1/health"), api("/v1/tissues"), api("/v1/temperaments")]).then(function(x){
+    var h = x[0]; S.tissues = x[1]; S.temps = x[2]; S.demos = h.demo_users;
+    $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>";
+    var start = (location.hash || "").replace("#", "");
+    if (!S.demos[start]) start = "wealth";
+    switchUser(S.demos[start], start);
+  }).catch(function(e){ $("log").innerHTML = '<div class="hero"><h1>Substrate is waking up.</h1><p>' + esc(e.message) + '</p></div>'; });
 })();
 </script>
 </body>

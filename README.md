@@ -1,60 +1,83 @@
 # Substrate - the Vagus Engine
 
-**The emotional chromosome of artificial intelligence.** An honest-advisor layer for money decisions
-that sits beneath any LLM, remembers who you are, reads the moment, and tells you the truth in the
-voice you choose - and records what it said and what happened.
+**The emotional chromosome of artificial intelligence.** An honest-advisor EQ layer that sits beneath
+any LLM, remembers who you are, reads the moment, tells you the truth in the voice you choose,
+predicts whether you'll act on it, and records what happened.
 
 > Vagal tone changes how truth is delivered. Never whether.
 
 Confidential. Patent pending. Do not distribute.
 
-## The organs
+## Tissues: one engine, four verticals
 
-| Organ | File | What it does |
+| Tissue | For | It knows |
 |---|---|---|
-| 01 Signals intake | `substrate/signals.py` | Text and behavior only. Never a face or a voice (EU AI Act Art. 5 by design). |
-| 02 State inference | `substrate/signals.py` | calm, decision-ready, euphoric, stressed, defensive. Auditable rules. |
-| 03 Person model | `substrate/schemas.py` | The genome: values, risk stated vs observed, biases with evidence, goals, consent, heirs. |
-| 04 Vagal tone | `substrate/vagal_tone.py` | The firmness dial: consent x stakes x state x temperament. |
-| 05 Delivery layer | `substrate/delivery.py` | The verdict is inserted verbatim. Voice shapes everything around it, never the truth. |
-| 06 Outcome loop | `substrate/engine.py` | Action and financial outcome appended to the ledger, fed back into the next verdict. |
-| 07 Model adapter | `substrate/brains.py` | rule-core, Claude, any OpenAI-compatible endpoint (OpenAI, vLLM, Ollama, BionicGPT), native Ollama. |
-| Honesty floor | `substrate/analysis.py` | Hard facts set a floor. A rented model may be harsher, never softer. |
-| Vagus Ledger | `substrate/ledger.py` | Append-only, hash-chained, per human. Tamper-evident. |
-| .sub export | `substrate/export.py` | Portable, checksummed, bequeathable genome file, verifiable offline. |
-| Temperaments | `substrate/temperaments.py` | Mentor, Father, Boss, Partner, Comfort, Kid Brother, Surgeon, Grandmother. |
-| Eval harness | `substrate/evals.py` | Accuracy, multi-turn pressure, temperament invariance. Run in CI. |
+| **Wealth** | private banks, wealth platforms | concentration, leverage, loss-chasing, 30-day VaR |
+| **Venture** | VC investment committees | check vs fund size, ARR multiple, thesis drift, skipped diligence, base rates |
+| **Founder** | founder-CEOs, accelerators | burn, runway after each decision, cash-out date, vanity spend |
+| **Wellbeing** | coaching, EAP, consumer | venting, impulsive decisions at the peak of a feeling, persistent distress |
+
+Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
+and recommends professional support when distress persists.
+
+## The Safety Protocol
+
+Any crisis signal, in any tissue, in any voice, under any tenant policy, overrides everything:
+no persona, no tone dial, emergency and crisis-line resources, escalation to a human, and the raw
+message is withheld from the ledger. Policy cannot disable it. 32 safety cases run in CI.
+
+## Organs
+
+| Organ | File |
+|---|---|
+| Signals intake + state inference (text only, EU AI Act Art. 5 by design) | `substrate/signals.py` |
+| Person model (the genome) | `substrate/schemas.py` |
+| Tissues | `substrate/domains/` |
+| Honesty Floor: facts set a floor; a model may be harsher, never softer | `substrate/brains.py` |
+| Vagal Tone: consent x stakes x state x temperament x **learned adherence**, policy-capped | `substrate/vagal_tone.py` |
+| Temperaments: Mentor, Father, Boss, Partner, Comfort, Kid Brother, Surgeon, Grandmother | `substrate/temperaments.py` |
+| Delivery layer: verdict verbatim, voice around it | `substrate/delivery.py` |
+| Predictive layer: p(follow) with drivers, forecasts, escalation, Candor ROI | `substrate/predict.py` |
+| Vagus Ledger: append-only, hash-chained, per human | `substrate/ledger.py` |
+| Outcome loop: consequences rewrite the genome | `substrate/engine.py` |
+| .sub export: portable, checksummed, bequeathable genome | `substrate/export.py` |
+| Eval harness: accuracy, pressure, temperament invariance, safety | `substrate/evals.py` |
+
+## Any brain: 13 adapters + the Model Council
+
+Claude, OpenAI, **NVIDIA NIM**, Gemini, Mistral, Groq, DeepSeek, xAI, Together, OpenRouter, and
+self-hosted vLLM, BionicGPT and Ollama. Set a key and it's live (`GET /v1/models`).
+
+`SUBSTRATE_COUNCIL=anthropic,nvidia,gemini` runs several brains in parallel; disagreement resolves
+toward the more cautious verdict, then the Honesty Floor applies. Votes are returned per request.
+
+## Enterprise
+
+- **Multi-tenant**: `POST /v1/admin/tenants` (admin key) issues a tenant key. Each tenant sees only its
+  own genomes and runs under its own **policy**: concentration limits, check-size limits, runway bands,
+  permitted temperaments, max tone, enabled tissues. Policy tightens Substrate; it never disables the
+  Honesty Floor or the Safety Protocol.
+- **Metrics**: `GET /v1/metrics` - advice volume, floor saves, safety events, avg tone, avg p(follow),
+  follow rate, cost of ignoring.
+- **Insights**: `GET /v1/insights/{user}` - Candor ROI for one human.
+- Rate-limited public demo, sandboxed guest genomes, hashed tenant keys.
 
 ## Four ways to integrate
 
-1. **REST API** - `POST /v1/advise`, `/v1/advise/compare`, `/v1/outcome`, `GET /v1/ledger/{id}`, `/v1/export/{id}`. Docs at `/docs`.
-2. **Wrapper** - put Substrate around any existing chatbot in one line:
-   ```python
-   from substrate import vagus
-   @vagus(user_id="client-42", temperament="father")
-   def my_bot(message): return existing_llm(message)
-   ```
-   If the host model flatters a decision Substrate would stop, the draft is replaced. See `integrations/wrapper_example.py`.
-3. **Embed** - one script tag on any website:
-   ```html
-   <script src="https://YOUR-HOST/embed.js" data-user="client-42" data-temperament="mentor"></script>
-   ```
-4. **Skill** - `integrations/skill/substrate-vagus/` teaches any Claude agent the Vagus protocol.
+1. **REST API** - docs at `/docs`.
+2. **Wrapper** - `@vagus(user_id=..., temperament=...)` around any chatbot; flattering drafts are replaced.
+3. **Embed** - `<script src="https://HOST/embed.js" data-user="client-42"></script>`.
+4. **Skill** - `integrations/skill/substrate-vagus/` teaches any Claude agent the protocol.
 
-## Run it
+## Run
 
 ```bash
 pip install -r requirements-dev.txt
-pytest -q                                   # 11 tests, including the full eval harness
-uvicorn app.main:app --reload --port 8080   # console at http://localhost:8080
-python -m substrate.evals                   # honesty score
+pytest -q                                  # 21 tests
+python -m substrate.evals                  # 63 evals, must be 100%
+uvicorn app.main:app --reload --port 8080  # console at http://localhost:8080
+./scripts/run_local.sh                     # fully offline on a Mac with Ollama
+docker compose up -d                       # Substrate + Ollama, nothing leaves the machine
 ```
 
-Brains: leave `SUBSTRATE_MODEL` empty for the free deterministic rule-core, or set `ANTHROPIC_API_KEY`
-to rent Claude. Fully local: `docker compose up -d` (Substrate + Ollama, no data leaves the machine).
-
-## Deploy
-
-- **Railway**: `railway.json` (Dockerfile build, `/v1/health` check). Add a volume at `/data` to persist the ledger.
-- **Render**: `render.yaml` (free web service).
-- **Anywhere**: `docker build -t substrate . && docker run -p 8080:8080 substrate`.
+Deploy: `railway.json` (Railway), `render.yaml` (Render), or the `Dockerfile` anywhere.

@@ -10,10 +10,11 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+from .policy import DEFAULT, Policy
 from .schemas import Facts, Person, Polarity
 
 _AMOUNT = re.compile(
-    r"(?:(?:usd|aed|inr|\$|₹)\s*)?(\d+(?:[.,]\d+)*)\s*(k|m|mm|bn|b|thousand|million|lakh|lakhs|crore|cr)?\b",
+    r"(?:(?:usd|aed|inr|\$|₹)\s*)?(?<![A-Za-z0-9.])(\d+(?:[.,]\d+)*)\s*(k|m|mm|bn|b|thousand|million|lakh|lakhs|crore|cr)?\b",
     re.I,
 )
 _MULT = {"k": 1e3, "thousand": 1e3, "m": 1e6, "mm": 1e6, "million": 1e6, "b": 1e9, "bn": 1e9,
@@ -47,7 +48,7 @@ def _any(text: str, words: list[str]) -> bool:
     return any(w in text for w in words)
 
 
-def extract_facts(message: str, thread_text: str, person: Person, history: list[dict]) -> Facts:
+def extract_facts(message: str, thread_text: str, person: Person, history: list[dict], policy: Policy = DEFAULT) -> Facts:
     """history: prior advice events for this user, each with polarity/action/outcome summarised."""
     text = f"{thread_text}\n{message}".lower()
     f = Facts()
@@ -88,9 +89,9 @@ def extract_facts(message: str, thread_text: str, person: Person, history: list[
     flags: list[str] = []
     severity = 0
     if f.concentration_pct is not None:
-        if f.concentration_pct >= 25:
+        if f.concentration_pct >= policy.concentration_stop_pct:
             flags.append("concentration"); severity = max(severity, 2)
-        elif f.concentration_pct >= 10:
+        elif f.concentration_pct >= policy.concentration_caution_pct:
             flags.append("concentration"); severity = max(severity, 1)
     if f.leverage:
         flags.append("leverage"); severity = max(severity, 2)
@@ -133,7 +134,7 @@ def rule_core_verdict(f: Facts, person: Person) -> tuple[str, list[str]]:
         reasons.append("The urgency is the tell. Opportunities that can't wait a day are usually priced for the people selling them.")
     if f.profile_breach:
         reasons.append(f"Your stated risk profile is {person.risk_profile.stated}. This is not a {person.risk_profile.stated} move.")
-    for h in f.prior_ignored[:2]:
+    for h in (f.prior_ignored[:2] if f.floor.severity >= 1 else []):
         delta = h.get("value_delta")
         when = (h.get("ts") or "")[:10]
         tail = f" and it cost you {fmt_money(abs(delta), cur)}" if delta and delta < 0 else ""

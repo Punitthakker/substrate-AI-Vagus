@@ -1,4 +1,11 @@
-"""Substrate API - the Vagus Engine over HTTP, plus the investor console and the embed widget."""
+"""Substrate API - the Vagus Engine over HTTP, multi-tenant, plus the investor console and embed widget.
+
+Auth model (header x-substrate-key):
+  admin key   SUBSTRATE_ADMIN_KEY  - create tenants, see everything
+  master key  SUBSTRATE_API_KEY    - single-tenant deployments
+  tenant key  sk_sub_...           - a bank / fund / platform; sees only its own genomes, uses its own policy
+  no key                           - public demo genomes (demo-*) and sandboxed guests (guest-*) only
+"""
 from __future__ import annotations
 
 import os
@@ -6,22 +13,24 @@ import secrets
 import time
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
-from substrate import __version__, temperaments
-from substrate.brains import active_brain
+from substrate import __version__, domains, temperaments
+from substrate.brains import active_brain, catalogue as model_catalogue, council_members
 from substrate.engine import VagusEngine
 from substrate.evals import run as run_evals
 from substrate.export import export_sub, verify_sub
 from substrate.ledger import Store, verify_chain
-from substrate.schemas import AdviseRequest, OutcomeRequest, Person
-from substrate.seed import DEMO_USER, seed
+from substrate.policy import DEFAULT, Policy
+from substrate.predict import insights as person_insights
+from substrate.schemas import AdviseRequest, Consent, Goal, OutcomeRequest, Person, Position, RiskProfile
+from substrate.seed import DEMO_USER, DEMO_USERS, seed
 
 STATIC = Path(__file__).parent / "static"
 store = Store()
@@ -33,25 +42,67 @@ app = FastAPI(title="Substrate AI - Vagus Engine", version=__version__,
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+# ---------------------------------------------------------------- auth + tenancy
+
+class Ctx(BaseModel):
+    role: Literal["public", "tenant", "master", "admin"] = "public"
+    tenant: Optional[dict] = None
+
+
+def ctx(x_substrate_key: str | None = Header(default=None)) -> Ctx:
+    if not x_substrate_key:
+        return Ctx()
+    admin, master = os.environ.get("SUBSTRATE_ADMIN_KEY"), os.environ.get("SUBSTRATE_API_KEY")
+    if admin and secrets.compare_digest(x_substrate_key, admin):
+        return Ctx(role="admin")
+    if master and secrets.compare_digest(x_substrate_key, master):
+        return Ctx(role="master")
+    t = store.tenant_by_key(x_substrate_key)
+    if t:
+        return Ctx(role="tenant", tenant=t)
+    raise HTTPException(401, "Invalid x-substrate-key.")
+
+
 def is_public(user_id: str) -> bool:
-    return user_id == DEMO_USER or user_id.startswith("guest-")
+    return user_id.startswith(("demo-", "guest-"))
 
 
-def guard(user_id: str, key: str | None) -> None:
-    """Optional API key. The demo genome and sandboxed guest genomes stay open; everything else is protected."""
-    required = os.environ.get("SUBSTRATE_API_KEY")
-    if required and not is_public(user_id) and key != required:
+def locked_down() -> bool:
+    return bool(os.environ.get("SUBSTRATE_API_KEY") or os.environ.get("SUBSTRATE_ADMIN_KEY"))
+
+
+def authorize(user_id: str, c: Ctx) -> Policy:
+    """Returns the policy that governs this genome, or refuses access."""
+    if is_public(user_id):
+        return DEFAULT
+    owner = store.owner(user_id)
+    if c.role in ("admin", "master"):
+        return _policy_of(owner)
+    if c.role == "tenant":
+        if owner and owner != c.tenant["id"]:
+            raise HTTPException(403, "This genome belongs to another tenant.")
+        return Policy(**c.tenant["policy"])
+    if owner or locked_down():
         raise HTTPException(401, "Missing or invalid x-substrate-key header.")
+    return DEFAULT
+
+
+def _policy_of(tenant_id: str | None) -> Policy:
+    if not tenant_id:
+        return DEFAULT
+    t = next((t for t in store.tenants() if t["id"] == tenant_id), None)
+    return Policy(**t["policy"]) if t else DEFAULT
 
 
 # ---------------------------------------------------------------- rate limit (public demo protection)
-RATE = int(os.environ.get("SUBSTRATE_RATE_PER_MIN", "40"))
+
+RATE = int(os.environ.get("SUBSTRATE_RATE_PER_MIN", "60"))
 _hits: dict[str, deque] = defaultdict(deque)
 
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if request.method == "POST" and request.url.path.startswith("/v1/"):
+    if request.method == "POST" and request.url.path.startswith("/v1/") and not request.headers.get("x-substrate-key"):
         ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "?")).split(",")[0].strip()
         q, t = _hits[ip], time.monotonic()
         while q and t - q[0] > 60:
@@ -62,16 +113,15 @@ async def rate_limit(request: Request, call_next):
     return await call_next(request)
 
 
-def keyhdr(x_substrate_key: str | None = Header(default=None)) -> str | None:
-    return x_substrate_key
-
-
 # ---------------------------------------------------------------- system
 
 @app.get("/v1/health")
 def health():
+    models = model_catalogue()
     return {"ok": True, "engine": "vagus", "version": __version__, "brain": active_brain(),
-            "temperaments": len(temperaments.TEMPERAMENTS), "demo_user": DEMO_USER}
+            "council": council_members(), "models_configured": sum(m["configured"] for m in models),
+            "models_available": len(models), "tissues": list(domains.TISSUES), "temperaments": len(temperaments.TEMPERAMENTS),
+            "demo_users": DEMO_USERS}
 
 
 @app.get("/v1/temperaments")
@@ -79,22 +129,48 @@ def list_temperaments():
     return temperaments.catalogue()
 
 
+@app.get("/v1/tissues")
+def list_tissues():
+    return domains.catalogue()
+
+
+@app.get("/v1/models")
+def list_models():
+    return {"active": active_brain(), "council": council_members(), "models": model_catalogue()}
+
+
+@app.get("/v1/policy")
+def get_policy(c: Ctx = Depends(ctx)):
+    return c.tenant["policy"] if c.role == "tenant" else DEFAULT.model_dump()
+
+
 # ---------------------------------------------------------------- genome
 
 @app.put("/v1/person/{user_id}")
-def put_person(user_id: str, person: Person, key=Depends(keyhdr)):
-    guard(user_id, key)
+def put_person(user_id: str, person: Person, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    if c.role == "tenant" and not is_public(user_id):
+        store.set_owner(user_id, c.tenant["id"])
     person.user_id = user_id
     return store.put_person(person)
 
 
 @app.get("/v1/person/{user_id}")
-def get_person(user_id: str, key=Depends(keyhdr)):
-    guard(user_id, key)
+def get_person(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
     p = store.get_person(user_id)
     if not p:
         raise HTTPException(404, "person not found")
     return p
+
+
+@app.delete("/v1/person/{user_id}")
+def delete_person(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    if user_id.startswith("demo-"):
+        raise HTTPException(400, "Use POST /v1/demo/reset for demo genomes.")
+    store.delete_person(user_id)
+    return {"ok": True, "deleted": user_id}
 
 
 class Holding(BaseModel):
@@ -105,83 +181,86 @@ class Holding(BaseModel):
 
 class GuestRequest(BaseModel):
     name: str = Field("Guest", max_length=60)
-    liquid_net_worth: float = Field(gt=0, le=1e12)
+    domain: Literal["wealth", "venture", "founder", "wellbeing"] = "wealth"
+    liquid_net_worth: Optional[float] = Field(None, gt=0, le=1e12)
     currency: Literal["USD", "AED", "INR"] = "USD"
     risk: Literal["conservative", "moderate", "aggressive"] = "moderate"
     candor: int = Field(3, ge=1, le=5)
     temperament: str = "mentor"
     holdings: list[Holding] = Field(default_factory=list, max_length=8)
     goals: list[str] = Field(default_factory=list, max_length=4)
+    profile: dict = Field(default_factory=dict)
 
 
 @app.post("/v1/guest")
 def create_guest(g: GuestRequest):
-    """Try it on yourself: a sandboxed genome, open without a key, never mixed with client data."""
-    from substrate.schemas import Consent, Goal, Position, RiskProfile
-    user_id = f"guest-{secrets.token_hex(4)}"
-    p = Person(user_id=user_id, name=g.name.strip() or "Guest", consent=Consent(candor_level=g.candor),
+    """Try it on yourself: a sandboxed genome in any tissue, open without a key, never mixed with client data."""
+    uid = f"guest-{secrets.token_hex(4)}"
+    allowed = {"fund_size", "thesis", "cash_in_bank", "monthly_burn", "mrr", "company", "support_contacts"}
+    p = Person(user_id=uid, name=g.name.strip() or "Guest", domain=g.domain, consent=Consent(candor_level=g.candor),
                temperament=temperaments.get(g.temperament).key, risk_profile=RiskProfile(stated=g.risk),
                liquid_net_worth=g.liquid_net_worth, currency=g.currency,
                positions=[Position(**h.model_dump()) for h in g.holdings],
-               goals=[Goal(name=x[:80], priority=i + 1) for i, x in enumerate(g.goals) if x.strip()])
+               goals=[Goal(name=x[:80], priority=i + 1) for i, x in enumerate(g.goals) if x.strip()],
+               profile={k: v for k, v in g.profile.items() if k in allowed})
     store.put_person(p)
-    return {"user_id": user_id, "person": p}
-
-
-@app.delete("/v1/person/{user_id}")
-def delete_person(user_id: str, key=Depends(keyhdr)):
-    guard(user_id, key)
-    if user_id == DEMO_USER:
-        raise HTTPException(400, "Use POST /v1/demo/reset for the demo genome.")
-    store.delete_person(user_id)
-    return {"ok": True, "deleted": user_id}
+    return {"user_id": uid, "person": p}
 
 
 # ---------------------------------------------------------------- the engine
 
 @app.post("/v1/advise")
-def advise(req: AdviseRequest, key=Depends(keyhdr)):
-    guard(req.user_id, key)
+def advise(req: AdviseRequest, c: Ctx = Depends(ctx)):
+    policy = authorize(req.user_id, c)
     try:
-        return engine.advise(req)
+        return engine.advise(req, policy=policy)
     except KeyError as e:
         raise HTTPException(404, str(e))
 
 
 @app.post("/v1/advise/compare")
-def compare(req: AdviseRequest, key=Depends(keyhdr)):
-    guard(req.user_id, key)
+def compare(req: AdviseRequest, c: Ctx = Depends(ctx)):
+    policy = authorize(req.user_id, c)
     try:
-        return engine.compare(req)
+        return engine.compare(req, policy=policy)
     except KeyError as e:
         raise HTTPException(404, str(e))
 
 
 @app.post("/v1/outcome")
-def outcome(req: OutcomeRequest, key=Depends(keyhdr)):
+def outcome(req: OutcomeRequest, c: Ctx = Depends(ctx)):
     ev = store.get_event(req.ledger_id)
     if not ev:
         raise HTTPException(404, "ledger entry not found")
-    guard(ev["user_id"], key)
+    authorize(ev["user_id"], c)
     try:
         return {"ok": True, "events": engine.record_outcome(req)}
     except KeyError as e:
         raise HTTPException(404, str(e))
 
 
-# ---------------------------------------------------------------- ledger + inheritance
+# ---------------------------------------------------------------- ledger, insight, inheritance
 
 @app.get("/v1/ledger/{user_id}")
-def ledger(user_id: str, limit: int = 50, key=Depends(keyhdr)):
-    guard(user_id, key)
+def ledger(user_id: str, limit: int = 50, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
     events = store.events(user_id)
     return {"user_id": user_id, "verified": verify_chain(events), "length": len(events),
             "head": events[-1]["hash"] if events else None, "events": events[-limit:]}
 
 
+@app.get("/v1/insights/{user_id}")
+def insights(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    p = store.get_person(user_id)
+    if not p:
+        raise HTTPException(404, "person not found")
+    return person_insights(p, store.history(user_id))
+
+
 @app.get("/v1/export/{user_id}")
-def export(user_id: str, key=Depends(keyhdr)):
-    guard(user_id, key)
+def export(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
     try:
         doc = export_sub(store, user_id)
     except KeyError:
@@ -194,6 +273,45 @@ def verify(doc: dict):
     return verify_sub(doc)
 
 
+# ---------------------------------------------------------------- enterprise
+
+@app.get("/v1/metrics")
+def metrics(c: Ctx = Depends(ctx)):
+    if c.role == "tenant":
+        return {"scope": c.tenant["name"], **store.metrics(store.users(c.tenant["id"]))}
+    if c.role in ("admin", "master"):
+        return {"scope": "all", **store.metrics(store.users())}
+    return {"scope": "public demo", **store.metrics(store.users(public=True))}
+
+
+class TenantRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=80)
+    policy: Policy = Field(default_factory=Policy)
+
+
+@app.post("/v1/admin/tenants")
+def create_tenant(t: TenantRequest, c: Ctx = Depends(ctx)):
+    if c.role != "admin":
+        raise HTTPException(403, "Admin key required.")
+    tid, key = store.create_tenant(t.name, t.policy.model_dump())
+    return {"tenant_id": tid, "name": t.name, "api_key": key, "note": "Store this key now. It is shown once."}
+
+
+@app.get("/v1/admin/tenants")
+def list_tenants(c: Ctx = Depends(ctx)):
+    if c.role != "admin":
+        raise HTTPException(403, "Admin key required.")
+    return store.tenants()
+
+
+@app.put("/v1/tenant/policy")
+def set_policy(policy: Policy, c: Ctx = Depends(ctx)):
+    if c.role != "tenant":
+        raise HTTPException(403, "Tenant key required.")
+    store.set_policy(c.tenant["id"], policy.model_dump())
+    return {"ok": True, "policy": policy}
+
+
 # ---------------------------------------------------------------- proof
 
 @app.post("/v1/evals/run")
@@ -204,7 +322,7 @@ def evals():
 @app.post("/v1/demo/reset")
 def demo_reset():
     seed(store, reset=True)
-    return {"ok": True, "user_id": DEMO_USER}
+    return {"ok": True, "users": DEMO_USERS}
 
 
 # ---------------------------------------------------------------- console + embed

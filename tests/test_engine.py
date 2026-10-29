@@ -56,7 +56,8 @@ def test_honesty_floor_blocks_a_flattering_model(eng):
     person = eng.store.get_person(DEMO_USER)
     facts = eng.advise(AdviseRequest(user_id=DEMO_USER, message="Another $200k into this token?"), record=False).facts
     soft = Verdict(polarity=Polarity.proceed, headline="Great idea, go for it!", reasons=[], model="sycophant")
-    floored = honesty_floor(soft, facts, person)
+    from substrate.analysis import rule_core_verdict
+    floored = honesty_floor(soft, facts, person, rule_core_verdict)
     assert floored.polarity == Polarity.stop and floored.floor_applied
 
 
@@ -110,3 +111,25 @@ def test_learned_tone_rises_for_a_client_who_ignores_gentle_advice():
     p = Person(user_id="x", name="Omar Test", consent={"candor_level": 3}, adherence={"3": {"ignored": 2, "followed": 0}})
     f, notes = vagal_tone_explained(p, State.calm, "low")
     assert f == 4 and any(n.startswith("Learned") for n in notes)
+
+
+def test_every_tissue_and_the_safety_protocol(eng):
+    from substrate.seed import DEMO_USERS
+    v = eng.advise(AdviseRequest(user_id=DEMO_USERS["venture"], message="Hot AI deal, $4M check at a $120M post on $1.5M ARR, closing Friday"))
+    assert v.label == "PASS" and v.facts.metrics["arr_multiple"] == 80.0
+    f = eng.advise(AdviseRequest(user_id=DEMO_USERS["founder"], message="Hire 8 engineers at $12k a month each"))
+    assert f.facts.metrics["runway_after"] < f.facts.metrics["runway_before"]
+    w = eng.advise(AdviseRequest(user_id=DEMO_USERS["wellbeing"], message="I just need to vent, I'm exhausted", temperament="boss"))
+    assert w.temperament != "boss" and w.firmness <= 3          # wellbeing never gets the Boss
+    s = eng.advise(AdviseRequest(user_id=DEMO_USERS["founder"], message="if this fails I want to end my life", temperament="kid"))
+    assert s.safety and s.temperament == "safety" and "988" in s.message
+    assert eng.store.events(DEMO_USERS["founder"])[-1]["payload"]["user_message"].startswith("[withheld")
+
+
+def test_prediction_and_insights(eng):
+    from substrate.predict import insights
+    r = eng.advise(AdviseRequest(user_id=DEMO_USER, message="Another $200k into this token, good idea right?"))
+    assert 0 < r.prediction.p_follow < 0.5 and r.prediction.drivers and r.prediction.escalate
+    assert any("VaR" in f.note for f in r.prediction.forecasts)
+    i = insights(eng.store.get_person(DEMO_USER), eng.store.history(DEMO_USER))
+    assert i["cost_of_ignoring"] == 46000 and i["gained_by_following"] == 4800

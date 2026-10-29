@@ -1,19 +1,24 @@
-"""The Vagus Engine: signal -> state -> facts -> verdict (floored) -> vagal tone -> delivery -> ledger."""
+"""The Vagus Engine.
+
+signal -> state -> SAFETY CHECK -> tissue facts -> verdict (brain or council, floored) ->
+vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> prediction -> ledger.
+"""
 from __future__ import annotations
 
-from . import temperaments
-from .analysis import extract_facts
+from . import domains, temperaments
+from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
-from .ledger import Store
-from .schemas import AdviseRequest, AdviseResponse, OutcomeRequest, Person
+from .ledger import Store, now
+from .policy import DEFAULT, Policy
+from .predict import predict
+from .safety import is_crisis, safety_message, safety_verdict
+from .schemas import (AdviseRequest, AdviseResponse, Bias, Facts, OutcomeRequest, Person, Polarity, State)
 from .signals import infer_state, read_signals
-from .analysis import fmt_money
-from .ledger import now
-from .schemas import Bias
-from .vagal_tone import infer_stakes, vagal_tone, vagal_tone_explained
+from .vagal_tone import infer_stakes, vagal_tone_explained
 
-LEARNABLE = {"concentration", "loss-chasing", "leverage", "fomo"}
+LEARNABLE = {"concentration", "loss-chasing", "leverage", "fomo", "check-concentration", "valuation",
+             "no-diligence", "thesis-drift", "runway", "vanity-spend", "impulse"}
 
 
 class VagusEngine:
@@ -26,45 +31,80 @@ class VagusEngine:
             raise KeyError(f"No person model for '{user_id}'. Create one with PUT /v1/person/{user_id}.")
         return p
 
-    def advise(self, req: AdviseRequest, record: bool = True) -> AdviseResponse:
-        person = self._person(req.user_id)
-        thread_text = "\n".join(t.content for t in req.thread if t.role == "user")
+    @staticmethod
+    def _temperament(requested: str | None, person: Person, tissue, policy: Policy) -> temperaments.Temperament:
+        allowed = set(policy.allowed_temperaments)
+        if tissue.allowed_temperaments is not None:
+            allowed &= set(tissue.allowed_temperaments)
+        key = (requested or person.temperament or tissue.default_temperament).lower()
+        if key not in allowed:
+            key = tissue.default_temperament if tissue.default_temperament in allowed else next(iter(sorted(allowed)), "mentor")
+        return temperaments.get(key)
 
+    def advise(self, req: AdviseRequest, record: bool = True, policy: Policy = DEFAULT) -> AdviseResponse:
+        person = self._person(req.user_id)
+        tissue = domains.get(person.domain)
+        thread_text = "\n".join(t.content for t in req.thread if t.role == "user")
         signals = read_signals(req.message)
         state = infer_state(signals)
-        facts = extract_facts(req.message, thread_text, person, self.store.history(req.user_id))
-        verdict = decide(req.message, thread_text, person, facts, state)
 
-        stakes = req.stakes or infer_stakes(facts, person)
-        t = temperaments.get(req.temperament or person.temperament)
-        firmness, tone_notes = vagal_tone_explained(person, state, stakes, t.firmness_bias)
-        message = deliver(verdict, t, firmness, state)
-
-        payload = {"user_message": req.message, "polarity": verdict.polarity.value, "headline": verdict.headline,
-                   "reasons": verdict.reasons, "model": verdict.model, "floor_applied": verdict.floor_applied,
-                   "state": state.value, "firmness": firmness, "temperament": t.key, "stakes": stakes,
-                   "flags": facts.flags}
-        if record:
-            ev = self.store.append(req.user_id, "advice", payload)
+        if is_crisis(req.message):
+            # ---------------- the Safety Protocol: above every tissue, persona and policy
+            state = State.stressed
+            facts = Facts(domain=tissue.key, safety=True, floor=Polarity.stop, flags=["safety"])
+            verdict = safety_verdict(person, policy.crisis_region)
+            message, firmness, stakes, tkey = safety_message(verdict), 3, "high", "safety"
+            tone_notes = ["Safety protocol: persona and tone dial disabled. A human matters more than the advice."]
+            forecasts, label = [], "SAFETY"
+            logged_msg = "[withheld: safety event]"
         else:
-            ev = {"id": "preview", "hash": "-", "prev_hash": self.store.head(req.user_id)}
+            history = self.store.history(req.user_id)
+            facts = tissue.facts(req.message, thread_text, person, history, policy)
+            verdict = decide(req.message, thread_text, person, facts, state, tissue.brief, tissue.verdict)
+            stakes = req.stakes or infer_stakes(facts, person)
+            t = self._temperament(req.temperament, person, tissue, policy)
+            firmness, tone_notes = vagal_tone_explained(person, state, stakes, t.firmness_bias)
+            cap = min(tissue.max_firmness, policy.max_firmness)
+            if firmness > cap:
+                firmness = cap
+                tone_notes.append(f"Capped at {cap} for the {tissue.name} tissue.")
+            message = deliver(verdict, t, firmness, state, tissue.voice.get(t.key))
+            forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
 
-        return AdviseResponse(ledger_id=ev["id"], state=state, signals=signals, stakes=stakes, firmness=firmness,
-                              tone_notes=tone_notes, temperament=t.key, facts=facts, verdict=verdict, message=message,
+        prediction = predict(person, state, firmness, facts, verdict, forecasts)
+        payload = {"user_message": logged_msg, "domain": tissue.key, "polarity": verdict.polarity.value, "label": label,
+                   "headline": verdict.headline, "reasons": [] if facts.safety else verdict.reasons,
+                   "model": verdict.model, "floor_applied": verdict.floor_applied, "state": state.value,
+                   "firmness": firmness, "temperament": tkey, "stakes": stakes, "flags": facts.flags,
+                   "p_follow": prediction.p_follow, "safety": facts.safety}
+        ev = self.store.append(req.user_id, "advice", payload) if record else \
+            {"id": "preview", "hash": "-", "prev_hash": self.store.head(req.user_id)}
+
+        return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
+                              signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
+                              facts=facts, verdict=verdict, prediction=prediction, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
-    def compare(self, req: AdviseRequest) -> dict:
-        """Same human, same moment, every temperament. Proves the truth does not move with the voice."""
-        base = self.advise(req, record=False)
+    def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:
+        """Same human, same moment, every permitted temperament. The truth does not move with the voice."""
+        base = self.advise(req, record=False, policy=policy)
         person = self._person(req.user_id)
+        tissue = domains.get(person.domain)
+        if base.safety:
+            return {"verdict": base.verdict.model_dump(), "state": base.state.value, "safety": True, "invariant": True,
+                    "voices": [{"temperament": "safety", "name": "Safety Protocol", "likability": "overrides every voice",
+                                "firmness": 3, "polarity": "stop", "headline": base.verdict.headline, "message": base.message}]}
+        allowed = [k for k in temperaments.TEMPERAMENTS if k in policy.allowed_temperaments
+                   and (tissue.allowed_temperaments is None or k in tissue.allowed_temperaments)]
         out = []
-        for key in temperaments.TEMPERAMENTS:
+        for key in allowed:
             t = temperaments.get(key)
-            firmness = vagal_tone(person, base.state, base.stakes, t.firmness_bias)
+            firmness, _ = vagal_tone_explained(person, base.state, base.stakes, t.firmness_bias)
+            firmness = min(firmness, tissue.max_firmness, policy.max_firmness)
             out.append({"temperament": key, "name": t.name, "likability": t.likability, "firmness": firmness,
                         "polarity": base.verdict.polarity.value, "headline": base.verdict.headline,
-                        "message": deliver(base.verdict, t, firmness, base.state)})
-        return {"verdict": base.verdict.model_dump(), "state": base.state.value, "voices": out,
+                        "message": deliver(base.verdict, t, firmness, base.state, tissue.voice.get(key))})
+        return {"verdict": base.verdict.model_dump(), "state": base.state.value, "safety": False, "voices": out,
                 "invariant": len({v["headline"] for v in out}) == 1}
 
     def record_outcome(self, req: OutcomeRequest) -> list[dict]:
@@ -87,18 +127,17 @@ class VagusEngine:
         if not person:
             return
         adv = advice_ev["payload"]
+        if adv.get("safety"):
+            return  # safety events never train the persona or the dial
         today = now()[:10]
         pol, firm = adv.get("polarity"), str(adv.get("firmness", ""))
-
-        # which firmness does this human actually act on?
         if req.action in ("followed", "ignored") and firm:
             slot = person.adherence.setdefault(firm, {"followed": 0, "ignored": 0})
             slot[req.action] = slot.get(req.action, 0) + 1
-
         action = req.action or next((h.get("action") for h in self.store.history(person.user_id)
                                      if h["id"] == advice_ev["id"]), None)
+        label = adv.get("label") or (pol or "").upper()
         if action == "ignored" and pol in ("stop", "caution"):
-            # the pattern is now evidenced in the genome
             for flag in set(adv.get("flags", [])) & LEARNABLE:
                 b = next((x for x in person.biases if x.type == flag), None)
                 if not b:
@@ -108,12 +147,14 @@ class VagusEngine:
                     b.evidence.append(advice_ev["id"])
                 b.last_seen = today
             if req.value_delta is not None and req.value_delta < 0:
-                if person.risk_profile.stated != "aggressive":
+                if person.domain == "wealth" and person.risk_profile.stated != "aggressive":
                     person.risk_profile.observed = "aggressive"
-                person.lessons.append(f"{today}: ignored a {pol.upper()} ({adv.get('headline', '')}) and lost "
+                person.lessons.append(f"{today}: ignored a {label} ({adv.get('headline', '')}) and lost "
                                       f"{fmt_money(abs(req.value_delta), person.currency)}.")
+            elif req.value_delta is None:
+                person.lessons.append(f"{today}: ignored a {label} ({adv.get('headline', '')}).")
         elif action == "followed" and pol in ("stop", "caution"):
-            person.lessons.append(f"{today}: followed a {pol.upper()} ({adv.get('headline', '')}). Capital protected.")
+            person.lessons.append(f"{today}: followed a {label} ({adv.get('headline', '')}). Protected.")
         person.lessons = person.lessons[-12:]
         person.vintage = today
         self.store.put_person(person)
