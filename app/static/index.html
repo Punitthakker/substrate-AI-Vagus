@@ -716,7 +716,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 
   $("entBtn").onclick = function(){
     overlay('<div class="lbl">Enterprise</div><h2>One heart. <span class="si blue">Any brain.</span> Every tissue.</h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
-    Promise.all([api("/v1/models"), api("/v1/metrics"), api("/v1/policy")]).then(function(x){
+    Promise.all([api("/v1/models"), api("/v1/metrics"), api("/v1/policy").catch(function(){return null})]).then(function(x){
       var m = x[0], met = x[1], pol = x[2];
       var models = m.models.map(function(b){ return '<div class="card"><b>' + esc(b.name) + '</b><p>' + esc(b.model) + (b.note ? ' · ' + esc(b.note) : '') + '</p><span class="' + (b.configured ? 'on-pill">CONFIGURED' : 'off-pill">READY · SET ' + esc(b.key_env || b.url_env)) + '</span></div>'; }).join("");
       var stat = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };

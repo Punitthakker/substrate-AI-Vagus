@@ -164,9 +164,14 @@ def list_models():
     return {"active": active_brain(), "council": council_members(), "models": model_catalogue()}
 
 
-@app.get("/v1/policy")
+@app.get("/v1/policy", include_in_schema=False)
 def get_policy(c: Ctx = Depends(ctx)):
-    return c.tenant["policy"] if c.role == "tenant" else DEFAULT.model_dump()
+    """The floor's parameters are configuration, not documentation: on a locked deployment they need a key."""
+    if c.role == "tenant":
+        return c.tenant["policy"]
+    if c.role in ("admin", "master") or not locked_down():
+        return DEFAULT.model_dump()
+    raise HTTPException(401, "A key is required to read policy on this deployment.")
 
 
 # ---------------------------------------------------------------- genome
@@ -782,7 +787,7 @@ def graphiti_episodes(user_id: str, c: Ctx = Depends(ctx)):
 
 # ---------------------------------------------------------------- learning
 
-@app.get("/v1/learn/stats")
+@app.get("/v1/learn/stats", include_in_schema=False)
 def learn_stats():
     """What the next training round would learn from (consented public genomes + self-distillation)."""
     d = build_dataset(store, store.users(public=True))
@@ -793,7 +798,7 @@ def learn_stats():
             "sample": {"sft": d["sft"][0] if d["sft"] else None, "dpo": d["dpo"][0] if d["dpo"] else None}}
 
 
-@app.post("/v1/learn/export")
+@app.post("/v1/learn/export", include_in_schema=False)
 def learn_export(c: Ctx = Depends(ctx)):
     if c.role not in ("admin", "master"):
         raise HTTPException(403, "Admin key required.")
@@ -937,7 +942,7 @@ def wa_simulate(s: WaSim):
     return {"replies": whatsapp.handle(store, engine, s.phone, s.text, s.button_id)}
 
 
-@app.get("/v1/admin/selfcheck", tags=["enterprise"])
+@app.get("/v1/admin/selfcheck", tags=["enterprise"], include_in_schema=False)
 def selfcheck(c: Ctx = Depends(ctx), rerun: bool = False):
     """Reachability of the database, Polymarket, the ECB FX feed, Mem0, brains and WhatsApp, from this server."""
     if locked_down() and c.role not in ("admin", "master"):
@@ -951,7 +956,7 @@ class TenantRequest(BaseModel):
     policy: Policy = Field(default_factory=Policy)
 
 
-@app.post("/v1/admin/tenants")
+@app.post("/v1/admin/tenants", include_in_schema=False)
 def create_tenant(t: TenantRequest, c: Ctx = Depends(ctx)):
     if c.role != "admin":
         raise HTTPException(403, "Admin key required.")
@@ -959,7 +964,7 @@ def create_tenant(t: TenantRequest, c: Ctx = Depends(ctx)):
     return {"tenant_id": tid, "name": t.name, "api_key": key, "note": "Store this key now. It is shown once."}
 
 
-@app.get("/v1/admin/tenants")
+@app.get("/v1/admin/tenants", include_in_schema=False)
 def list_tenants(c: Ctx = Depends(ctx)):
     if c.role != "admin":
         raise HTTPException(403, "Admin key required.")
@@ -971,7 +976,7 @@ class WebhookRequest(BaseModel):
     events: list[str] = Field(default_factory=lambda: ["escalation", "safety", "pact-broken"])
 
 
-@app.put("/v1/tenant/webhook")
+@app.put("/v1/tenant/webhook", include_in_schema=False)
 def set_webhook(req: WebhookRequest, c: Ctx = Depends(ctx)):
     """Register this tenant's webhook. The signing secret is shown once."""
     if c.role != "tenant":
@@ -981,14 +986,14 @@ def set_webhook(req: WebhookRequest, c: Ctx = Depends(ctx)):
             "verify": "hmac_sha256(secret, raw_body) == x-substrate-signature[7:]"}
 
 
-@app.get("/v1/admin/webhooks/log")
+@app.get("/v1/admin/webhooks/log", include_in_schema=False)
 def webhook_log(c: Ctx = Depends(ctx)):
     if c.role not in ("admin", "master"):
         raise HTTPException(403, "Admin or master key required.")
     return list(webhooks.LOG)
 
 
-@app.put("/v1/tenant/policy")
+@app.put("/v1/tenant/policy", include_in_schema=False)
 def set_policy(policy: Policy, c: Ctx = Depends(ctx)):
     if c.role != "tenant":
         raise HTTPException(403, "Tenant key required.")
@@ -998,12 +1003,12 @@ def set_policy(policy: Policy, c: Ctx = Depends(ctx)):
 
 # ---------------------------------------------------------------- proof
 
-@app.post("/v1/evals/run")
+@app.post("/v1/evals/run", include_in_schema=False)
 def evals():
     return run_evals()
 
 
-@app.post("/v1/demo/reset")
+@app.post("/v1/demo/reset", include_in_schema=False)
 def demo_reset():
     seed(store, reset=True)
     return {"ok": True, "users": DEMO_USERS}
