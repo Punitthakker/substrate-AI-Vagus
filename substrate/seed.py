@@ -105,7 +105,13 @@ def seed(store: Store, reset: bool = False, only: str | None = None) -> None:
     for elder, (heir, relation) in DEMO_HEIRS.items():
         e, h = store.get_person(elder), store.get_person(heir)
         if e and h and not h.ancestry:
-            inherit(store, export_sub(store, elder), heir, relation)
+            if heir not in e.consent.inheritance.heirs:   # older stored genome: name the heir, as the demo intends
+                e.consent.inheritance.heirs.append(heir)
+                store.put_person(e)
+            try:
+                inherit(store, export_sub(store, elder), heir, relation)
+            except Exception:   # a demo nicety must never stop the engine from starting
+                pass
 
 
 def _history(store: Store, uid: str) -> None:
