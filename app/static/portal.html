@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Substrate - Your Vagus Engine</title>
+<meta name="description" content="Sign in to your private genome: honest advice, pacts, follow-ups, your Legacy Vault and your ledger.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=Share+Tech+Mono&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090C; --room:#0A0E13; --panel:#0D1319; --panel2:#0B1016; --edge:#243140; --hair:#1B2631;
+  --lum:#D8F3FF; --lum-mid:#7FD8F7; --dim:rgba(141,214,241,.64); --text:#9FC2D3; --bright:#E4F5FD;
+  --red:#FF4B33; --green:#9EF0B0; --amber:#FFC24B; --pencil:#F2A58F;
+  --disp:"Big Shoulders Display",sans-serif; --body:"Archivo",sans-serif; --mono:"Share Tech Mono",monospace; --hand:"Caveat",cursive;
+}
+:root[data-theme="light"]{ --bg:#07090C; }
+*{margin:0;padding:0;box-sizing:border-box}
+html{scrollbar-color:#2A3845 var(--bg)}
+::selection{background:rgba(127,216,247,.28);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15.5px;line-height:1.6;min-height:100vh}
+a{color:var(--lum)}
+input,select,textarea,button{font-family:var(--body);font-size:15px;color:var(--bright)}
+input,select,textarea{background:var(--panel2);border:1px solid var(--edge);border-radius:3px;padding:10px 12px;width:100%}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--lum-mid);outline-offset:1px}
+label{display:block;font-family:var(--mono);font-size:12px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;margin:16px 0 6px}
+button{cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:2px;text-transform:uppercase;
+  background:var(--lum);color:#071015;border:1px solid var(--lum);border-radius:3px;padding:12px 20px;box-shadow:0 8px 18px rgba(0,0,0,.45);transition:transform .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--lum);border-color:#2A3845}
+.btn.ghost:hover{border-color:var(--lum)}
+.btn.danger{background:transparent;color:var(--red);border-color:#4A2520}
+.btn.sm{font-size:13px;padding:8px 14px;letter-spacing:1.6px;box-shadow:none}
+.mono{font-family:var(--mono)}
+.hand{font-family:var(--hand);color:var(--pencil)}
+h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--bright);line-height:1.05}
+h2{font-size:clamp(26px,3vw,38px)}
+h3{font-size:19px;letter-spacing:1.2px}
+.meta{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}
+.err{color:var(--red);font-size:14px;margin-top:10px;min-height:20px}
+.ok{color:var(--green)}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:3px;padding:22px}
+hr{border:0;border-top:1px solid var(--hair);margin:20px 0}
+
+/* ---------- auth screen ---------- */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(1200px 700px at 50% -10%, #0D1621 0%, var(--bg) 60%)}
+.authbox{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:34px;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:.02em;text-transform:uppercase;color:var(--lum)}
+.wordmark b{color:var(--red)}
+.authbox .meta{margin-top:6px}
+.tabrow{display:flex;gap:0;margin-top:24px;border:1px solid var(--edge);border-radius:3px;overflow:hidden}
+.tabrow button{flex:1;background:transparent;border:0;color:var(--dim);font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:2px;text-transform:uppercase;padding:11px}
+.tabrow button.on{background:var(--lum);color:#071015}
+.tissues6{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.tissues6 button{background:var(--panel2);border:1px solid var(--edge);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:10px 4px}
+.tissues6 button.on{border-color:var(--lum);color:var(--lum)}
+
+/* ---------- shell ---------- */
+#shell{display:none;min-height:100vh}
+#shell.on{display:grid;grid-template-columns:230px 1fr}
+nav{border-right:1px solid var(--hair);background:var(--room);padding:22px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+nav .wordmark{font-size:24px;padding:0 22px}
+nav .meta{padding:2px 22px 18px}
+nav a.ni{display:block;padding:11px 22px;color:var(--text);text-decoration:none;font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:1.6px;text-transform:uppercase;border-left:2px solid transparent}
+nav a.ni:hover{color:var(--bright)}
+nav a.ni.on{color:var(--lum);border-left-color:var(--red);background:rgba(127,216,247,.04)}
+nav a.ni .dot{display:inline-block;min-width:20px;padding:0 6px;margin-left:8px;border-radius:9px;background:var(--red);color:#fff;font-family:var(--mono);font-size:11.5px;text-align:center;letter-spacing:0}
+.whoami{margin-top:auto;padding:16px 22px;border-top:1px solid var(--hair)}
+.whoami b{display:block;color:var(--bright);font-weight:600}
+main{padding:clamp(22px,4vw,52px);max-width:1060px;width:100%}
+.view{display:none}.view.on{display:block}
+.viewhead{display:flex;align-items:baseline;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  padding:12px 20px;color:var(--bright);font-size:14.5px;box-shadow:0 16px 36px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s;max-width:90vw;z-index:50}
+#toast.on{opacity:1}
+
+/* ---------- consult ---------- */
+#thread{display:flex;flex-direction:column;gap:16px;margin-bottom:18px}
+.turn-u{align-self:flex-end;max-width:70ch;background:#11202B;border:1px solid #1E3342;border-radius:3px;padding:12px 16px;color:var(--bright)}
+.vcard{background:var(--panel);border:1px solid var(--hair);border-left:3px solid var(--vc,#2A3845);border-radius:3px;padding:18px 20px;max-width:78ch}
+.vcard .stamp{display:inline-block;font-family:var(--mono);font-size:12.5px;letter-spacing:2.5px;padding:3px 10px;border:1px solid currentColor;border-radius:2px;margin-bottom:10px}
+.vcard .headline{font-size:17px;color:var(--bright);font-weight:600}
+.vcard ul{margin:10px 0 0 18px}
+.vcard li{margin-top:5px}
+.vcard .msg{margin-top:12px;white-space:pre-wrap}
+.vcard .metarow{margin-top:14px;display:flex;gap:14px;flex-wrap:wrap}
+.vcard .pactbar,.vcard .outbar{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.letter{margin-top:14px;border:1px dashed #3A4A2E;background:#0E1510;border-radius:3px;padding:14px 16px}
+.letter .meta{color:var(--green)}
+.composer{position:sticky;bottom:0;background:var(--bg);padding:12px 0 4px}
+.composer .row1{display:flex;gap:10px}
+.composer textarea{min-height:64px;resize:vertical}
+.composer .row2{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.composer select{width:auto;padding:7px 10px;font-size:13.5px}
+.spin{display:none;font-family:var(--mono);color:var(--dim);font-size:13px}
+.spin.on{display:inline}
+
+/* ---------- lists ---------- */
+.rowitem{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--hair)}
+.rowitem p{max-width:62ch}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:18px}
+.badge{border:1px solid var(--hair);border-radius:3px;padding:14px;opacity:.45}
+.badge.earned{opacity:1;border-color:#2E4A3A}
+.badge b{display:block;color:var(--bright);font-family:var(--disp);letter-spacing:1px;text-transform:uppercase;font-size:15px}
+.badge.earned b{color:var(--green)}
+.statrow{display:flex;gap:34px;flex-wrap:wrap;margin-top:8px}
+.stat b{font-family:var(--disp);font-weight:700;font-size:34px;color:var(--bright);letter-spacing:1px}
+.stat span{display:block}
+.ledrow{padding:12px 4px;border-bottom:1px solid var(--hair);display:grid;grid-template-columns:110px 92px 1fr;gap:12px;align-items:baseline}
+.ledrow .k{color:var(--lum-mid)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+
+/* ---------- mobile ---------- */
+#mtop{display:none}
+@media (max-width:860px){
+  #shell.on{grid-template-columns:1fr}
+  nav{position:fixed;inset:0 28% 0 0;z-index:40;transform:translateX(-102%);transition:transform .3s;box-shadow:30px 0 60px rgba(0,0,0,.5)}
+  nav.open{transform:none}
+  #mtop{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--hair);position:sticky;top:0;background:var(--bg);z-index:30}
+  #mtop .wordmark{font-size:20px}
+  #mtop button{background:none;border:1px solid var(--edge);border-radius:3px;color:var(--lum);padding:7px 12px;font-family:var(--mono);font-size:12px;letter-spacing:1.5px}
+  main{padding:18px 16px 80px}
+  .ledrow{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ======================= AUTH ======================= -->
+<section id="auth">
+  <div class="authbox">
+    <div class="wordmark">Substr<b>a</b>te</div>
+    <div class="meta">Your private genome &middot; The Vagus Engine</div>
+    <div class="tabrow"><button id="t-in" class="on" onclick="authTab('in')">Sign in</button><button id="t-up" onclick="authTab('up')">Create account</button></div>
+    <form id="authform" onsubmit="return doAuth(event)">
+      <div id="f-name" style="display:none"><label for="a-name">Your name</label><input id="a-name" maxlength="60" autocomplete="name"></div>
+      <label for="a-email">Email</label><input id="a-email" type="email" required autocomplete="email">
+      <label for="a-pass">Password</label><input id="a-pass" type="password" required minlength="8" autocomplete="current-password">
+      <div id="f-tissue" style="display:none">
+        <label>Where do you want honesty first?</label>
+        <div class="tissues6" id="tissuepick"></div>
+      </div>
+      <div class="err" id="autherr" role="alert"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px" id="authgo">Sign in</button>
+      <p class="meta" style="margin-top:18px;letter-spacing:1px;text-transform:none">Emotion is read from your words only. Never your face, never your voice. Your genome is yours: export it or delete it any time.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ======================= SHELL ======================= -->
+<div id="shell">
+  <nav id="sidenav">
+    <div class="wordmark">Substr<b>a</b>te</div>
+    <div class="meta">The Vagus Engine</div>
+    <a class="ni on" data-v="consult" href="#consult">Consult</a>
+    <a class="ni" data-v="inbox" href="#inbox">Follow-ups<span class="dot" id="inboxdot" style="display:none">0</span></a>
+    <a class="ni" data-v="pacts" href="#pacts">Pacts</a>
+    <a class="ni" data-v="vault" href="#vault">Legacy Vault</a>
+    <a class="ni" data-v="progress" href="#progress">Progress</a>
+    <a class="ni" data-v="history" href="#history">Ledger</a>
+    <a class="ni" data-v="profile" href="#profile">Genome</a>
+    <a class="ni" data-v="settings" href="#settings">Settings</a>
+    <div class="whoami"><b id="who-name"></b><span class="meta" id="who-email"></span></div>
+  </nav>
+
+  <div>
+    <div id="mtop"><span class="wordmark">Substr<b>a</b>te</span><button onclick="document.getElementById('sidenav').classList.toggle('open')">MENU</button></div>
+    <main>
+
+      <!-- consult -->
+      <section class="view on" id="v-consult">
+        <div class="viewhead"><h2>Consult</h2><span class="meta" id="tissue-chip"></span></div>
+        <div id="thread"></div>
+        <div class="composer">
+          <div class="row1">
+            <textarea id="msg" placeholder="Tell it what you are about to do with your money." aria-label="Your message"></textarea>
+          </div>
+          <div class="row2">
+            <select id="voice" aria-label="Voice"></select>
+            <select id="stakes" aria-label="Stakes"><option value="">Stakes: auto</option><option value="low">Stakes: low</option><option value="medium">Stakes: medium</option><option value="high">Stakes: high</option></select>
+            <button class="btn sm" onclick="send()">Ask</button>
+            <span class="spin" id="spin">READING&hellip;</span>
+            <span class="err" id="cerr" style="margin:0"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- inbox -->
+      <section class="view" id="v-inbox">
+        <div class="viewhead"><h2>Follow-ups</h2><span class="meta">Substrate closes its own loops</span></div>
+        <div id="inboxlist"></div>
+      </section>
+
+      <!-- pacts -->
+      <section class="view" id="v-pacts">
+        <div class="viewhead"><h2>Pacts</h2><span class="meta">Promises you made to your future self</span></div>
+        <div id="pactlist"></div>
+      </section>
+
+      <!-- vault -->
+      <section class="view" id="v-vault">
+        <div class="viewhead"><h2>Legacy Vault</h2><span class="meta">Sealed letters &middot; opened at the right moment</span></div>
+        <div class="grid2">
+          <div>
+            <h3>To me</h3><div id="letters-to"></div>
+            <h3 style="margin-top:30px">By me</h3><div id="letters-by"></div>
+          </div>
+          <div class="card">
+            <h3>Seal a letter</h3>
+            <label for="l-to">To (heir's email or genome id)</label><input id="l-to" placeholder="son@example.com">
+            <label for="l-rel">Relation</label><input id="l-rel" value="family" maxlength="30">
+            <label for="l-title">Title</label><input id="l-title" maxlength="120" placeholder="Read this before you borrow to invest">
+            <label for="l-body">Letter</label><textarea id="l-body" rows="6" maxlength="8000"></textarea>
+            <label for="l-rtype">Opens</label>
+            <select id="l-rtype" onchange="relHint()">
+              <option value="moment">At a moment (e.g. their first hard stop)</option>
+              <option value="date">On a date</option>
+              <option value="age">At an age</option>
+              <option value="first">Whichever comes first</option>
+            </select>
+            <input id="l-rval" value="any-stop" maxlength="40" style="margin-top:8px">
+            <p class="meta" id="moments" style="text-transform:none;letter-spacing:.5px;margin-top:8px"></p>
+            <div class="err" id="lerr"></div>
+            <button class="btn sm" style="margin-top:12px" onclick="sealLetter()">Seal it</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- progress -->
+      <section class="view" id="v-progress">
+        <div class="viewhead"><h2>Progress</h2><span class="meta" id="prog-rule"></span></div>
+        <div class="statrow" id="prog-stats"></div>
+        <div class="badges" id="badgegrid"></div>
+      </section>
+
+      <!-- history -->
+      <section class="view" id="v-history">
+        <div class="viewhead"><h2>Ledger</h2>
+          <span><button class="btn sm ghost" onclick="exportSub()">Export my .sub</button></span></div>
+        <div class="card" id="insightcard" style="margin-bottom:22px"></div>
+        <div id="ledger"></div>
+      </section>
+
+      <!-- profile -->
+      <section class="view" id="v-profile">
+        <div class="viewhead"><h2>Genome</h2><span class="meta">What Substrate knows &middot; you own every field</span></div>
+        <div class="grid2">
+          <div>
+            <label for="p-name">Name</label><input id="p-name" maxlength="60">
+            <label for="p-domain">Tissue</label>
+            <select id="p-domain"><option>wealth</option><option>venture</option><option>founder</option><option>wellbeing</option><option>markets</option><option>trading</option></select>
+            <label for="p-temp">Default voice</label><select id="p-temp"></select>
+            <label for="p-risk">Stated risk</label>
+            <select id="p-risk"><option>conservative</option><option>moderate</option><option>aggressive</option></select>
+            <label for="p-candor">Candor level: <span id="candorval" class="mono"></span></label>
+            <input id="p-candor" type="range" min="1" max="5" step="1" style="padding:0">
+            <label for="p-style">How you like decisions put to you</label><input id="p-style" maxlength="200" placeholder="numbers first, no sugar">
+          </div>
+          <div>
+            <label for="p-lnw">Liquid net worth</label><input id="p-lnw" type="number" min="0" step="1000">
+            <label for="p-ccy">Currency</label><select id="p-ccy"><option>USD</option><option>AED</option><option>INR</option></select>
+            <label for="p-values">Values (comma-separated)</label><input id="p-values" placeholder="family security, no debt">
+            <label for="p-goals">Goals (comma-separated)</label><input id="p-goals" placeholder="buy a home 2027, kids' school fund">
+            <label for="p-heirs">Heirs (emails, comma-separated)</label><input id="p-heirs" placeholder="son@example.com">
+            <label for="p-scope">Inheritance scope</label>
+            <select id="p-scope"><option value="values">Values only</option><option value="values+ledger">Values + ledger lessons</option><option value="full">Full genome</option></select>
+            <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:14.5px;color:var(--text)">
+              <input id="p-train" type="checkbox" style="width:auto"> Let my anonymised patterns train the engine
+            </label>
+          </div>
+        </div>
+        <div class="err" id="perr"></div>
+        <button class="btn" style="margin-top:16px" onclick="saveProfile()">Save genome</button>
+      </section>
+
+      <!-- settings -->
+      <section class="view" id="v-settings">
+        <div class="viewhead"><h2>Settings</h2></div>
+        <div class="grid2">
+          <div class="card">
+            <h3>Password</h3>
+            <label for="s-old">Current password</label><input id="s-old" type="password" autocomplete="current-password">
+            <label for="s-new">New password (8+ characters)</label><input id="s-new" type="password" minlength="8" autocomplete="new-password">
+            <div class="err" id="serr"></div>
+            <button class="btn sm" style="margin-top:12px" onclick="changePw()">Change password</button>
+            <hr>
+            <button class="btn sm ghost" onclick="signOut(false)">Sign out here</button>
+            <button class="btn sm ghost" onclick="signOut(true)">Sign out everywhere</button>
+          </div>
+          <div class="card">
+            <h3 style="color:var(--red)">Delete everything</h3>
+            <p style="margin-top:10px;max-width:48ch">Deletes your account, your genome, your ledger, your pacts and your sealed letters. There is no undo and no copy kept.</p>
+            <label for="s-del">Type DELETE to confirm</label><input id="s-del" autocomplete="off">
+            <div class="err" id="delerr"></div>
+            <button class="btn sm danger" style="margin-top:12px" onclick="deleteAccount()">Delete my account</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+// ---------------- state ----------------
+var S = { token:null, uid:null, name:"", email:"", tissue:"wealth", temperaments:[], person:null, thread:[] };
+function lsGet(k){ try{ return localStorage.getItem(k) }catch(e){ return null } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k) }catch(e){} }
+function toast(t,ok){ var el=document.getElementById('toast'); el.textContent=t; el.style.borderColor= ok===false? '#4A2520':'var(--edge)'; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(function(){el.classList.remove('on')},3200) }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}) }
+function md(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|\s)_([^_]+)_(?=\s|$)/g,'$1<i>$2</i>') }
+function fmt(n){ if(n==null||isNaN(n))return '-'; return Number(n).toLocaleString('en-US',{maximumFractionDigits:0}) }
+
+async function api(path, opts){
+  opts = opts||{};
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(S.token) opts.headers['Authorization'] = 'Bearer '+S.token;
+  var r = await fetch(path, opts);
+  var body = null; try{ body = await r.json() }catch(e){}
+  if(!r.ok){ var d = body && (body.detail||body.message) || ('HTTP '+r.status);
+    if(r.status===401 && S.token){ signOutLocal(); }
+    throw new Error(typeof d==='string'?d:JSON.stringify(d)); }
+  return body;
+}
+
+// ---------------- auth ----------------
+var authMode='in';
+var TISSUES=['wealth','venture','founder','wellbeing','markets','trading'];
+function authTab(m){ authMode=m;
+  document.getElementById('t-in').classList.toggle('on',m==='in');
+  document.getElementById('t-up').classList.toggle('on',m==='up');
+  document.getElementById('f-name').style.display = m==='up'?'block':'none';
+  document.getElementById('f-tissue').style.display = m==='up'?'block':'none';
+  document.getElementById('authgo').textContent = m==='up'?'Create my genome':'Sign in';
+  document.getElementById('a-pass').autocomplete = m==='up'?'new-password':'current-password';
+}
+(function(){ var tp=document.getElementById('tissuepick');
+  TISSUES.forEach(function(t){ var b=document.createElement('button'); b.type='button'; b.textContent=t;
+    if(t===S.tissue)b.classList.add('on');
+    b.onclick=function(){ S.tissue=t; tp.querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); b.classList.add('on') };
+    tp.appendChild(b) }) })();
+
+async function doAuth(ev){ ev.preventDefault();
+  var err=document.getElementById('autherr'); err.textContent='';
+  var email=document.getElementById('a-email').value.trim(), pass=document.getElementById('a-pass').value;
+  try{
+    var r;
+    if(authMode==='up'){
+      r = await api('/v1/auth/signup',{method:'POST',body:JSON.stringify({email:email,password:pass,name:document.getElementById('a-name').value.trim(),tissue:S.tissue})});
+    }else{
+      r = await api('/v1/auth/login',{method:'POST',body:JSON.stringify({email:email,password:pass})});
+    }
+    S.token = r.token || r.session || r.access_token; S.uid = r.user_id; S.email = r.email||email; S.name = r.name||'';
+    lsSet('sub_token',S.token); lsSet('sub_uid',S.uid); lsSet('sub_email',S.email);
+    await enterShell();
+  }catch(e){ err.textContent = e.message }
+  return false;
+}
+function signOutLocal(){ S.token=null;S.uid=null; lsDel('sub_token');lsDel('sub_uid');lsDel('sub_email');
+  document.getElementById('shell').classList.remove('on'); document.getElementById('auth').style.display='flex'; }
+async function signOut(everywhere){
+  if(everywhere){ try{ await api('/v1/auth/logout',{method:'POST'}) }catch(e){} }
+  signOutLocal(); toast(everywhere?'Signed out everywhere.':'Signed out.');
+}
+
+// ---------------- shell ----------------
+async function enterShell(){
+  document.getElementById('auth').style.display='none';
+  var sh=document.getElementById('shell'); sh.classList.add('on');
+  try{
+    var me = await api('/v1/auth/me'); S.uid=me.user_id; S.email=me.email; S.person=me.person; S.name=(me.person&&me.person.name)||me.name||'';
+  }catch(e){ return }
+  document.getElementById('who-name').textContent = S.name||'You';
+  document.getElementById('who-email').textContent = S.email;
+  document.getElementById('tissue-chip').textContent = 'TISSUE: '+((S.person&&S.person.domain)||'wealth').toUpperCase();
+  try{ S.temperaments = await api('/v1/temperaments') }catch(e){ S.temperaments=[] }
+  var vs=document.getElementById('voice'); vs.innerHTML='<option value="">Voice: their pick</option>';
+  var pt=document.getElementById('p-temp'); pt.innerHTML='';
+  (S.temperaments||[]).forEach(function(t){ var k=t.key||t, n=t.name||t.key||t;
+    vs.insertAdjacentHTML('beforeend','<option value="'+esc(k)+'">Voice: '+esc(n)+'</option>');
+    pt.insertAdjacentHTML('beforeend','<option value="'+esc(k)+'">'+esc(n)+'</option>') });
+  fillProfile(); refreshInboxDot();
+  route(location.hash.replace('#','')||'consult');
+}
+function route(v){
+  var names=['consult','inbox','pacts','vault','progress','history','profile','settings'];
+  if(names.indexOf(v)<0)v='consult';
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on')});
+  document.getElementById('v-'+v).classList.add('on');
+  document.querySelectorAll('nav a.ni').forEach(function(a){a.classList.toggle('on',a.dataset.v===v)});
+  document.getElementById('sidenav').classList.remove('open');
+  if(v==='inbox')loadInbox(); if(v==='pacts')loadPacts(); if(v==='vault')loadVault();
+  if(v==='progress')loadProgress(); if(v==='history')loadHistory();
+}
+window.addEventListener('hashchange',function(){route(location.hash.replace('#',''))});
+
+// ---------------- consult ----------------
+var POLC={stop:'var(--red)',caution:'var(--amber)',proceed:'var(--green)'};
+function vcard(r){
+  var pol=(r.verdict&&r.verdict.polarity)||'proceed', col=POLC[pol]||'var(--green)';
+  var h='<div class="vcard" style="--vc:'+col+'">';
+  h+='<span class="stamp" style="color:'+col+'">'+esc(r.label||pol).toUpperCase()+(r.verdict&&r.verdict.floor_applied?' &middot; FLOOR':'')+'</span>';
+  if(r.safety){ h+='<p class="headline">'+esc(r.verdict.headline)+'</p><p class="msg">'+esc(r.message)+'</p></div>'; return h; }
+  h+='<p class="headline">'+esc(r.verdict.headline)+'</p>';
+  if(r.verdict.reasons&&r.verdict.reasons.length){ h+='<ul>'+r.verdict.reasons.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>' }
+  h+='<p class="msg">'+md(r.message)+'</p>';
+  if(r.ancestry){ h+='<p class="hand" style="font-size:21px;margin-top:12px">'+esc(r.ancestry)+'</p>' }
+  if(r.letter){ h+='<div class="letter"><span class="meta">A SEALED LETTER OPENED &middot; '+esc(r.letter.from_name||'family')+'</span><p style="margin-top:8px;white-space:pre-wrap">'+esc(r.letter.body||r.letter.title||'')+'</p></div>' }
+  h+='<div class="metarow meta"><span>VOICE: '+esc(r.temperament)+'</span><span>STATE: '+esc(r.state)+'</span><span>FIRMNESS: '+esc(r.firmness)+'/5</span><span>STAKES: '+esc(r.stakes)+'</span><span>MODEL: '+esc(r.verdict.model)+'</span></div>';
+  if(r.pact_active){ h+='<p class="meta" style="margin-top:10px;color:var(--amber)">PACT IN FORCE UNTIL '+esc(r.pact_active.until||'')+'</p>' }
+  if(r.pact_offer){ h+='<div class="pactbar"><span class="meta">'+esc(r.pact_offer.text||'Want me to hold you to it?')+'</span><button class="btn sm ghost" onclick="makePact(\''+esc(r.ledger_id)+'\','+(r.pact_offer.hours||12)+',this)">Hold me to it</button></div>' }
+  h+='<div class="outbar"><span class="meta">CLOSE THE LOOP:</span>'+
+     '<button class="btn sm ghost" onclick="outcome(\''+esc(r.ledger_id)+'\',\'followed\',this)">I followed it</button>'+
+     '<button class="btn sm ghost" onclick="outcome(\''+esc(r.ledger_id)+'\',\'ignored\',this)">I ignored it</button>'+
+     '<button class="btn sm ghost" onclick="outcome(\''+esc(r.ledger_id)+'\',\'partial\',this)">Partly</button></div>';
+  h+='</div>'; return h;
+}
+async function send(){
+  var box=document.getElementById('msg'), m=box.value.trim(), err=document.getElementById('cerr'); err.textContent='';
+  if(!m)return;
+  var th=document.getElementById('thread');
+  th.insertAdjacentHTML('beforeend','<div class="turn-u">'+esc(m)+'</div>');
+  document.getElementById('spin').classList.add('on'); box.value='';
+  var body={user_id:S.uid, message:m, thread:S.thread.slice(-8)};
+  var v=document.getElementById('voice').value; if(v)body.temperament=v;
+  var st=document.getElementById('stakes').value; if(st)body.stakes=st;
+  try{
+    var r = await api('/v1/advise',{method:'POST',body:JSON.stringify(body)});
+    S.thread.push({role:'user',content:m},{role:'substrate',content:r.message||r.verdict.headline});
+    th.insertAdjacentHTML('beforeend',vcard(r));
+    window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+    refreshInboxDot();
+  }catch(e){ err.textContent=e.message }
+  document.getElementById('spin').classList.remove('on');
+}
+document.getElementById('msg').addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();send()} });
+async function makePact(lid,hours,btn){
+  try{ await api('/v1/pact',{method:'POST',body:JSON.stringify({user_id:S.uid,ledger_id:lid,hours:hours})});
+    btn.textContent='Held. I will check on you.'; btn.disabled=true; toast('Pact sealed.') }
+  catch(e){ toast(e.message,false) }
+}
+async function outcome(lid,action,btn){
+  var delta=null;
+  if(action!=='partial'){ var raw=prompt('Optional: what did it move for you, in money? (+ saved or gained, - lost). Leave empty to skip.'); if(raw&&!isNaN(parseFloat(raw)))delta=parseFloat(raw) }
+  var body={ledger_id:lid,action:action}; if(delta!=null){body.outcome_type='pnl';body.value_delta=delta}
+  try{ await api('/v1/outcome',{method:'POST',body:JSON.stringify(body)});
+    btn.parentElement.innerHTML='<span class="meta ok">LOOP CLOSED &middot; '+action.toUpperCase()+'</span>'; }
+  catch(e){ toast(e.message,false) }
+}
+
+// ---------------- inbox ----------------
+async function refreshInboxDot(){
+  try{ var items=await api('/v1/inbox/'+S.uid); var d=document.getElementById('inboxdot');
+    d.style.display=items.length?'inline-block':'none'; d.textContent=items.length }catch(e){}
+}
+async function loadInbox(){
+  var el=document.getElementById('inboxlist'); el.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var items=await api('/v1/inbox/'+S.uid);
+    if(!items.length){ el.innerHTML='<p>Nothing owed. When you take a hard verdict, Substrate comes back the morning after - the follow-up lands here.</p>'; return }
+    el.innerHTML=items.map(function(it){
+      var q=esc(it.question||it.text||it.kind);
+      return '<div class="rowitem"><div><span class="meta">'+esc((it.kind||'check-in').toUpperCase())+' &middot; '+esc(it.due||it.ts||'')+'</span><p style="margin-top:6px;color:var(--bright)">'+q+'</p></div>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn sm ghost" onclick="answerCk(\''+esc(it.id)+'\',\'followed\')">I followed it</button>'+
+        '<button class="btn sm ghost" onclick="answerCk(\''+esc(it.id)+'\',\'ignored\')">I ignored it</button>'+
+        '<button class="btn sm ghost" onclick="answerCk(\''+esc(it.id)+'\',\'later\')">Later</button>'+
+        '<button class="btn sm ghost" onclick="answerCk(\''+esc(it.id)+'\',\'ack\')">OK</button></div></div>'
+    }).join('');
+  }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function answerCk(id,ans){
+  try{ var r=await api('/v1/inbox/'+S.uid+'/'+id,{method:'POST',body:JSON.stringify({answer:ans})});
+    toast(r&&r.reply?r.reply:'Noted.'); loadInbox(); refreshInboxDot(); }
+  catch(e){ toast(e.message,false) }
+}
+
+// ---------------- pacts ----------------
+async function loadPacts(){
+  var el=document.getElementById('pactlist'); el.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var r=await api('/v1/pact/'+S.uid);
+    var items=r.pacts||r.active||r||[]; if(!Array.isArray(items))items=[].concat(r.active||[],r.history||[]);
+    if(!items.length){ el.innerHTML='<p>No pacts yet. When Substrate says stop and you agree, say "hold me to it" - the promise lives here until it is kept.</p>'; return }
+    el.innerHTML=items.map(function(p){
+      var active=(p.status||'active')==='active';
+      return '<div class="rowitem"><div><span class="meta" style="color:'+(active?'var(--amber)':'var(--dim)')+'">'+esc((p.status||'active').toUpperCase())+' &middot; UNTIL '+esc(p.until||p.expires||'')+'</span>'+
+        '<p style="margin-top:6px;color:var(--bright)">'+esc(p.text||p.promise||p.summary||('Pact '+(p.id||'')))+'</p></div>'+
+        (active?'<button class="btn sm danger" onclick="dropPact(\''+esc(p.id)+'\')">Release me</button>':'')+'</div>'
+    }).join('');
+  }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function dropPact(id){
+  if(!confirm('Release this pact early? It will be recorded.'))return;
+  try{ await api('/v1/pact/'+S.uid+'/'+id,{method:'DELETE'}); loadPacts(); toast('Pact released. Recorded.') }
+  catch(e){ toast(e.message,false) }
+}
+
+// ---------------- vault ----------------
+function relHint(){ var t=document.getElementById('l-rtype').value, i=document.getElementById('l-rval');
+  i.value = t==='moment'?'any-stop': t==='date'?'2030-01-01': t==='age'?'18':'any-stop|2030-01-01' }
+async function loadVault(){
+  var to=document.getElementById('letters-to'), by=document.getElementById('letters-by');
+  to.innerHTML=by.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var r=await api('/v1/legacy/'+S.uid);
+    document.getElementById('moments').textContent='Moments: '+(r.moments||[]).join(', ');
+    to.innerHTML=(r.to||[]).length? r.to.map(function(l){
+      return '<div class="rowitem"><div><span class="meta">'+(l.delivered?'OPENED':'SEALED')+' &middot; FROM '+esc(l.from_name||'family')+' &middot; OPENS: '+esc((l.release&&(l.release.type+' '+l.release.value))||'')+'</span>'+
+        '<p style="margin-top:6px;color:var(--bright)">'+esc(l.title)+'</p>'+(l.delivered&&l.body?'<p style="margin-top:6px;white-space:pre-wrap">'+esc(l.body)+'</p>':'')+'</div></div>'
+    }).join(''):'<p>No letters addressed to you.</p>';
+    by.innerHTML=(r.by||[]).length? r.by.map(function(l){
+      return '<div class="rowitem"><div><span class="meta">'+(l.delivered?'DELIVERED':(l.revoked?'REVOKED':'SEALED'))+' &middot; TO '+esc(l.to_user)+'</span>'+
+        '<p style="margin-top:6px;color:var(--bright)">'+esc(l.title)+'</p></div>'+
+        (!l.delivered&&!l.revoked?'<button class="btn sm danger" onclick="revokeLetter(\''+esc(l.id)+'\')">Unseal &amp; destroy</button>':'')+'</div>'
+    }).join(''):'<p>You have not sealed a letter yet.</p>';
+  }catch(e){ to.innerHTML='<p class="err">'+esc(e.message)+'</p>'; by.innerHTML='' }
+}
+async function sealLetter(){
+  var err=document.getElementById('lerr'); err.textContent='';
+  try{
+    await api('/v1/legacy/letter',{method:'POST',body:JSON.stringify({
+      from_user:S.uid, to_user:document.getElementById('l-to').value.trim(),
+      relation:document.getElementById('l-rel').value.trim()||'family',
+      title:document.getElementById('l-title').value.trim(), body:document.getElementById('l-body').value,
+      release_type:document.getElementById('l-rtype').value, release_value:document.getElementById('l-rval').value.trim()})});
+    toast('Sealed. It opens exactly when you said.'); document.getElementById('l-title').value='';document.getElementById('l-body').value=''; loadVault();
+  }catch(e){ err.textContent=e.message+(/not a named heir/.test(e.message)?' - add them under Genome > Heirs first.':'') }
+}
+async function revokeLetter(id){
+  if(!confirm('Destroy this sealed letter? The heir will never see it.'))return;
+  try{ await api('/v1/legacy/'+S.uid+'/'+id,{method:'DELETE'}); loadVault() }catch(e){ toast(e.message,false) }
+}
+
+// ---------------- progress ----------------
+async function loadProgress(){
+  var st=document.getElementById('prog-stats'), bg=document.getElementById('badgegrid');
+  st.innerHTML='<p class="meta">LOADING&hellip;</p>'; bg.innerHTML='';
+  try{
+    var p=await api('/v1/progress/'+S.uid);
+    document.getElementById('prog-rule').textContent=(p.rule||'').toUpperCase();
+    st.innerHTML=[['LEVEL',esc(p.level_name||p.level||1)],['XP',fmt(p.xp)],['STREAK',esc(p.streak)],['BEST',esc(p.best_streak)],
+      ['DISCIPLINE',p.discipline==null?'-':p.discipline+'%'],['PROTECTED',fmt(p.protected)]].map(function(x){
+      return '<div class="stat"><b>'+x[1]+'</b><span class="meta">'+x[0]+'</span></div>'}).join('');
+    bg.innerHTML=(p.badges||[]).map(function(b){
+      return '<div class="badge'+(b.earned?' earned':'')+'"><b>'+esc(b.name)+'</b><span style="font-size:13.5px">'+esc(b.why)+'</span></div>'}).join('');
+  }catch(e){ st.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+
+// ---------------- history ----------------
+async function loadHistory(){
+  var led=document.getElementById('ledger'), ic=document.getElementById('insightcard');
+  led.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var ins=await api('/v1/insights/'+S.uid);
+    ic.innerHTML='<h3>Candor ROI</h3><div class="statrow" style="margin-top:14px">'+
+      [['ADVISED',fmt(ins.advised)],['DECIDED',fmt(ins.decided)],['FOLLOW RATE',ins.follow_rate==null?'-':Math.round(ins.follow_rate*100)+'%'],
+       ['COST OF IGNORING',fmt(ins.cost_of_ignoring)],['GAINED BY FOLLOWING',fmt(ins.gained_by_following)]].map(function(x){
+        return '<div class="stat"><b>'+x[1]+'</b><span class="meta">'+x[0]+'</span></div>'}).join('')+'</div>'+
+      ((ins.lessons||[]).length?'<hr><p class="meta">LESSONS PAID FOR</p>'+ins.lessons.map(function(l){return '<p class="hand" style="font-size:21px">'+esc(l.text||l)+'</p>'}).join(''):'');
+  }catch(e){ ic.innerHTML='' }
+  try{
+    var ev=await api('/v1/ledger/'+S.uid);
+    var rows=(ev.events||ev||[]).slice().reverse().slice(0,120);
+    led.innerHTML=rows.length? rows.map(function(e){
+      var p=e.payload||{}, what='';
+      if(e.kind==='advice')what=(p.label||'')+' - '+(p.headline||p.message||'').slice(0,140);
+      else if(e.kind==='action')what='I '+(p.taken||'');
+      else if(e.kind==='outcome')what='Outcome: '+(p.type||'')+' '+(p.value_delta!=null?fmt(p.value_delta):'');
+      else what=JSON.stringify(p).slice(0,120);
+      return '<div class="ledrow"><span class="meta">'+esc((e.ts||'').slice(0,16).replace('T',' '))+'</span><span class="mono k">'+esc(e.kind)+'</span><span>'+esc(what)+'</span></div>'
+    }).join('') : '<p>The ledger is empty. Every verdict, action and outcome will be chained here for life.</p>';
+  }catch(e){ led.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function exportSub(){
+  try{
+    var d=await api('/v1/export/'+S.uid);
+    var blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=S.uid+'.sub'; a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},5000); toast('Your genome, in your hands.');
+  }catch(e){ toast(e.message,false) }
+}
+
+// ---------------- profile ----------------
+function fillProfile(){
+  var p=S.person||{};
+  document.getElementById('p-name').value=p.name||'';
+  document.getElementById('p-domain').value=p.domain||'wealth';
+  if(p.temperament)document.getElementById('p-temp').value=p.temperament;
+  document.getElementById('p-risk').value=(p.risk_profile&&p.risk_profile.stated)||'moderate';
+  var c=(p.consent&&p.consent.candor_level)||3;
+  document.getElementById('p-candor').value=c; document.getElementById('candorval').textContent=c+'/5';
+  document.getElementById('p-style').value=p.decision_style||'';
+  document.getElementById('p-lnw').value=p.liquid_net_worth!=null?p.liquid_net_worth:'';
+  document.getElementById('p-ccy').value=p.currency||'USD';
+  document.getElementById('p-values').value=(p.values||[]).join(', ');
+  document.getElementById('p-goals').value=(p.goals||[]).map(function(g){return g.name||g}).join(', ');
+  document.getElementById('p-heirs').value=((p.consent&&p.consent.inheritance&&p.consent.inheritance.heirs)||[]).join(', ');
+  document.getElementById('p-scope').value=(p.consent&&p.consent.inheritance&&p.consent.inheritance.scope)||'values+ledger';
+  document.getElementById('p-train').checked=!!(p.consent&&p.consent.allow_training);
+}
+document.getElementById('p-candor').addEventListener('input',function(){document.getElementById('candorval').textContent=this.value+'/5'});
+function csv(id){ return document.getElementById(id).value.split(',').map(function(x){return x.trim()}).filter(Boolean) }
+async function saveProfile(){
+  var err=document.getElementById('perr'); err.textContent='';
+  var body={ name:document.getElementById('p-name').value.trim(),
+    domain:document.getElementById('p-domain').value, temperament:document.getElementById('p-temp').value,
+    risk:document.getElementById('p-risk').value, candor:parseInt(document.getElementById('p-candor').value,10),
+    decision_style:document.getElementById('p-style').value.trim(),
+    currency:document.getElementById('p-ccy').value, values:csv('p-values'), goals:csv('p-goals'),
+    heirs:csv('p-heirs'), inheritance_scope:document.getElementById('p-scope').value,
+    allow_training:document.getElementById('p-train').checked };
+  var lnw=document.getElementById('p-lnw').value; if(lnw!=='')body.liquid_net_worth=parseFloat(lnw);
+  try{ S.person=await api('/v1/person/'+S.uid,{method:'PATCH',body:JSON.stringify(body)});
+    document.getElementById('tissue-chip').textContent='TISSUE: '+(S.person.domain||'wealth').toUpperCase();
+    document.getElementById('who-name').textContent=S.person.name||'You';
+    toast('Genome saved.');
+  }catch(e){ err.textContent=e.message }
+}
+
+// ---------------- settings ----------------
+async function changePw(){
+  var err=document.getElementById('serr'); err.textContent='';
+  try{ await api('/v1/auth/password',{method:'POST',body:JSON.stringify({old:document.getElementById('s-old').value,new:document.getElementById('s-new').value})});
+    document.getElementById('s-old').value=document.getElementById('s-new').value='';
+    toast('Password changed. Other sessions were signed out.');
+  }catch(e){ err.textContent=e.message }
+}
+async function deleteAccount(){
+  var err=document.getElementById('delerr'); err.textContent='';
+  if(document.getElementById('s-del').value!=='DELETE'){ err.textContent='Type DELETE to confirm.'; return }
+  try{ await api('/v1/auth/account',{method:'DELETE'}); toast('Deleted. Goodbye.'); signOutLocal(); }
+  catch(e){ err.textContent=e.message }
+}
+
+// ---------------- boot ----------------
+(function(){
+  var t=lsGet('sub_token');
+  if(t){ S.token=t; S.uid=lsGet('sub_uid'); S.email=lsGet('sub_email')||''; enterShell(); }
+})();
+</script>
+</body>
+</html>

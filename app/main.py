@@ -1016,6 +1016,18 @@ def console():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/app", include_in_schema=False)
+def portal():
+    """The people portal: sign in, consult, pacts, vault, progress, ledger, genome."""
+    return FileResponse(STATIC / "portal.html")
+
+
+@app.get("/admin", include_in_schema=False)
+def admin_console():
+    """The reading room: impact, people, desk, invites, keys, webhooks, policy."""
+    return FileResponse(STATIC / "admin.html")
+
+
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 

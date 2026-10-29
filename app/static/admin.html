@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Substrate - Reading Room</title>
+<meta name="description" content="The tenant console: impact, clients, Advisor Desk, invites, keys, webhooks and policy.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090C; --room:#0A0E13; --panel:#0D1319; --panel2:#0B1016; --edge:#243140; --hair:#1B2631;
+  --lum:#D8F3FF; --lum-mid:#7FD8F7; --dim:rgba(141,214,241,.64); --text:#9FC2D3; --bright:#E4F5FD;
+  --red:#FF4B33; --green:#9EF0B0; --amber:#FFC24B;
+  --disp:"Big Shoulders Display",sans-serif; --body:"Archivo",sans-serif; --mono:"Share Tech Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+::selection{background:rgba(127,216,247,.28);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15.5px;line-height:1.6;min-height:100vh}
+a{color:var(--lum)}
+input,select,textarea,button{font-family:var(--body);font-size:15px;color:var(--bright)}
+input,select,textarea{background:var(--panel2);border:1px solid var(--edge);border-radius:3px;padding:10px 12px;width:100%}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--lum-mid);outline-offset:1px}
+label{display:block;font-family:var(--mono);font-size:12px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;margin:16px 0 6px}
+button{cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:2px;text-transform:uppercase;
+  background:var(--lum);color:#071015;border:1px solid var(--lum);border-radius:3px;padding:10px 18px;box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.btn.ghost{background:transparent;color:var(--lum);border-color:#2A3845}
+.btn.ghost:hover{border-color:var(--lum)}
+.btn.sm{font-size:13px;padding:7px 12px;letter-spacing:1.5px;box-shadow:none}
+.mono{font-family:var(--mono)}
+h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--bright);line-height:1.05}
+h2{font-size:clamp(24px,3vw,34px)}
+h3{font-size:18px;letter-spacing:1.2px}
+.meta{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}
+.err{color:var(--red);font-size:14px;min-height:20px;margin-top:8px}
+.ok{color:var(--green)}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:3px;padding:22px}
+hr{border:0;border-top:1px solid var(--hair);margin:18px 0}
+code,pre{font-family:var(--mono);font-size:13px;color:var(--lum)}
+pre{background:var(--panel2);border:1px solid var(--hair);border-radius:3px;padding:14px;overflow:auto;max-height:340px}
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 700px at 50% -10%, #0D1621 0%, var(--bg) 60%)}
+.gatebox{width:100%;max-width:430px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:32px;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:.02em;text-transform:uppercase;color:var(--lum)}
+.wordmark b{color:var(--red)}
+
+#shell{display:none}
+#shell.on{display:block}
+header{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:16px clamp(18px,3vw,40px);border-bottom:1px solid var(--hair);position:sticky;top:0;background:var(--bg);z-index:20}
+header .tabs{display:flex;gap:2px;flex-wrap:wrap}
+header .tabs button{background:none;border:0;color:var(--text);font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:1.6px;text-transform:uppercase;padding:9px 13px;border-bottom:2px solid transparent}
+header .tabs button.on{color:var(--lum);border-bottom-color:var(--red)}
+header .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+main{padding:clamp(20px,3.5vw,44px);max-width:1180px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.statrow{display:flex;gap:34px;flex-wrap:wrap;margin:10px 0 6px}
+.stat b{font-family:var(--disp);font-weight:700;font-size:32px;color:var(--bright);letter-spacing:1px}
+.stat span{display:block}
+table{width:100%;border-collapse:collapse;margin-top:14px}
+th{font-family:var(--mono);font-size:11.5px;letter-spacing:1.6px;color:var(--dim);text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--edge)}
+td{padding:11px 10px;border-bottom:1px solid var(--hair);font-size:14.5px;font-variant-numeric:tabular-nums}
+td b{color:var(--bright);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+@media (max-width:920px){.grid2{grid-template-columns:1fr}}
+.pill{display:inline-block;font-family:var(--mono);font-size:11.5px;letter-spacing:1.4px;padding:2px 9px;border:1px solid currentColor;border-radius:2px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--edge);border-radius:3px;
+  padding:12px 20px;color:var(--bright);font-size:14.5px;box-shadow:0 16px 36px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s;max-width:90vw;z-index:50}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="gate">
+  <div class="gatebox">
+    <div class="wordmark">Substr<b>a</b>te</div>
+    <div class="meta">Reading room &middot; tenant &amp; admin console</div>
+    <form onsubmit="return unlock(event)">
+      <label for="g-key">Your key (tenant sk_, admin or master)</label>
+      <input id="g-key" type="password" autocomplete="off" required>
+      <div class="err" id="gerr" role="alert"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px">Open the room</button>
+      <p class="meta" style="margin-top:16px;text-transform:none;letter-spacing:.5px">The key stays in this tab only. People sign in at <a href="/app">/app</a>; the public demo lives at <a href="/">/</a>.</p>
+    </form>
+  </div>
+</section>
+
+<div id="shell">
+  <header>
+    <span class="wordmark" style="font-size:22px">Substr<b>a</b>te</span>
+    <div class="tabs" id="tabs">
+      <button data-v="overview" class="on">Impact</button>
+      <button data-v="people">People</button>
+      <button data-v="desk">Advisor desk</button>
+      <button data-v="invites">Invites</button>
+      <button data-v="keys">Embed keys</button>
+      <button data-v="webhook">Webhooks</button>
+      <button data-v="policy">Policy</button>
+      <button data-v="system">System</button>
+    </div>
+    <div class="right">
+      <span class="meta" id="role-chip"></span>
+      <button class="btn sm ghost" onclick="lock()">Lock</button>
+    </div>
+  </header>
+  <main>
+
+    <section class="view on" id="v-overview">
+      <h2>Impact <span class="meta" id="scope-chip" style="font-size:13px"></span></h2>
+      <div class="statrow" id="impact-stats"><p class="meta">LOADING&hellip;</p></div>
+      <div class="grid2" style="margin-top:20px">
+        <div class="card"><h3>Top patterns caught</h3><div id="patterns"></div></div>
+        <div class="card"><h3>Risky hours</h3><div id="hours"></div>
+          <p class="meta" style="margin-top:12px;text-transform:none;letter-spacing:.5px">When your people make their worst calls, in their local time.</p></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-people">
+      <h2>People</h2>
+      <p style="max-width:70ch;margin-top:8px">Every genome in your scope. The audit opens a printable, regulator-ready record with live hash-chain verification.</p>
+      <table id="clients"><thead><tr><th>Person</th><th>Tissue</th><th>Advice</th><th>Last verdict</th><th>Last activity</th><th></th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section class="view" id="v-desk">
+      <h2>Advisor desk</h2>
+      <p style="max-width:70ch;margin-top:8px">People who need a human, most urgent first. Crisis words are never shown here.</p>
+      <div id="tickets" style="margin-top:14px"></div>
+    </section>
+
+    <section class="view" id="v-invites">
+      <h2>Invites</h2>
+      <div class="grid2" style="margin-top:16px">
+        <div class="card">
+          <h3>New invite link</h3>
+          <label for="i-tissue">Tissue</label>
+          <select id="i-tissue"><option>wealth</option><option>venture</option><option>founder</option><option>wellbeing</option><option>markets</option><option>trading</option></select>
+          <label for="i-label">Label</label><input id="i-label" value="Substrate private preview" maxlength="80">
+          <label for="i-uses">Max uses</label><input id="i-uses" type="number" value="25" min="1" max="10000">
+          <label for="i-days">Valid for (days)</label><input id="i-days" type="number" value="14" min="1" max="365">
+          <div class="err" id="ierr"></div>
+          <button class="btn sm" style="margin-top:12px" onclick="makeInvite()">Create link</button>
+        </div>
+        <div><h3>Live invites</h3><div id="invitelist"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-keys">
+      <h2>Embed keys</h2>
+      <p style="max-width:70ch;margin-top:8px">Publishable keys (pk_live_) for the one-script browser SDK, locked to your origins. Tenant key required.</p>
+      <div class="grid2" style="margin-top:16px">
+        <div class="card">
+          <h3>New publishable key</h3>
+          <label for="k-origins">Allowed origins (comma-separated)</label><input id="k-origins" placeholder="app.mybank.com, *.mybank.com">
+          <label for="k-tissue">Tissue</label>
+          <select id="k-tissue"><option>wealth</option><option>venture</option><option>founder</option><option>wellbeing</option><option>markets</option><option>trading</option></select>
+          <label for="k-label">Label</label><input id="k-label" value="web" maxlength="60">
+          <div class="err" id="kerr"></div>
+          <button class="btn sm" style="margin-top:12px" onclick="makePk()">Create key</button>
+          <hr>
+          <p class="meta" style="text-transform:none;letter-spacing:.5px">Then one tag: <code>&lt;script src="/sdk.js" data-substrate-pk="pk_live_..."&gt;&lt;/script&gt;</code> &middot; <a href="/developers">full developer guide</a></p>
+        </div>
+        <div><h3>Your keys</h3><div id="keylist"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-webhook">
+      <h2>Webhooks</h2>
+      <div class="grid2" style="margin-top:16px">
+        <div class="card">
+          <h3>Register endpoint</h3>
+          <label for="w-url">HTTPS URL</label><input id="w-url" placeholder="https://ops.mybank.com/substrate">
+          <label for="w-events">Events (comma-separated)</label><input id="w-events" value="escalation, safety, pact-broken">
+          <div class="err" id="werr"></div>
+          <button class="btn sm" style="margin-top:12px" onclick="setWebhook()">Save webhook</button>
+          <div id="w-secret" style="margin-top:14px"></div>
+        </div>
+        <div><h3>Delivery log <span class="meta">(admin)</span></h3><pre id="wlog">-</pre>
+          <button class="btn sm ghost" onclick="loadWlog()">Refresh log</button></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-policy">
+      <h2>Policy</h2>
+      <p style="max-width:70ch;margin-top:8px">The floor your tenant runs on. Candor can be raised, never lowered below the arithmetic. Saved for every genome you own.</p>
+      <div class="card" style="margin-top:16px;max-width:720px">
+        <label for="pol">Policy JSON</label>
+        <textarea id="pol" rows="12" class="mono" spellcheck="false"></textarea>
+        <div class="err" id="polerr"></div>
+        <button class="btn sm" style="margin-top:12px" onclick="savePolicy()">Apply policy</button>
+      </div>
+    </section>
+
+    <section class="view" id="v-system">
+      <h2>System</h2>
+      <div class="grid2" style="margin-top:16px">
+        <div class="card"><h3>Self-check <span class="meta">(admin)</span></h3><pre id="selfcheck">-</pre>
+          <button class="btn sm ghost" onclick="loadSelfcheck()">Run self-check</button></div>
+        <div class="card"><h3>Engine metrics</h3><pre id="metrics">-</pre>
+          <hr><h3>Tenants <span class="meta">(admin)</span></h3><div id="tenantlist">-</div>
+          <label for="t-name">New tenant name</label><input id="t-name" maxlength="60" placeholder="Gulf Bank Wealth">
+          <div class="err" id="terr"></div>
+          <button class="btn sm" style="margin-top:10px" onclick="makeTenant()">Create tenant</button></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+var KEY=null;
+function ssGet(k){ try{ return sessionStorage.getItem(k) }catch(e){ return null } }
+function ssSet(k,v){ try{ sessionStorage.setItem(k,v) }catch(e){} }
+function ssDel(k){ try{ sessionStorage.removeItem(k) }catch(e){} }
+function toast(t,bad){ var el=document.getElementById('toast'); el.textContent=t; el.style.borderColor=bad?'#4A2520':'var(--edge)'; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(function(){el.classList.remove('on')},3400) }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}) }
+function fmt(n){ if(n==null||isNaN(n))return '-'; return Number(n).toLocaleString('en-US',{maximumFractionDigits:0}) }
+async function kapi(path,opts){
+  opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json','x-substrate-key':KEY},opts.headers||{});
+  var r=await fetch(path,opts); var b=null; try{b=await r.json()}catch(e){}
+  if(!r.ok){ var d=b&&(b.detail||b.message)||('HTTP '+r.status); throw new Error(typeof d==='string'?d:JSON.stringify(d)) }
+  return b;
+}
+
+async function unlock(ev){ ev.preventDefault();
+  KEY=document.getElementById('g-key').value.trim();
+  var err=document.getElementById('gerr'); err.textContent='';
+  try{
+    await kapi('/v1/policy');     // cheap authenticated probe: any bad key 401s
+    ssSet('sub_admin_key',KEY);
+    document.getElementById('gate').style.display='none';
+    document.getElementById('shell').classList.add('on');
+    whoAmI(); loadOverview();
+  }catch(e){ err.textContent=/401|invalid/i.test(e.message)?'That key is not valid.':e.message }
+  return false;
+}
+function lock(){ KEY=null; ssDel('sub_admin_key'); location.reload() }
+async function whoAmI(){
+  // role is inferred from what answers: clients 403s for nobody with a real key; tenants list 403s for non-admin
+  var role='tenant';
+  try{ await kapi('/v1/admin/tenants'); role='admin' }catch(e){}
+  document.getElementById('role-chip').textContent='ROLE: '+role.toUpperCase();
+  window._role=role;
+}
+
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+  document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on')});
+  document.getElementById('v-'+b.dataset.v).classList.add('on');
+  ({overview:loadOverview,people:loadClients,desk:loadDesk,invites:loadInvites,keys:loadKeys,webhook:loadWlog,policy:loadPolicy,system:loadSystem})[b.dataset.v]();
+});
+
+// ---------- impact ----------
+async function loadOverview(){
+  var st=document.getElementById('impact-stats');
+  try{
+    var a=await kapi('/v1/analytics?days=30');
+    document.getElementById('scope-chip').textContent=' SCOPE: '+(a.scope||'').toUpperCase()+' / 30 DAYS';
+    var pairs=[['PEOPLE',fmt(a.humans)],['VERDICTS',fmt(a.advice)],['HARD CALLS',fmt(a.hard_calls)],
+      ['HONEST-CHOICE RATE',a.honest_rate!=null?Math.round(a.honest_rate*100)+'%':'-'],
+      ['PROTECTED',fmt(a.money_protected)],['COST OF IGNORING',fmt(a.cost_of_ignoring)]];
+    st.innerHTML=pairs.map(function(x){return '<div class="stat"><b>'+x[1]+'</b><span class="meta">'+x[0]+'</span></div>'}).join('');
+    var pt=document.getElementById('patterns');
+    var pats=a.top_patterns||a.patterns||[];
+    pt.innerHTML=pats.length?pats.map(function(p){
+      var name=p.pattern||p.name||p[0], n=p.count||p.n||p[1];
+      return '<div style="display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--hair)"><span>'+esc(name)+'</span><b class="mono" style="color:var(--bright)">'+fmt(n)+'</b></div>'
+    }).join(''):'<p>Nothing caught yet.</p>';
+    var hr=document.getElementById('hours');
+    var pk=a.heatmap&&a.heatmap.peak;
+    hr.innerHTML=(pk&&pk.count)?('<div class="stat" style="margin-top:6px"><b>'+esc(pk.weekday)+' '+esc(pk.hour)+':00</b><span class="meta">PEAK RISK WINDOW &middot; '+fmt(pk.count)+' HARD CALLS</span></div>'+
+      (a.avg_firmness!=null?'<p class="meta" style="margin-top:14px">AVG FIRMNESS: '+a.avg_firmness+'/5</p>':'')):'<p>No pattern yet.</p>';
+  }catch(e){ st.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+
+// ---------- people ----------
+async function loadClients(){
+  var tb=document.querySelector('#clients tbody'); tb.innerHTML='<tr><td colspan="6" class="meta">LOADING&hellip;</td></tr>';
+  try{
+    var rows=await kapi('/v1/clients');
+    tb.innerHTML=rows.length?rows.map(function(r){
+      return '<tr><td><b>'+esc(r.name||r.user_id)+'</b><br><span class="mono" style="font-size:12px;color:var(--dim)">'+esc(r.user_id)+'</span></td>'+
+        '<td>'+esc(r.domain)+'</td><td>'+fmt(r.advice)+'</td><td>'+esc(r.last_label||'-')+'</td><td class="mono" style="font-size:13px">'+esc((r.last_ts||'').slice(0,16).replace('T',' ')||'-')+'</td>'+
+        '<td><a class="btn sm ghost" href="/v1/audit/'+encodeURIComponent(r.user_id)+'" onclick="return openAudit(event,\''+esc(r.user_id)+'\')">Audit</a></td></tr>'
+    }).join(''):'<tr><td colspan="6">No genomes in scope yet. Share an invite, or embed the SDK.</td></tr>';
+  }catch(e){ tb.innerHTML='<tr><td colspan="6" class="err">'+esc(e.message)+'</td></tr>' }
+}
+async function openAudit(ev,uid){ ev.preventDefault();
+  try{
+    var r=await fetch('/v1/audit/'+encodeURIComponent(uid),{headers:{'x-substrate-key':KEY}});
+    var html=await r.text(); if(!r.ok)throw new Error('audit: HTTP '+r.status);
+    var w=window.open('about:blank'); w.document.write(html); w.document.close();
+  }catch(e){ toast(e.message,true) }
+  return false;
+}
+
+// ---------- desk ----------
+async function loadDesk(){
+  var el=document.getElementById('tickets'); el.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var ts=await kapi('/v1/desk');
+    el.innerHTML=ts.length?ts.map(function(t){
+      var col=t.status==='resolved'?'var(--green)':(t.status==='claimed'?'var(--amber)':'var(--red)');
+      return '<div class="card" style="margin-bottom:12px"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">'+
+        '<span class="pill" style="color:'+col+'">'+esc((t.status||'open').toUpperCase())+'</span>'+
+        '<b style="color:var(--bright)">'+esc(t.user_name||t.user_id)+'</b>'+
+        '<span class="meta">'+esc(t.reason||t.kind||'')+' &middot; '+esc((t.ts||'').slice(0,16).replace('T',' '))+'</span>'+
+        (t.advisor?'<span class="meta">ADVISOR: '+esc(t.advisor)+'</span>':'')+'</div>'+
+        (t.note?'<p style="margin-top:8px">'+esc(t.note)+'</p>':'')+
+        (t.status!=='resolved'?'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+
+          '<button class="btn sm ghost" onclick="deskSet(\''+esc(t.id)+'\',\'claimed\')">Claim</button>'+
+          '<button class="btn sm ghost" onclick="deskSet(\''+esc(t.id)+'\',\'resolved\')">Resolve</button></div>':'')+'</div>'
+    }).join(''):'<p>No open tickets. Good.</p>';
+  }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function deskSet(id,status){
+  var advisor = status==='claimed' ? (prompt('Your name (shown on the ticket):')||'') : '';
+  var note = status==='resolved' ? (prompt('Closing note (optional):')||'') : '';
+  try{ await kapi('/v1/desk/'+id,{method:'POST',body:JSON.stringify({status:status,advisor:advisor,note:note})}); loadDesk() }
+  catch(e){ toast(e.message,true) }
+}
+
+// ---------- invites ----------
+async function loadInvites(){
+  var el=document.getElementById('invitelist'); el.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var rows=await kapi('/v1/invites');
+    el.innerHTML=rows.length?rows.map(function(i){
+      var url=location.origin+'/?invite='+i.code;
+      return '<div class="card" style="margin-bottom:10px"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'+
+        '<b style="color:var(--bright)">'+esc(i.label)+'</b><span class="meta">'+esc(i.tissue)+' &middot; '+esc(i.remaining)+' LEFT &middot; '+(i.valid?'<span class="ok">VALID</span>':'<span style="color:var(--red)">EXPIRED</span>')+'</span></div>'+
+        '<div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap"><code>'+esc(url)+'</code>'+
+        '<button class="btn sm ghost" onclick="copyTxt(\''+esc(url)+'\')">Copy</button></div></div>'
+    }).join(''):'<p>No invites yet.</p>';
+  }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function makeInvite(){
+  var err=document.getElementById('ierr'); err.textContent='';
+  try{
+    var r=await kapi('/v1/invites',{method:'POST',body:JSON.stringify({
+      tissue:document.getElementById('i-tissue').value, label:document.getElementById('i-label').value.trim(),
+      max_uses:parseInt(document.getElementById('i-uses').value,10)||25, days:parseInt(document.getElementById('i-days').value,10)||14})});
+    copyTxt(location.origin+r.path); loadInvites();
+  }catch(e){ err.textContent=e.message }
+}
+function copyTxt(t){ try{ navigator.clipboard.writeText(t); toast('Copied: '+t) }catch(e){ prompt('Copy this:',t) } }
+
+// ---------- embed keys ----------
+async function loadKeys(){
+  var el=document.getElementById('keylist'); el.innerHTML='<p class="meta">LOADING&hellip;</p>';
+  try{
+    var rows=await kapi('/v1/embed/keys');
+    el.innerHTML=rows.length?rows.map(function(k){
+      return '<div class="card" style="margin-bottom:10px"><b style="color:var(--bright)">'+esc(k.label)+'</b> <span class="meta">'+esc(k.tissue)+'</span>'+
+        '<div style="margin-top:6px"><code>'+esc(k.pk||k.key||k.id)+'</code></div>'+
+        '<p class="meta" style="margin-top:6px;text-transform:none">Origins: '+esc((k.origins||[]).join(', '))+'</p></div>'
+    }).join(''):'<p>No publishable keys yet.</p>';
+  }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>' }
+}
+async function makePk(){
+  var err=document.getElementById('kerr'); err.textContent='';
+  var origins=document.getElementById('k-origins').value.split(',').map(function(x){return x.trim()}).filter(Boolean);
+  try{
+    var r=await kapi('/v1/embed/keys',{method:'POST',body:JSON.stringify({origins:origins,tissue:document.getElementById('k-tissue').value,label:document.getElementById('k-label').value.trim()||'web'})});
+    toast('Key created.'); copyTxt(r.pk||r.key||''); loadKeys();
+  }catch(e){ err.textContent=e.message }
+}
+
+// ---------- webhooks ----------
+async function setWebhook(){
+  var err=document.getElementById('werr'); err.textContent='';
+  var events=document.getElementById('w-events').value.split(',').map(function(x){return x.trim()}).filter(Boolean);
+  try{
+    var r=await kapi('/v1/tenant/webhook',{method:'PUT',body:JSON.stringify({url:document.getElementById('w-url').value.trim(),events:events})});
+    document.getElementById('w-secret').innerHTML='<p class="meta ok">SIGNING SECRET (SHOWN ONCE):</p><code>'+esc(r.secret)+'</code><p class="meta" style="margin-top:6px;text-transform:none">'+esc(r.verify)+'</p>';
+  }catch(e){ err.textContent=e.message }
+}
+async function loadWlog(){
+  try{ var l=await kapi('/v1/admin/webhooks/log'); document.getElementById('wlog').textContent=JSON.stringify(l.slice(-30),null,1) }
+  catch(e){ document.getElementById('wlog').textContent=e.message }
+}
+
+// ---------- policy ----------
+async function loadPolicy(){
+  try{ var p=await kapi('/v1/policy'); document.getElementById('pol').value=JSON.stringify(p.policy||p,null,2) }
+  catch(e){ document.getElementById('polerr').textContent=e.message }
+}
+async function savePolicy(){
+  var err=document.getElementById('polerr'); err.textContent='';
+  var body; try{ body=JSON.parse(document.getElementById('pol').value) }catch(e){ err.textContent='That is not valid JSON.'; return }
+  try{ await kapi('/v1/tenant/policy',{method:'PUT',body:JSON.stringify(body)}); toast('Policy applied to your tenant.') }
+  catch(e){ err.textContent=e.message }
+}
+
+// ---------- system ----------
+async function loadSystem(){
+  try{ var m=await kapi('/v1/metrics'); document.getElementById('metrics').textContent=JSON.stringify(m,null,1) }catch(e){ document.getElementById('metrics').textContent=e.message }
+  try{ var t=await kapi('/v1/admin/tenants');
+    document.getElementById('tenantlist').innerHTML=t.length?t.map(function(x){return '<div style="padding:7px 0;border-bottom:1px solid var(--hair)"><b style="color:var(--bright)">'+esc(x.name)+'</b> <span class="mono" style="font-size:12px;color:var(--dim)">'+esc(x.id)+'</span></div>'}).join(''):'None yet.';
+  }catch(e){ document.getElementById('tenantlist').textContent=e.message }
+}
+async function loadSelfcheck(){
+  try{ var s=await kapi('/v1/admin/selfcheck'); document.getElementById('selfcheck').textContent=JSON.stringify(s,null,1) }
+  catch(e){ document.getElementById('selfcheck').textContent=e.message }
+}
+async function makeTenant(){
+  var err=document.getElementById('terr'); err.textContent='';
+  try{
+    var r=await kapi('/v1/admin/tenants',{method:'POST',body:JSON.stringify({name:document.getElementById('t-name').value.trim(),policy:{}})});
+    alert('Tenant key (shown once - store it now):\n\n'+r.api_key); loadSystem();
+  }catch(e){ err.textContent=e.message }
+}
+
+// boot
+(function(){ var k=ssGet('sub_admin_key'); if(k){ KEY=k;
+  document.getElementById('gate').style.display='none'; document.getElementById('shell').classList.add('on'); whoAmI(); loadOverview(); } })();
+</script>
+</body>
+</html>

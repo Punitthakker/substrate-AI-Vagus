@@ -177,7 +177,7 @@ def is_heir(store: Store, heirs: list[str], heir_id: str) -> bool:
     if heir_id in (heirs or []):
         return True
     em = email_of(store, heir_id)
-    return bool(em) and f"email:{em}" in (heirs or [])
+    return bool(em) and any(h.replace("email:", "").strip().lower() == em.lower() for h in (heirs or []))
 
 
 def logout_everywhere(store: Store, email: str) -> None:

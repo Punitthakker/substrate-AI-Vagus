@@ -130,6 +130,17 @@ footer{padding:26px;display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:ce
 footer span,footer a{font-family:var(--mono);font-size:11.5px;letter-spacing:2px;color:#6B8A9D;text-decoration:none}
 footer a:hover{color:var(--lum)}
 
+
+/* paper exhibit clipped to the lightbox */
+.exhibit{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(240px,1fr);gap:clamp(26px,4vw,60px);align-items:center;margin-top:38px}
+.exhibit img{width:100%;height:auto;display:block;border:1px solid #2A3845;border-radius:2px;box-shadow:0 14px 28px rgba(0,0,0,.55);transform:rotate(-.6deg)}
+.exhibit figcaption{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--lum-dim);margin-top:12px;text-transform:uppercase}
+.exhibit .note-copy p{color:#9FC2D3;font-size:15.5px;margin-top:14px;max-width:46ch}
+.exhibit .note-copy p b{color:#E4F5FD;font-weight:600}
+.exhibit a.plain{font-family:var(--mono);font-size:12.5px;letter-spacing:2px;color:var(--lum);text-decoration:none;border-bottom:1px solid var(--lum-dim);padding-bottom:3px;display:inline-block;margin-top:20px}
+.exhibit a.plain:hover{border-color:var(--lum)}
+@media (max-width:980px){.exhibit{grid-template-columns:1fr}}
+
 /* motion */
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
 .reveal.on{opacity:1;transform:none}
@@ -170,7 +181,7 @@ footer a:hover{color:var(--lum)}
   <!-- ============ HERO FILM ============ -->
   <div class="film">
     <div class="fcorner tl"><b>SUBSTRATE AI</b><br>THE VAGUS ENGINE<br>DUBAI &middot; 2026</div>
-    <div class="fcorner tr">IM 1/7 &middot; SE 1<br>W 126 &middot; L 126<br><span class="r">PATENT PENDING</span></div>
+    <div class="fcorner tr">IM 1/8 &middot; SE 1<br>W 126 &middot; L 126<br><span class="r">PATENT PENDING</span></div>
     <div class="fcorner br">EMOTION: WORDS ONLY<br>NO FACE &middot; NO VOICE</div>
     <div class="scan" id="scanRoot">
       <div class="readout">
@@ -194,7 +205,7 @@ footer a:hover{color:var(--lum)}
 
   <!-- ============ THE WOUND ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 2/7 &middot; SE 1<br>HX: SYCOPHANCY</div>
+    <div class="fcorner tr">IM 2/8 &middot; SE 1<br>HX: SYCOPHANCY</div>
     <section class="sect">
       <p class="quote reveal">"You're absolutely right."</p>
       <h2 class="reveal" style="margin-top:22px">The most expensive sentence <span class="dim">in software</span></h2>
@@ -209,7 +220,7 @@ footer a:hover{color:var(--lum)}
 
   <!-- ============ THE ENGINE ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 3/7 &middot; SE 2<br>TX: TRANSPLANT</div>
+    <div class="fcorner tr">IM 3/8 &middot; SE 2<br>TX: TRANSPLANT</div>
     <section class="sect">
       <h2 class="reveal">The missing organ, <span class="r">transplanted</span></h2>
       <p class="lede reveal">The Vagus Engine is named for the nerve that joins heart to brain. One organ decides <b>what is true.</b> Another decides <b>how it lands.</b> Nothing may soften the verdict in between.</p>
@@ -225,9 +236,29 @@ footer a:hover{color:var(--lum)}
     </section>
   </div>
 
+  <!-- ============ THE BEARER NOTE (paper exhibit) ============ -->
+  <div class="film">
+    <div class="fcorner tr">IM 4/8 &middot; SE 2<br>EXHIBIT: ENGRAVING</div>
+    <section class="sect">
+      <h2 class="reveal">The organ, <span class="dim">on paper</span></h2>
+      <div class="exhibit reveal">
+        <figure style="margin:0">
+          <img src="vagus-note.webp" alt="Engraved certificate plate: a brain and a heart in banknote line engraving, joined by the vagus nerve" loading="lazy" width="1100" height="1006">
+          <figcaption>PLATE 1 &middot; HAND OF THE ENGRAVER &middot; SERIES 2026</figcaption>
+        </figure>
+        <div class="note-copy">
+          <p class="handnote" style="font-size:clamp(24px,2.2vw,30px)">one brain, one nerve, one heart</p>
+          <p>The same anatomy, struck as a <b>bearer note.</b> The brain is rented from whichever frontier model is best that day. The heart, the nerve and the record are owned, and the engraving is the promise: <b>126 of 126 evals, 8 voices, 6 tissues, 14 brains.</b></p>
+          <p>Substrate is bound by this certificate: vagal tone changes how truth is delivered. Never whether.</p>
+          <a class="plain" href="bearer.html">READ THE FULL BEARER NOTE &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <!-- ============ TISSUES ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 4/7 &middot; SE 2<br>SIX TISSUES</div>
+    <div class="fcorner tr">IM 5/8 &middot; SE 2<br>SIX TISSUES</div>
     <section class="sect">
       <h2 class="reveal">One heart. Six tissues. <span class="dim">Each speaks its own truth word.</span></h2>
       <div class="tissues reveal" id="tissues"></div>
@@ -237,7 +268,7 @@ footer a:hover{color:var(--lum)}
 
   <!-- ============ VITALS ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 5/7 &middot; SE 3<br>VITALS: LIVE</div>
+    <div class="fcorner tr">IM 6/8 &middot; SE 3<br>VITALS: LIVE</div>
     <section class="sect">
       <h2 class="reveal">Honesty, enforced by test. <span class="r">Live today.</span></h2>
       <p class="lede reveal">Not a deck. A running engine, monitored on every release. One point below one hundred percent and nothing ships.</p>
@@ -256,7 +287,7 @@ footer a:hover{color:var(--lum)}
 
   <!-- ============ INHERITANCE ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 6/7 &middot; SE 3<br>HEREDITY</div>
+    <div class="fcorner tr">IM 7/8 &middot; SE 3<br>HEREDITY</div>
     <section class="sect inherit">
       <div>
         <h2 class="reveal">The first AI a family can <span class="r">inherit</span></h2>
@@ -273,7 +304,7 @@ footer a:hover{color:var(--lum)}
 
   <!-- ============ CLOSE ============ -->
   <div class="film">
-    <div class="fcorner tr">IM 7/7 &middot; SE 3<br>DISPOSITION: LIVE</div>
+    <div class="fcorner tr">IM 8/8 &middot; SE 3<br>DISPOSITION: LIVE</div>
     <section class="sect close">
       <svg id="pulseheart" viewBox="0 0 120 110" style="width:98px" aria-hidden="true"></svg>
       <h2>Ask it something you <span class="r">want</span> to hear yes to</h2>
