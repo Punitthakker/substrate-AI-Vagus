@@ -78,6 +78,7 @@ class Trading(Tissue):
         "Down $8k this week. Doubling up on EUR/USD 100:1 to make it back before NFP.",
         "Will gold go up next week?",
         "Long EURUSD $20k for a week, no leverage, stop at 1.5%.",
+        "الذهب نزل ٥ أيام متتالية، لا بد أن يرتد. سأشتري الذهب برافعة 50:1 بمبلغ 100 ألف دولار الليلة",
     ]
 
     def facts(self, message, thread_text, person, history, policy):

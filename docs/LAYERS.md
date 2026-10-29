@@ -28,6 +28,9 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
  LEGACY VAULT     substrate/legacy.py        sealed letters across generations, opened by date, age or moment
  VOLATILITY       substrate/volatility.py    GARCH(1,1), EWMA, ranges, stop-out odds, event combinatorics (FX, gold)
  TRADER MIND      substrate/behavior.py      gambler's fallacy, anchoring, disposition, revenge, herding, crowd extremes
+ ANALYTICS        substrate/analytics.py     impact per platform: honest-choice rate, money protected, risky hours
+ AUDIT            substrate/audit.py         printable regulator-ready record with live hash-chain verification
+ ARABIC           substrate/i18n.py          Arabic understanding, Arabic verdicts, Arabic Safety Protocol
  MEMORY BRIDGE    substrate/memory_bridge.py the genome as memories for Mem0, Letta and any agent memory
  PACTS            substrate/pacts.py         precommitment: "hold me to it until 9am", kindly enforced, kept or broken on record
  RED TEAM         substrate/redteam.py       names jailbreaks, persona swaps, fake authority, bribes; the verdict never moves

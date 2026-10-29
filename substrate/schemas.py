@@ -194,6 +194,7 @@ class AdviseResponse(BaseModel):
     pact_offer: Optional[dict] = None  # "hold me to it until 9am", offered on a hard stop
     pact_active: Optional[dict] = None # the human's own promise, in force right now
     letter: Optional[dict] = None      # a Legacy Vault letter delivered at this moment
+    language: str = "en"
     message: str
     hash: str
     prev_hash: str

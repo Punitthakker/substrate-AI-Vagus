@@ -5,7 +5,7 @@ vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> predic
 """
 from __future__ import annotations
 
-from . import domains, legacy, limbic, pacts, redteam, reflect, temperaments
+from . import domains, i18n, legacy, limbic, pacts, redteam, reflect, temperaments
 from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
@@ -42,6 +42,9 @@ class VagusEngine:
         return temperaments.get(key)
 
     def advise(self, req: AdviseRequest, record: bool = True, policy: Policy = DEFAULT) -> AdviseResponse:
+        original, lang = req.message, i18n.detect(req.message)
+        if lang == "ar":   # analyse an English view; deliver in Arabic; log the person's own words
+            req = req.model_copy(update={"message": i18n.english_view(req.message)})
         person = self._person(req.user_id)
         tissue = domains.get(person.domain)
         thread_text = "\n".join(t.content for t in req.thread if t.role == "user")
@@ -51,7 +54,7 @@ class VagusEngine:
         ancestry_note = None
         pact_offer = pact_active = letter_out = None
 
-        if is_crisis(req.message):
+        if is_crisis(req.message) or i18n.is_crisis_ar(original):
             # ---------------- the Safety Protocol: above every tissue, persona and policy
             state = State.stressed
             facts = Facts(domain=tissue.key, safety=True, floor=Polarity.stop, flags=["safety"])
@@ -142,12 +145,14 @@ class VagusEngine:
                 note = "_This advice is recorded in your Vagus Ledger._"
                 message = message.replace(note, block + "\n\n" + note) if note in message else message + "\n\n" + block
                 tone_notes.append(f"Legacy Vault: a sealed letter from {lt.from_name} delivered for this moment.")
-            forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
+            forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, original
             if facts.metrics.get("label_override"):
                 label = facts.metrics["label_override"]
             if pact_active and "pact" in facts.flags and verdict.headline.startswith("Not yet."):
                 label = "PACT HOLDS"
 
+        if lang == "ar":
+            message = i18n.deliver_ar(label, verdict.polarity.value, message, facts.safety)
         prediction = predict(person, state, firmness, facts, verdict, forecasts)
         payload = {"user_message": logged_msg, "domain": tissue.key, "polarity": verdict.polarity.value, "label": label,
                    "headline": verdict.headline, "reasons": [] if facts.safety else verdict.reasons,
@@ -162,7 +167,7 @@ class VagusEngine:
 
         return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
-                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, letter=letter_out, message=message,
+                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, letter=letter_out, language=lang, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:

@@ -3,7 +3,7 @@
  "info": {
   "title": "Substrate AI - Vagus Engine",
   "description": "The emotional chromosome of AI. Vagal tone changes how truth is delivered. Never whether.",
-  "version": "0.8.0"
+  "version": "0.9.0"
  },
  "paths": {
   "/v1/health": {
@@ -1934,6 +1934,133 @@
       "content": {
        "application/json": {
         "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/analytics": {
+   "get": {
+    "tags": [
+     "enterprise"
+    ],
+    "summary": "Analytics",
+    "description": "Impact: honest pauses, honest-choice rate, money protected vs cost of ignoring, top patterns, risky hours.",
+    "operationId": "analytics_v1_analytics_get",
+    "parameters": [
+     {
+      "name": "utc_offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number",
+       "default": 4,
+       "title": "Utc Offset"
+      }
+     },
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 30,
+       "title": "Days"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/audit/{user_id}": {
+   "get": {
+    "tags": [
+     "enterprise"
+    ],
+    "summary": "Audit Report",
+    "description": "Printable, regulator-ready audit of one person's advice record with live hash-chain verification.",
+    "operationId": "audit_report_v1_audit__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "text/html": {
+        "schema": {
+         "type": "string"
+        }
        }
       }
      },

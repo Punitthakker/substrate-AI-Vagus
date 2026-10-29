@@ -82,7 +82,7 @@
       ".brand{font-weight:800;letter-spacing:3px;font-size:11px}.pill{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:2px;padding:5px 10px;border-radius:999px;color:#0B0A08}" +
       ".pill.stop{background:var(--acc)}.pill.caution{background:var(--amb)}.pill.proceed{background:var(--ok)}.pill.safety{background:#7FB2FF}" +
       ".body{padding:16px 18px;font-size:14px;line-height:1.55}.body h3{margin:0 0 8px;font-size:17px;line-height:1.35}" +
-      ".body p{margin:0 0 10px;color:var(--fg)}.body ul{margin:0 0 10px;padding-left:18px;color:var(--dim)}.body li{margin:3px 0}" +
+      ".body p,.body li,.m,input{unicode-bidi:plaintext}.body p{margin:0 0 10px;color:var(--fg)}.body ul{margin:0 0 10px;padding-left:18px;color:var(--dim)}.body li{margin:3px 0}" +
       ".body blockquote{margin:8px 0;padding:10px 14px;border-left:3px solid var(--ok);background:var(--soft);font-style:italic;border-radius:0 10px 10px 0}" +
       ".fc{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}.fc span{font-size:11px;border:1px solid var(--hair);border-radius:999px;padding:3px 9px;color:var(--dim)}.fc b{color:var(--fg);font-weight:600}" +
       ".acts{display:flex;gap:8px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--hair)}" +

@@ -22,6 +22,13 @@ Confidential. Patent pending. Do not distribute.
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
 
+## New in v0.9: proof and compliance
+
+- **Impact analytics** (`/v1/analytics`, console "Impact dashboard"): honest-choice rate, money protected vs cost of ignoring, top patterns, risky-hours heatmap, pacts, safety, override attempts, honest rate by tissue, 30-day trend
+- **Audit report** (`/v1/audit/{id}`): printable, regulator-ready record of every piece of advice, the client's action and outcome, consent, pacts and letters, with live hash-chain verification (tampering shows BROKEN); crisis messages appear only as withheld entries
+- **Arabic**: Arabic-Indic digits, ألف/مليون amounts and key financial and emotional words understood by every tissue; Arabic labels, verdict summary and closing; the Safety Protocol fully in Arabic; rented brains answer in the user's language
+- Evals 126/126 (new Arabic suite), tests 56
+
 ## New in v0.8: the embedded SDK
 
 - **No-code Embed SDK** (`/sdk.js`): one script tag; `data-substrate-check` on any Buy, Place bet or Confirm button gives an honest pause before the click, closes the loop automatically (Cancel = followed, Proceed anyway = ignored), offers pacts, fails open; plus a chat widget and a `<substrate-check>` web component; shadow-DOM isolated, themed to the host brand
@@ -109,7 +116,7 @@ toward the more cautious verdict, then the Honesty Floor applies. Votes are retu
 ```bash
 pip install -r requirements-dev.txt
 pytest -q                                  # 21 tests
-python -m substrate.evals                  # 118 evals, must be 100%
+python -m substrate.evals                  # 126 evals, must be 100%
 uvicorn app.main:app --reload --port 8080  # console at http://localhost:8080
 ./scripts/run_local.sh                     # fully offline on a Mac with Ollama
 docker compose up -d                       # Substrate + Ollama, nothing leaves the machine

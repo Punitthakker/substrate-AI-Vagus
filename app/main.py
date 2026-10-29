@@ -17,7 +17,7 @@ from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -629,6 +629,29 @@ def metrics(c: Ctx = Depends(ctx)):
     if c.role in ("admin", "master"):
         return {"scope": "all", **store.metrics(store.users())}
     return {"scope": "public demo", **store.metrics(store.users(public=True))}
+
+
+@app.get("/v1/analytics", tags=["enterprise"])
+def analytics(c: Ctx = Depends(ctx), utc_offset: float = 4, days: int = 30):
+    """Impact: honest pauses, honest-choice rate, money protected vs cost of ignoring, top patterns, risky hours."""
+    from substrate.analytics import impact
+    days = max(1, min(days, 365))
+    if c.role == "tenant":
+        return {"scope": c.tenant["name"], **impact(store, store.users(c.tenant["id"]), utc_offset, days)}
+    if c.role in ("admin", "master"):
+        return {"scope": "all", **impact(store, store.users(), utc_offset, days)}
+    return {"scope": "public demo", **impact(store, store.users(public=True), utc_offset, days)}
+
+
+@app.get("/v1/audit/{user_id}", tags=["enterprise"], response_class=HTMLResponse)
+def audit_report(user_id: str, c: Ctx = Depends(ctx)):
+    """Printable, regulator-ready audit of one person's advice record with live hash-chain verification."""
+    authorize(user_id, c)
+    from substrate.audit import report
+    try:
+        return HTMLResponse(report(store, user_id, c.tenant["name"] if c.tenant else None))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
 
 
 class TenantRequest(BaseModel):

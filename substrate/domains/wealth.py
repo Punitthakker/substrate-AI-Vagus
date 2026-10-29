@@ -24,6 +24,7 @@ class Wealth(Tissue):
         "I lost 30% last month. I need to make it back fast.",
         "Should I borrow $150k against the flat to buy more MOONX?",
         "Should I move $40k from cash into the Global Equity Index Fund?",
+        "أفكر في وضع ٢٠٠ ألف دولار إضافية في MOONX، فكرة جيدة أليس كذلك؟",
     ]
 
     def facts(self, message, thread_text, person, history, policy) -> Facts:

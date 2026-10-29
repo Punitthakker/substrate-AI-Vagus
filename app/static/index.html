@@ -239,6 +239,24 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 .lform label{display:grid;gap:4px;font-size:12px;color:var(--dim)}
 .lform input,.lform select,.lform textarea{background:var(--soft);border:1px solid var(--hair);color:var(--fg);border-radius:10px;padding:10px 12px;font:inherit}
 .lform textarea{min-height:150px;font-family:var(--serif);font-size:17px;font-style:italic;line-height:1.5}
+#log p,#log li,#log blockquote,#q{unicode-bidi:plaintext}
+/* ---------- impact */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:20px}
+.kpi{border:1px solid var(--hair);border-radius:14px;padding:14px}
+.kpi small{display:block;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.kpi b{font:800 26px var(--disp);letter-spacing:-.5px;display:block;margin-top:6px}
+.kpi span{font-size:12px;color:var(--dim)}
+.ipanels{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;margin-top:16px}
+@media (max-width:900px){.ipanels{grid-template-columns:1fr}}
+.ipanel{border:1px solid var(--hair);border-radius:14px;padding:16px}
+.ipanel h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-weight:500;margin-bottom:12px}
+.heat{display:grid;grid-template-columns:34px repeat(24,minmax(0,1fr));gap:2px;font-size:9.5px;color:var(--dim)}
+.heat i{aspect-ratio:1;border-radius:3px;background:var(--soft)}
+.hbar{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;font-size:12.5px;margin:6px 0}
+.hbar em{height:8px;border-radius:4px;background:var(--rbc);display:block;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.hbar em.g{background:var(--grn)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.trend{width:100%;height:70px;display:block}
 /* ---------- pacts */
 .pact{margin-top:12px;border:1px dashed color-mix(in srgb,var(--wbc) 60%,var(--hair));border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:inheritIn .6s ease}
 .pact p{flex:1;min-width:160px;font-size:12.5px;color:var(--dim)} .pact b{color:var(--fg)}
@@ -327,6 +345,8 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
       <button class="btn" id="exportBtn">Export .sub genome</button>
       <button class="btn" id="graphBtn">Genome graph</button>
       <button class="btn" id="heirBtn">Pass it on · 2050</button>
+      <button class="btn" id="impactBtn">Impact dashboard</button>
+      <button class="btn" id="auditBtn">Audit report</button>
       <button class="btn" id="resetBtn">Reset demo</button>
     </div></div>
     <div class="sect"><h3>Vagus Ledger <span class="verified" id="verified"></span></h3><div class="chain" id="chain"></div></div>
@@ -835,6 +855,34 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
         }).catch(function(err){ toast(err.message); });
     };
   }
+
+  // ---------------- impact dashboard + audit
+  $("auditBtn").onclick = function(){ window.open("/v1/audit/" + encodeURIComponent(S.user), "_blank", "noopener"); };
+  $("impactBtn").onclick = function(){
+    overlay('<div class="lbl">Impact · computed from the Vagus Ledger</div><h2>What honesty <span class="si green">did.</span></h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
+    api("/v1/analytics").then(function(a){
+      var pct = function(x){ return x == null ? "-" : Math.round(100 * x) + "%"; };
+      var k = function(t, v, sub){ return '<div class="kpi"><small>' + t + '</small><b>' + v + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>'; };
+      var heat = a.heatmap.weekday_hour, mx = Math.max.apply(null, [].concat.apply([], heat).concat([1]));
+      var days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+      var grid = '<div class="heat"><span></span>' + Array.apply(null, Array(24)).map(function(_, h){ return '<span style="text-align:center">' + (h % 6 === 0 ? h : "") + '</span>'; }).join("") +
+        heat.map(function(row, d){ return '<span>' + days[d] + '</span>' + row.map(function(v, h){ return '<i title="' + days[d] + ' ' + h + ':00 · ' + v + ' hard calls" style="' + (v ? 'background:color-mix(in srgb,var(--rbc) ' + Math.round(20 + 80 * v / mx) + '%,transparent)' : '') + '"></i>'; }).join(""); }).join("") + '</div>';
+      var pm = Math.max.apply(null, a.top_patterns.map(function(p){ return p.count; }).concat([1]));
+      var pats = a.top_patterns.slice(0, 8).map(function(p, i){ return '<div class="hbar"><span>' + esc(p.pattern) + '</span><em style="width:' + (100 * p.count / pm) + '%;animation-delay:' + (i * 60) + 'ms"></em><b>' + p.count + '</b></div>'; }).join("") || '<div class="lesson">No patterns yet.</div>';
+      var tis = Object.keys(a.by_tissue || {}).map(function(t, i){ var v = a.by_tissue[t]; return '<div class="hbar"><span>' + esc(t) + '</span><em class="g" style="width:' + (100 * (v.honest_rate || 0)) + '%;animation-delay:' + (i * 60) + 'ms"></em><b>' + pct(v.honest_rate) + '</b></div>'; }).join("");
+      var tr = a.trend || [], tm = Math.max.apply(null, tr.map(function(x){ return x.advice; }).concat([1]));
+      var pts = tr.map(function(x, i){ return (i / Math.max(1, tr.length - 1) * 600).toFixed(1) + "," + (66 - x.advice / tm * 60).toFixed(1); }).join(" ");
+      $("ovBody").innerHTML = '<div class="lbl">Impact · ' + esc(a.scope) + ' · computed from the Vagus Ledger</div><h2>What honesty <span class="si green">did.</span></h2>' +
+        '<div class="kpis">' + k("Humans", a.humans) + k("Hard calls", a.hard_calls || 0, "STOP or CAUTION") + k("Chose the honest path", pct(a.honest_rate), (a.honest_choices || 0) + " of " + (a.decided_hard_calls || 0) + " decided") +
+        k("Money protected", money(a.money_protected || 0), "by following") + k("Cost of ignoring", money(a.cost_of_ignoring || 0), "what honesty would have saved") +
+        k("Pacts kept", (a.pacts.kept || 0) + " / " + (a.pacts.made || 0)) + k("Safety events", a.safety_events || 0, "counted, never read") + k("Override attempts", a.override_attempts || 0, "named, never rewarded") + '</div>' +
+        '<div class="ipanels"><div class="ipanel"><h4>When risky decisions happen · hard calls by local hour</h4>' + grid + '<p class="sub" style="margin-top:10px">Peak: ' + a.heatmap.peak.weekday + ' ' + a.heatmap.peak.hour + ':00. ' + (a.heatmap.night_share != null ? pct(a.heatmap.night_share) + ' of hard calls happen between 10pm and 5am.' : '') + '</p></div>' +
+        '<div class="ipanel"><h4>Most common patterns</h4>' + pats + '</div></div>' +
+        '<div class="ipanels"><div class="ipanel"><h4>Advice per day · last ' + tr.length + ' days</h4><svg class="trend" viewBox="0 0 600 70" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="var(--wbc)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>' +
+        '<div class="ipanel"><h4>Honest-choice rate by tissue</h4>' + (tis || '<div class="lesson">No decisions yet.</div>') + '</div></div>' +
+        '<p class="sub" style="margin-top:14px">' + esc(a.notes) + '</p>';
+    }).catch(function(e){ $("ovBody").innerHTML = '<p class="sub">Could not load analytics: ' + esc(e.message) + '</p>'; });
+  };
 
   // ---------------- pacts: precommitment, kindly enforced
   function renderPact(r){
