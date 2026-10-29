@@ -22,6 +22,14 @@ def _ts(s: str) -> datetime | None:
         return None
 
 
+def _desk(store: Store, user_ids: list[str]) -> dict:
+    from .desk import tickets
+    ts = tickets(store, user_ids)
+    return {"open": sum(1 for t in ts if t["status"] == "open"), "claimed": sum(1 for t in ts if t["status"] == "claimed"),
+            "resolved": sum(1 for t in ts if t["status"] == "resolved"),
+            "urgent_open": sum(1 for t in ts if t["status"] != "resolved" and t["priority"] == "urgent")}
+
+
 def impact(store: Store, user_ids: list[str], utc_offset: float = 4, days: int = 30) -> dict:
     if not user_ids:
         return {"advice": 0, "humans": 0}
@@ -115,6 +123,7 @@ def impact(store: Store, user_ids: list[str], utc_offset: float = 4, days: int =
         "pacts": {"made": pacts["made"], "kept": pacts["kept"], "broken": pacts["broken"], "released": pacts["released"]},
         "safety_events": safety, "override_attempts": overrides, "escalation_grade": esc_grade,
         "letters_delivered": letters, "inheritances": inherit, "trend": trend,
+        "desk": _desk(store, user_ids),
         "notes": "Net value of honesty = money protected by following + losses incurred when ignoring "
                  "(what the honest answer would have saved). Safety events are counted, never read.",
     }

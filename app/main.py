@@ -17,7 +17,7 @@ from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -652,6 +652,108 @@ def audit_report(user_id: str, c: Ctx = Depends(ctx)):
         return HTMLResponse(report(store, user_id, c.tenant["name"] if c.tenant else None))
     except KeyError as e:
         raise HTTPException(404, str(e))
+
+
+# ---------------------------------------------------------------- check-ins and advisor desk
+
+@app.get("/v1/inbox/{user_id}", tags=["follow-up"])
+def inbox(user_id: str, c: Ctx = Depends(ctx)):
+    """Follow-ups Substrate owes this person: the morning after, what did you decide, you kept your word."""
+    authorize(user_id, c)
+    from substrate import checkins
+    return checkins.due(store, user_id)
+
+
+class CheckinAnswer(BaseModel):
+    answer: Literal["followed", "ignored", "later", "ack"]
+
+
+@app.post("/v1/inbox/{user_id}/{checkin_id}", tags=["follow-up"])
+def answer_checkin(user_id: str, checkin_id: str, a: CheckinAnswer, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    from substrate import checkins
+    try:
+        return checkins.answer(store, engine, user_id, checkin_id, a.answer)
+    except KeyError:
+        raise HTTPException(404, "No such check-in.")
+
+
+def _scope_users(c: Ctx) -> list[str]:
+    if c.role == "tenant":
+        return store.users(c.tenant["id"])
+    if c.role in ("admin", "master"):
+        return store.users()
+    return store.users(public=True)
+
+
+@app.get("/v1/desk", tags=["enterprise"])
+def desk_list(c: Ctx = Depends(ctx), status: Optional[str] = None):
+    """The Advisor Desk: people who need a human, most urgent first. Crisis words are never included."""
+    from substrate import desk
+    return desk.tickets(store, _scope_users(c), status)
+
+
+class DeskUpdate(BaseModel):
+    status: Literal["open", "claimed", "resolved"]
+    advisor: str = Field("", max_length=80)
+    note: str = Field("", max_length=1000)
+
+
+@app.post("/v1/desk/{ticket_id}", tags=["enterprise"])
+def desk_update(ticket_id: str, u: DeskUpdate, c: Ctx = Depends(ctx)):
+    from substrate import desk
+    t = next((x for x in desk.tickets(store, _scope_users(c)) if x["id"] == ticket_id), None)
+    if not t:
+        raise HTTPException(404, "No such ticket in your scope.")
+    return desk.update(store, ticket_id, u.status, u.advisor, u.note)
+
+
+@app.get("/v1/embed/inbox", tags=["embed"])
+def embed_inbox(user: str, request: Request, tissue: Optional[str] = None, x_substrate_pk: Optional[str] = Header(None)):
+    from substrate import checkins, embed
+    tenant, t, _ = _pk_ctx(request, x_substrate_pk, tissue)
+    return checkins.due(store, embed.user_id(tenant, user, tissue or t))
+
+
+# ---------------------------------------------------------------- WhatsApp channel
+
+@app.get("/v1/channels/whatsapp/webhook", tags=["channels"], response_class=PlainTextResponse)
+def wa_verify(request: Request):
+    q = request.query_params
+    if q.get("hub.mode") == "subscribe" and q.get("hub.verify_token") and \
+            secrets.compare_digest(q.get("hub.verify_token", ""), os.environ.get("WHATSAPP_VERIFY_TOKEN", "\0")):
+        return PlainTextResponse(q.get("hub.challenge", ""))
+    raise HTTPException(403, "Verification failed.")
+
+
+@app.post("/v1/channels/whatsapp/webhook", tags=["channels"])
+async def wa_inbound(request: Request):
+    """Meta delivers messages here. Signature-verified; each sender gets a private hashed genome."""
+    from substrate.channels import whatsapp
+    raw = await request.body()
+    if not whatsapp.verify_signature(raw, request.headers.get("x-hub-signature-256")):
+        raise HTTPException(401, "Bad signature.")
+    import json as _json
+    sent = []
+    for frm, text, button in whatsapp.parse(_json.loads(raw or b"{}")):
+        for payload in whatsapp.handle(store, engine, frm, text, button):
+            sent.append(whatsapp.send(frm, payload))
+    return {"ok": True, "sent": len(sent), "dry_run": any(s.get("dry_run") for s in sent)}
+
+
+class WaSim(BaseModel):
+    phone: str = Field("+971500000001", max_length=20)
+    text: Optional[str] = Field(None, max_length=4000)
+    button_id: Optional[str] = Field(None, max_length=80)
+
+
+@app.post("/v1/channels/whatsapp/simulate", tags=["channels"])
+def wa_simulate(s: WaSim):
+    """Dry-run the WhatsApp channel without Meta: returns exactly what would be sent."""
+    from substrate.channels import whatsapp
+    if locked_down() and not os.environ.get("SUBSTRATE_DEMO_PK"):
+        raise HTTPException(403, "Simulator disabled on locked deployments.")
+    return {"replies": whatsapp.handle(store, engine, s.phone, s.text, s.button_id)}
 
 
 class TenantRequest(BaseModel):

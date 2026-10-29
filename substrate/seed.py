@@ -143,6 +143,29 @@ def seed(store: Store, reset: bool = False, only: str | None = None) -> None:
                 inherit(store, export_sub(store, elder), heir, relation)
             except Exception:   # a demo nicety must never stop the engine from starting
                 pass
+    try:
+        _checkin_demo(store)
+    except Exception:
+        pass
+
+
+def _checkin_demo(store: Store) -> None:
+    """Unanswered advice so the demo shows check-ins: a late-night NO BET and an old PASS. Idempotent."""
+    from datetime import datetime, timedelta, timezone
+    iso = lambda d: d.strftime("%Y-%m-%dT%H:%M:%SZ")  # noqa: E731
+    now = datetime.now(timezone.utc)
+    if store.get_person("demo-rahman") and not store.get_event("L-seed-mk03"):
+        store.append("demo-rahman", "advice", {
+            "user_message": "It's 2am, one more parlay to finish the night up.", "domain": "markets", "polarity": "stop",
+            "label": "NO BET", "headline": "No bet. Not this one, not at this size.", "reasons": ["Late-night bets are the ones people most often regret by morning."],
+            "model": "rule-core", "floor_applied": False, "state": "stressed", "firmness": 4, "temperament": "surgeon",
+            "stakes": "medium", "flags": ["late-night", "parlay-math"]}, event_id="L-seed-mk03", ts=iso(now - timedelta(hours=10)))
+    if store.get_person("demo-haddad") and not store.get_event("L-seed-vc02"):
+        store.append("demo-haddad", "advice", {
+            "user_message": "$5M into the robotics round at 70x ARR, partners love it.", "domain": "venture", "polarity": "stop",
+            "label": "PASS", "headline": "Pass on the robotics round at 70x ARR.", "reasons": ["70x ARR needs a top-decile outcome to return the check."],
+            "model": "rule-core", "floor_applied": False, "state": "euphoric", "firmness": 5, "temperament": "surgeon",
+            "stakes": "high", "flags": ["valuation", "check-concentration"]}, event_id="L-seed-vc02", ts=iso(now - timedelta(days=12)))
 
 
 def _letters(store: Store) -> None:

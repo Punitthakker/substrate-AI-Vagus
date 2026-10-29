@@ -5,7 +5,7 @@ vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> predic
 """
 from __future__ import annotations
 
-from . import domains, i18n, legacy, limbic, pacts, redteam, reflect, temperaments
+from . import desk, domains, i18n, legacy, limbic, pacts, redteam, reflect, temperaments
 from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
@@ -165,10 +165,16 @@ class VagusEngine:
         ev = self.store.append(req.user_id, "advice", payload) if record else \
             {"id": "preview", "hash": "-", "prev_hash": self.store.head(req.user_id)}
 
-        return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
+        resp = AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
                               facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, letter=letter_out, language=lang, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
+        if record:
+            try:
+                desk.from_response(self.store, req.user_id, resp)
+            except Exception:   # the desk must never break advice
+                pass
+        return resp
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:
         """Same human, same moment, every permitted temperament. The truth does not move with the voice."""
