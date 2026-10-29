@@ -76,3 +76,52 @@ def test_goemotions_mapping_and_litellm_registered():
     finally:
         limbic.set_classifier(None)
     assert "litellm" in brains.REGISTRY and c.get("/v1/models").status_code == 200
+
+
+def test_invite_link_lifecycle():
+    import os
+    body = {"tissue": "markets", "label": "VC preview", "max_uses": 1}
+    if os.environ.get("SUBSTRATE_ADMIN_KEY"):
+        assert c.post("/v1/invites", json=body).status_code == 403          # locked down: no key, no invites
+    inv = c.post("/v1/invites", json=body, headers={"x-substrate-key": os.environ.get("SUBSTRATE_ADMIN_KEY", "")}).json()
+    assert inv["valid"] and inv["path"].startswith("/?invite=")
+    r = c.post(f"/v1/invite/{inv['code']}/redeem", json={"name": "Ada"}).json()
+    assert r["user_id"].startswith("guest-") and r["person"]["domain"] == "markets" and r["person"]["lessons"] == []
+    assert c.post(f"/v1/invite/{inv['code']}/redeem", json={"name": "Bo"}).status_code == 410   # used up
+    assert c.get(f"/v1/person/{r['user_id']}").json()["name"] == "Ada"
+
+
+def test_openai_compatible_harness_and_guard():
+    o = c.post("/v1/chat/completions", json={"model": "substrate-markets",
+               "messages": [{"role": "user", "content": "6-leg parlay, each leg 70%, $1,000. Lock!"}]}).json()
+    assert o["object"] == "chat.completion" and o["substrate"]["label"] in ("SIZE DOWN", "NO BET")
+    assert len(o["substrate"]["trace"]) == 10
+    g = c.post("/v1/chat/completions", headers={"x-substrate-user": "demo-kapoor", "x-substrate-mode": "guard"},
+               json={"messages": [{"role": "user", "content": "Another $200k into MOONX, good idea right?"}],
+                     "draft": "Great idea, go for it!"}).json()
+    assert g["substrate"]["action"] == "replaced" and "MOONX" in g["choices"][0]["message"]["content"]
+    s = c.post("/v1/chat/completions", json={"stream": True, "messages": [{"role": "user", "content": "hello"}]})
+    assert s.text.startswith("data: ") and "[DONE]" in s.text
+
+
+def test_progress_rewards_choosing_well():
+    p = c.get("/v1/progress/demo-rahman").json()
+    assert p["xp"] > 0 and "never-twice" in p["earned"] and p["discipline"] is not None
+    assert c.get("/v1/progress/demo-maya").json()["earned"] == ["heir"] or "heir" in c.get("/v1/progress/demo-maya").json()["earned"]
+
+
+def test_mcp_server_speaks_jsonrpc():
+    import json
+    import subprocess
+    import sys
+    msgs = [{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "substrate_bet_math",
+             "arguments": {"legs": [{"price": 0.5}, {"price": 0.5}], "stake": 10, "bankroll": 1000}}}]
+    out = subprocess.run([sys.executable, "integrations/mcp/substrate_mcp.py"], input="\n".join(map(json.dumps, msgs)),
+                         capture_output=True, text=True, timeout=60).stdout.strip().splitlines()
+    res = [json.loads(x) for x in out]
+    assert [r["id"] for r in res] == [1, 2, 3]
+    assert len(res[1]["result"]["tools"]) == 5
+    assert '"joint_market_prob": 0.25' in res[2]["result"]["content"][0]["text"]

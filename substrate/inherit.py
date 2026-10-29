@@ -55,6 +55,9 @@ def inherit(store: Store, doc: dict, heir_id: str, relation: str = "family") -> 
     if scope in ("values+ledger", "full"):
         a.lessons = list(g.get("lessons") or [])[-8:]
         a.patterns = [b["type"] for b in g.get("biases") or []]
+    same = next((x for x in heir.ancestry if x.from_user == a.from_user and x.checksum == a.checksum), None)
+    if same:
+        return same   # already received this exact genome
     heir.ancestry = [x for x in heir.ancestry if x.from_user != a.from_user] + [a]
     for val in a.values:
         if val not in heir.values:

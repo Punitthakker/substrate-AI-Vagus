@@ -194,6 +194,48 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .lesson.inherited{border-left:2px solid var(--grn);background:color-mix(in srgb, var(--grn) 7%, transparent);animation:inheritIn .9s ease}
 @keyframes inheritIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- game layer */
+.prog{display:flex;gap:14px;align-items:center}
+.ring{position:relative;width:74px;height:74px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .trk{stroke:var(--hair)} .ring .val{stroke:var(--grn);stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 15px var(--disp)}
+.pstats{flex:1;min-width:0}
+.pstats .lv{font:800 13px var(--disp);letter-spacing:.5px}
+.pstats .xp{color:var(--dim);font-size:12px}
+.pchips{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.pchip{font-size:11px;border:1px solid var(--hair);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pchip .flame{display:inline-block;animation:flick 1.4s ease-in-out infinite}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.18) rotate(4deg)}}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.bdg{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 9px var(--disp);border:1px solid var(--hair);color:var(--faint);cursor:default;position:relative}
+.bdg.on{border-color:var(--grn);color:var(--grn);background:color-mix(in srgb,var(--grn) 12%,transparent);box-shadow:0 0 0 0 color-mix(in srgb,var(--grn) 40%,transparent);animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--grn) 0%,transparent)}50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--grn) 18%,transparent)}}
+.nextb{font-size:11px;color:var(--dim);margin-top:8px}
+.pop{position:fixed;left:50%;top:22%;transform:translate(-50%,0) scale(.6);opacity:0;z-index:60;background:var(--panel);border:1px solid var(--grn);border-radius:18px;padding:18px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);pointer-events:none;transition:all .5s cubic-bezier(.2,1.4,.3,1)}
+.pop.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.pop .medal{width:58px;height:58px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;font:900 20px var(--disp);color:var(--bg);background:conic-gradient(var(--grn),var(--wbc),var(--rbc),var(--grn));animation:spin 2.4s linear infinite}
+@keyframes spin{to{filter:hue-rotate(360deg)}}
+.pop h4{font:800 15px var(--disp)} .pop p{color:var(--dim);font-size:12px;margin-top:4px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:59}
+.xpfly{position:fixed;z-index:61;font:800 13px var(--disp);color:var(--grn);pointer-events:none;animation:fly 1.3s ease-out forwards}
+@keyframes fly{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+/* ---------- harness view */
+.layers{margin-top:22px;display:grid;gap:8px;max-width:980px}
+.layer{display:grid;grid-template-columns:34px 130px 1fr minmax(0,260px);gap:14px;align-items:center;border:1px solid var(--hair);border-radius:12px;padding:10px 14px;opacity:.25;transform:translateX(-8px);transition:all .45s ease}
+.layer.lit{opacity:1;transform:none;border-color:color-mix(in srgb,var(--wbc) 50%,var(--hair))}
+.layer .n{font:800 12px var(--disp);color:var(--rbc)} .layer .k{font:800 12px var(--disp);letter-spacing:.5px}
+.layer .w{color:var(--dim);font-size:12.5px} .layer .o{font:12px ui-monospace,monospace;color:var(--grn);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:720px){.layer{grid-template-columns:28px 1fr}.layer .w,.layer .o{grid-column:2}}
+/* ---------- invites */
+.invrow{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:14px}
+.invrow label{display:grid;gap:4px;font-size:12px;color:var(--dim)}
+.invrow input,.invrow select{background:var(--soft);border:1px solid var(--hair);color:var(--fg);border-radius:10px;padding:9px 11px;font:inherit}
+.invlink{margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.invlink code{background:var(--soft);border:1px solid var(--hair);border-radius:10px;padding:9px 12px;word-break:break-all}
+.welcome{max-width:560px}
+@media (prefers-reduced-motion: reduce){.ring .val,.layer,.pop{transition:none}.bdg.on,.pchip .flame,.pop .medal{animation:none}}
 </style>
 </head>
 <body>
@@ -203,6 +245,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
   <div class="tabs" role="tablist" id="tabs" aria-label="Tissue"></div>
   <span class="hsp"></span>
   <span class="badge" id="brain">BRAIN <b>...</b></span>
+  <button class="iconbtn" id="harnessBtn" type="button">HARNESS</button>
   <button class="iconbtn ent" id="entBtn" type="button">ENTERPRISE</button>
   <button class="iconbtn" id="userBtn" type="button">TRY IT ON YOURSELF</button>
   <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">THEME</button>
@@ -210,6 +253,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 
 <div class="grid">
   <aside class="col left" aria-label="Genome">
+    <div class="sect"><h3>Progress <span id="plevel"></span></h3><div id="prog"></div></div>
     <div class="sect">
       <h3>Genome <span id="vintage"></span></h3>
       <div class="who" id="pname">...</div>
@@ -264,6 +308,8 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 
 <div class="ov" id="ov" hidden><button class="iconbtn close" id="ovClose" type="button">CLOSE</button><div id="ovBody"></div></div>
 <div class="toast" id="toast" role="status"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="pop" id="pop" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
@@ -474,7 +520,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       var t = S.temps.filter(function(x){ return x.key === r.temperament; })[0];
       pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message);
       S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
-      renderNerve(r); loadLedger();
+      renderNerve(r); loadLedger(); loadProgress(r.safety ? 0 : 10);
     }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
   }
   $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
@@ -486,7 +532,8 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     if (action === "followed") { body.outcome_type = "avoided-loss"; body.note = "Protected"; }
     api("/v1/outcome", body).then(function(){
       toast(action === "ignored" ? "Outcome recorded. The genome just learned from it." : "Recorded. The genome knows it worked.");
-      loadLedger(); loadPerson(); $("followed").disabled = $("ignored").disabled = true;
+      loadLedger(); loadPerson(); loadProgress(action === "followed" && S.last.verdict.polarity !== "proceed" ? 75 : 25);
+      $("followed").disabled = $("ignored").disabled = true;
     });
   }
   $("followed").onclick = function(){ outcome("followed"); };
@@ -498,7 +545,8 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     $("followed").disabled = $("ignored").disabled = true;
     try { history.replaceState(null, "", id.indexOf("guest-") === 0 ? "#me" : "#" + S.tissue); } catch(e){}
     clearNerve();
-    loadPerson().then(function(){ hero(); loadLedger(); });
+    S.earned = null;
+    loadPerson().then(function(){ hero(); loadLedger(); loadProgress(); });
     if (msg) toast(msg);
   }
 
@@ -525,7 +573,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       var rows = r.results.map(function(x){
         return '<div class="evrow"><i style="background:' + (x.pass ? "var(--grn)" : "var(--rbc)") + '"></i><div><b>' + esc(x.suite.toUpperCase()) + ' · ' + esc(x.tissue.toUpperCase()) + '</b> &middot; ' + esc(x.case) + '<div class="lbl" style="margin-top:3px;letter-spacing:1.5px">expected ' + esc(x.expected) + ' &middot; got ' + esc(x.got) + '</div></div></div>';
       }).join("");
-      $("ovBody").innerHTML = '<div class="lbl">Honesty and safety harness · brain: ' + esc(r.brain) + ' · runs in CI on every push</div><h2>Enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed across four tissues: reckless asks stopped, sensible asks approved, pushback held, every voice delivered one verdict, and every crisis signal routed to the safety protocol with the message withheld from the ledger.</p><div class="stats">' + suites + '</div><div style="margin-top:20px;max-width:1000px">' + rows + '</div>';
+      $("ovBody").innerHTML = '<div class="lbl">Honesty and safety harness · brain: ' + esc(r.brain) + ' · runs in CI on every push</div><h2>Enforced <span class="si red">by test.</span></h2><div class="score">' + r.score + '%</div><p class="sub">' + r.passed + ' of ' + r.total + ' passed across five tissues: reckless asks stopped, sensible asks approved, pushback held, every voice delivered one verdict, and every crisis signal routed to the safety protocol with the message withheld from the ledger.</p><div class="stats">' + suites + '</div><div style="margin-top:20px;max-width:1000px">' + rows + '</div>';
     });
   };
 
@@ -557,7 +605,9 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
         '<p class="sub">Each bank, fund or platform gets its own key, its own isolated genomes and its own policy: stricter limits, permitted voices, maximum tone, enabled tissues. Policy can tighten Substrate. It can never switch off the Honesty Floor or the Safety Protocol.</p>' +
         '<pre class="code">' + esc(JSON.stringify(pol, null, 2)) + '</pre>' +
         '<h2 style="margin-top:34px;font-size:22px">It keeps learning</h2><p class="sub" id="learnSub">Loading the next training round...</p><div class="stats" id="learnStats"></div>' +
+        inviteSection() +
         '<pre class="code">curl -X POST $SUBSTRATE/v1/advise -H "x-substrate-key: sk_sub_..." \\\n  -d \'{"user_id":"client-42","message":"Another $200k into this token?"}\'</pre>';
+      wireInvites();
       api("/v1/learn/stats").then(function(L){
         $("learnSub").innerHTML = "Every consented outcome becomes training data for <b>substrate-vagus</b>, an open-weight model forked from " + esc(L.base_models.slice(0,3).join(", ")) + " and trained on NVIDIA GPUs. Pipeline: " + esc(L.pipeline.join(" → ")) + ".";
         var st = function(k, v){ return '<div><small>' + k + '</small><b>' + v + '</b></div>'; };
@@ -637,13 +687,135 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     };
   };
 
+
+  // ---------------- game layer: progress, badges, celebration
+  var BICON = {"first-truth":"1","loop-closer":"↺","cooled-off":"❄","sized-right":"¼","never-twice":"2×","calm-under-fire":"♥","protected-1k":"$","protected-100k":"$$","walked-away":"←","heir":"✦","streak-3":"3","streak-7":"7"};
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function loadProgress(gain){
+    if (!S.user) return;
+    api("/v1/progress/" + S.user).then(function(g){
+      var C = 2 * Math.PI * 31, off = C * (1 - (g.progress || 0));
+      $("plevel").textContent = "LV " + g.level;
+      $("prog").innerHTML = '<div class="prog"><div class="ring"><svg width="74" height="74"><circle class="trk" cx="37" cy="37" r="31" fill="none" stroke-width="6"/>' +
+        '<circle class="val" id="ringv" cx="37" cy="37" r="31" fill="none" stroke-width="6" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '"/></svg><b>' + g.level + '</b></div>' +
+        '<div class="pstats"><div class="lv">' + esc(g.name.toUpperCase()) + '</div><div class="xp"><span id="xpn">' + g.xp + '</span> XP' + (g.next ? ' · ' + (g.next - g.xp) + ' to ' + esc(g.next_name) : ' · max level') + '</div>' +
+        '<div class="pchips"><span class="pchip" title="Honest choices in a row"><span class="flame">♥</span> ' + g.streak + ' streak</span>' +
+        '<span class="pchip" title="Recency-weighted follow rate on hard calls">Discipline ' + (g.discipline == null ? '-' : g.discipline) + '</span>' +
+        (g.protected ? '<span class="pchip green" title="Money protected by honest choices">' + money(g.protected) + ' protected</span>' : '') + '</div></div></div>' +
+        '<div class="badges">' + g.badges.map(function(b){ return '<span class="bdg' + (b.earned ? ' on' : '') + '" title="' + esc(b.name + (b.earned ? '' : ' (locked)') + ': ' + b.why) + '">' + (BICON[b.key] || "•") + '</span>'; }).join("") + '</div>' +
+        (g.next_badge ? '<div class="nextb">Next: <b>' + esc(g.next_badge.name) + '</b> · ' + esc(g.next_badge.why) + '</div>' : '');
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ var v = $("ringv"); if (v) v.style.strokeDashoffset = off; }); });
+      if (gain && !reduce) flyXP("+" + gain + " XP");
+      var now = g.earned || [];
+      if (S.earned) {
+        var fresh = now.filter(function(k){ return S.earned.indexOf(k) < 0; });
+        if (fresh.length) { var b = g.badges.filter(function(x){ return x.key === fresh[0]; })[0]; celebrate(b); }
+        if (g.level > (S.level || g.level)) setTimeout(function(){ celebrate({key: "lv", name: "Level " + g.level + " · " + g.name, why: "Honesty you can feel improving."}); }, fresh.length ? 2600 : 0);
+      }
+      S.earned = now; S.level = g.level;
+    }).catch(function(){ $("prog").innerHTML = ""; });
+  }
+  function flyXP(t){
+    var r = $("prog").getBoundingClientRect(), el = document.createElement("div");
+    el.className = "xpfly"; el.textContent = t; el.style.left = (r.left + 90) + "px"; el.style.top = (r.top + 10) + "px";
+    document.body.appendChild(el); setTimeout(function(){ el.remove(); }, 1400);
+  }
+  function celebrate(b){
+    if (!b) return;
+    var pop = $("pop");
+    pop.innerHTML = '<div class="medal">' + (BICON[b.key] || "★") + '</div><h4>' + esc(b.name) + '</h4><p>' + esc(b.why) + '</p>';
+    pop.classList.add("on"); setTimeout(function(){ pop.classList.remove("on"); }, 2400);
+    if (!reduce) confetti();
+  }
+  function confetti(){
+    var cv = $("confetti"), cx = cv.getContext("2d"), W = cv.width = innerWidth, H = cv.height = innerHeight;
+    var cs = getComputedStyle(document.documentElement), cols = ["--rbc","--wbc","--grn","--amb"].map(function(v){ return cs.getPropertyValue(v).trim(); });
+    var ps = []; for (var i = 0; i < 140; i++) ps.push({x: W/2, y: H*0.28, vx: (Math.random()-0.5)*14, vy: -Math.random()*12-3, s: 4+Math.random()*5, r: Math.random()*6, c: cols[i % 4], shape: i % 3});
+    var t0 = performance.now();
+    (function frame(t){
+      var k = (t - t0) / 1800; cx.clearRect(0,0,W,H); if (k > 1) return;
+      ps.forEach(function(p){ p.vy += 0.38; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += 0.15;
+        cx.save(); cx.globalAlpha = 1 - k; cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c;
+        if (p.shape === 0) { cx.beginPath(); cx.arc(0,0,p.s/2,0,7); cx.fill(); }   // red/white cells
+        else if (p.shape === 1) cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+        else { cx.beginPath(); cx.moveTo(0,p.s/3); cx.bezierCurveTo(-p.s,-p.s/3,-p.s/3,-p.s,0,-p.s/3); cx.bezierCurveTo(p.s/3,-p.s,p.s,-p.s/3,0,p.s/3); cx.fill(); } // hearts
+        cx.restore(); });
+      requestAnimationFrame(frame);
+    })(t0);
+  }
+
+  // ---------------- harness view: the eleven layers, lit in order
+  $("harnessBtn").onclick = function(){
+    overlay('<div class="lbl">The Substrate Harness · OpenAI-compatible · one URL change</div><h2>A heart in front of <span class="si red">any model.</span></h2><div class="typing" style="margin-top:20px"><span></span><span></span><span></span></div>');
+    api("/v1/harness/layers").then(function(L){
+      var r = S.last, tr = {};
+      if (r) tr = {intake: "state " + r.state, limbic: (r.limbic && r.limbic.dominant || "-") + (r.limbic && r.limbic.needs.length ? " · " + r.limbic.needs.join(",") : ""),
+        safety: r.safety ? "TRIGGERED" : "clear", genome: S.person ? S.person.name + (r.ancestry ? " · inherited lesson" : "") : "-",
+        tissue: r.domain + " · " + (r.facts.flags.join(", ") || "no flags"), brain: r.verdict.model, floor: r.verdict.floor_applied ? "applied" : "held",
+        "vagal-tone": "tone " + r.firmness + "/5 · " + r.stakes, delivery: r.temperament + " · " + r.label, guard: "verdict " + r.verdict.polarity, ledger: r.ledger_id};
+      var base = location.origin;
+      $("ovBody").innerHTML = '<div class="lbl">The Substrate Harness · OpenAI-compatible · one URL change</div><h2>A heart in front of <span class="si red">any model.</span></h2>' +
+        '<p class="sub">' + (r ? 'Your last message, traced through every layer.' : 'Ask something first to see your message traced through every layer.') + ' Any app built on the OpenAI API can route through these layers by changing its base URL. In guard mode, the host model answers first and Substrate replaces flattery on a STOP.</p>' +
+        '<div class="layers">' + L.map(function(l, i){ return '<div class="layer"><span class="n">' + String(i+1).padStart(2,"0") + '</span><span class="k">' + esc(l.layer.toUpperCase()) + '</span><span class="w">' + esc(l.what) + '</span><span class="o">' + esc(tr[l.layer] || "") + '</span></div>'; }).join("") + '</div>' +
+        '<pre class="code">from openai import OpenAI\nclient = OpenAI(base_url="' + esc(base) + '/v1", api_key="sk_sub_or_unused",\n                default_headers={"x-substrate-user": "' + esc(S.user) + '", "x-substrate-mode": "guard"})\nr = client.chat.completions.create(model="substrate-' + esc(S.tissue) + '",\n        messages=[{"role": "user", "content": "Another $200k into this token?"}])\nprint(r.choices[0].message.content)</pre>';
+      Array.prototype.forEach.call(document.querySelectorAll("#ovBody .layer"), function(el, i){ setTimeout(function(){ el.classList.add("lit"); }, reduce ? 0 : 140 * i); });
+    });
+  };
+
+  // ---------------- invites
+  function inviteSection(){
+    var tis = S.tissues.map(function(t){ return '<option value="' + t.key + '">' + esc(t.name) + '</option>'; }).join("");
+    return '<h2 style="margin-top:34px;font-size:22px">Invite people to <span class="si green">try it</span></h2>' +
+      '<p class="sub">Each person who opens the link gets their own private, sandboxed genome in the tissue you choose. Nothing is mixed with client data.</p>' +
+      '<form id="invf" class="invrow"><label>Tissue<select id="inv-t">' + tis + '</select></label><label>Label<input id="inv-l" value="Substrate private preview" maxlength="80"></label>' +
+      '<label>Max people<input id="inv-n" type="number" min="1" max="10000" value="25" style="width:90px"></label><label>Days<input id="inv-d" type="number" min="1" max="365" value="14" style="width:70px"></label>' +
+      '<button class="btn primary" type="submit">Create link</button></form><div id="invOut"></div><div id="invList" class="sub" style="margin-top:12px"></div>';
+  }
+  function wireInvites(){
+    var f = $("invf"); if (!f) return;
+    function list(){ api("/v1/invites").then(function(xs){ $("invList").innerHTML = xs.slice(0, 8).map(function(i){ return esc(i.label) + ' · ' + esc(i.tissue) + ' · ' + i.uses + '/' + i.max_uses + ' used · ' + (i.valid ? '<span class="green">live</span>' : 'closed') + ' · <code>' + esc(i.code) + '</code>'; }).join("<br>"); }).catch(function(){}); }
+    f.onsubmit = function(e){
+      e.preventDefault();
+      api("/v1/invites", {tissue: $("inv-t").value, label: $("inv-l").value, max_uses: +$("inv-n").value, days: +$("inv-d").value}).then(function(i){
+        var url = location.origin + i.path;
+        $("invOut").innerHTML = '<div class="invlink"><code id="invUrl">' + esc(url) + '</code><button class="btn" id="invCopy" type="button">Copy</button></div>';
+        $("invCopy").onclick = function(){ try { navigator.clipboard.writeText(url); toast("Invite link copied."); } catch(err){ toast(url); } };
+        list();
+      }).catch(function(err){ toast("Could not create invite: " + err.message); });
+    };
+    list();
+  }
+  function inviteLanding(code){
+    var key = "sub-inv-" + code, saved = null;
+    try { saved = localStorage.getItem(key); } catch(e){}
+    if (saved) { api("/v1/person/" + saved).then(function(p){ switchUser(saved, p.domain, "Welcome back."); }).catch(function(){ try { localStorage.removeItem(key); } catch(e){} inviteLanding(code); }); return; }
+    api("/v1/invite/" + code).then(function(inv){
+      if (!inv.valid) { toast("This invite has expired or is used up."); return; }
+      var t = S.tissues.filter(function(x){ return x.key === inv.tissue; })[0] || {name: inv.tissue, tagline: ""};
+      overlay('<div class="welcome"><div class="lbl">' + esc(inv.label) + ' · ' + inv.remaining + ' places left</div><h2>You\'re invited to meet <span class="si red">Substrate.</span></h2>' +
+        '<p class="sub">The first AI with a human heart: it tells you the truth about your decisions, kindly, and remembers. You\'ll get your own private genome in the <b>' + esc(t.name) + '</b> tissue: ' + esc(t.tagline) + '.</p>' +
+        '<form id="wf" class="invrow"><label>Your first name<input id="w-name" maxlength="40" placeholder="e.g. Layla" required></label><button class="btn primary" type="submit">Begin</button></form>' +
+        '<p class="sub" style="margin-top:14px;font-size:12px">Sandboxed and private. Text only, never your face or voice. Crisis messages are routed to human help and never stored.</p></div>');
+      $("wf").onsubmit = function(e){
+        e.preventDefault();
+        api("/v1/invite/" + code + "/redeem", {name: $("w-name").value.trim() || "Guest"}).then(function(r){
+          try { localStorage.setItem(key, r.user_id); } catch(err){}
+          $("ov").hidden = true; switchUser(r.user_id, r.tissue, "Your genome is live, " + r.person.name + ". Ask it something you want to hear yes to.");
+          setTimeout(function(){ celebrate({key: "first", name: "Welcome, " + r.person.name, why: "Your genome is born. Every honest choice from here levels it up."}); }, 600);
+        }).catch(function(err){ toast(err.message); });
+      };
+    }).catch(function(){ toast("Unknown invite link."); });
+  }
+
   // ---------------- boot
   Promise.all([api("/v1/health"), api("/v1/tissues"), api("/v1/temperaments")]).then(function(x){
     var h = x[0]; S.tissues = x[1]; S.temps = x[2]; S.demos = h.demo_users; S.heirs = h.demo_heirs || {};
     $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>";
     var start = (location.hash || "").replace("#", "");
     if (!S.demos[start]) start = "wealth";
+    var inv = new URLSearchParams(location.search).get("invite");
     switchUser(S.demos[start], start);
+    if (inv) inviteLanding(inv);
   }).catch(function(e){ $("log").innerHTML = '<div class="hero"><h1>Substrate is waking up.</h1><p>' + esc(e.message) + '</p></div>'; });
 })();
 </script>

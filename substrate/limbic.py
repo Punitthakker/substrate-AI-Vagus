@@ -38,6 +38,11 @@ LEXICON = {
     "anticipation": ["can't wait", "cant wait", "soon", "about to", "planning", "going to", "ready to", "tomorrow",
                      "next week", "before it's too late", "closing friday", "opportunity", "launch"],
 }
+# idioms read as a whole, then masked so their words don't score alone ("can't miss" is not sadness)
+IDIOMS = {"can't miss": "anticipation", "cant miss": "anticipation", "need a win": "anticipation",
+          "before it lists": "anticipation", "to the moon": "joy", "can't lose": "joy", "cant lose": "joy",
+          "free money": "joy", "sure thing": "trust", "down bad": "sadness", "win it back": "anger",
+          "make it back": "anger"}
 INTENSIFIERS = ["so", "very", "really", "extremely", "totally", "completely", "absolutely", "incredibly", "super", "too"]
 NEGATORS = ["not", "never", "no", "don't", "dont", "isn't", "isnt", "wasn't", "wasnt", "hardly"]
 
@@ -73,6 +78,11 @@ def _tokens_before(text: str, idx: int, n: int = 3) -> list[str]:
 def _emotion_vector(text: str) -> dict[str, float]:
     low = text.lower().replace("’", "'")
     scores = {e: 0.0 for e in EMOTIONS}
+    for phrase, emo in IDIOMS.items():
+        n = low.count(phrase)
+        if n:
+            scores[emo] += 1.2 * n
+            low = low.replace(phrase, " " * len(phrase))
     for emo, words in LEXICON.items():
         for w in words:
             for m in re.finditer(r"(?<![a-z])" + re.escape(w) + r"(?![a-z])", low):

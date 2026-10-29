@@ -59,8 +59,40 @@ class Store:
             create table if not exists tenants (id text primary key, name text not null, key_hash text unique not null,
                                                 policy text not null, created text not null);
             create table if not exists owners (user_id text primary key, tenant_id text not null);
+            create table if not exists invites (code text primary key, tissue text not null, label text not null,
+                                                max_uses integer not null, uses integer not null default 0,
+                                                expires text not null, created text not null);
         """)
         self.db.commit()
+
+    # ---------------- invite links
+    def create_invite(self, tissue: str, label: str, max_uses: int, expires: str) -> str:
+        code = secrets.token_urlsafe(6).replace("-", "x").replace("_", "z")
+        with _lock:
+            self.db.execute("insert into invites (code,tissue,label,max_uses,uses,expires,created) values (?,?,?,?,0,?,?)",
+                            (code, tissue, label, max_uses, expires, now()))
+            self.db.commit()
+        return code
+
+    def invite(self, code: str) -> dict | None:
+        r = self.db.execute("select code,tissue,label,max_uses,uses,expires,created from invites where code=?",
+                            (code,)).fetchone()
+        if not r:
+            return None
+        d = dict(zip(("code", "tissue", "label", "max_uses", "uses", "expires", "created"), r))
+        d["remaining"] = max(0, d["max_uses"] - d["uses"])
+        d["valid"] = d["remaining"] > 0 and d["expires"] > now()
+        return d
+
+    def invites(self) -> list[dict]:
+        return [self.invite(r[0]) for r in self.db.execute("select code from invites order by created desc").fetchall()]
+
+    def use_invite(self, code: str) -> bool:
+        with _lock:
+            cur = self.db.execute("update invites set uses = uses + 1 where code=? and uses < max_uses and expires > ?",
+                                  (code, now()))
+            self.db.commit()
+        return cur.rowcount == 1
 
     # ---------------- enterprise tenancy
     @staticmethod

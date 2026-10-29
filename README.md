@@ -8,7 +8,7 @@ predicts whether you'll act on it, and records what happened.
 
 Confidential. Patent pending. Do not distribute.
 
-## Tissues: one engine, four verticals
+## Tissues: one engine, five verticals
 
 | Tissue | For | It knows |
 |---|---|---|
@@ -16,15 +16,26 @@ Confidential. Patent pending. Do not distribute.
 | **Venture** | VC investment committees | check vs fund size, ARR multiple, thesis drift, skipped diligence, base rates |
 | **Founder** | founder-CEOs, accelerators | burn, runway after each decision, cash-out date, vanity spend |
 | **Wellbeing** | coaching, EAP, consumer | venting, impulsive decisions at the peak of a feeling, persistent distress |
+| **Markets** | Polymarket, Kalshi, sportsbooks, games | price as probability, parlay and round-robin combinatorics, fees, quarter-Kelly sizing, tilt and chasing, gambling harm |
 
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
+
+## New in v0.5
+
+- **Markets tissue**: the honest brake on prediction markets and betting, plus stateless bet math (`/v1/markets/analyze`) and live Polymarket prices
+- **The Harness**: OpenAI-compatible `/v1/chat/completions`; any OpenAI app gets a heart by changing one URL ([docs/HARNESS.md](docs/HARNESS.md))
+- **Inheritance**: a verified genome passed to a named heir; Substrate cites the elder's lesson when the heir repeats the pattern
+- **Invite links**: sandboxed test genomes for the people you choose
+- **Progress**: XP, streaks, discipline, badges, computed from the ledger; rewards choosing well, never using more
+- **Integrations**: MCP server, JS SDK, LangChain guard, LiteLLM (100+ providers), GoEmotions, Presidio redaction ([docs/INTEGRATIONS.md](docs/INTEGRATIONS.md))
+- Docs: [LAYERS](docs/LAYERS.md) · [HARNESS](docs/HARNESS.md) · [INTEGRATIONS](docs/INTEGRATIONS.md) · [RUN THE MODEL](docs/RUN_THE_MODEL.md)
 
 ## The Safety Protocol
 
 Any crisis signal, in any tissue, in any voice, under any tenant policy, overrides everything:
 no persona, no tone dial, emergency and crisis-line resources, escalation to a human, and the raw
-message is withheld from the ledger. Policy cannot disable it. 32 safety cases run in CI.
+message is withheld from the ledger. Policy cannot disable it. 40 safety cases run in CI.
 
 ## Organs
 
@@ -74,7 +85,7 @@ toward the more cautious verdict, then the Honesty Floor applies. Votes are retu
 ```bash
 pip install -r requirements-dev.txt
 pytest -q                                  # 21 tests
-python -m substrate.evals                  # 63 evals, must be 100%
+python -m substrate.evals                  # 88 evals, must be 100%
 uvicorn app.main:app --reload --port 8080  # console at http://localhost:8080
 ./scripts/run_local.sh                     # fully offline on a Mac with Ollama
 docker compose up -d                       # Substrate + Ollama, nothing leaves the machine

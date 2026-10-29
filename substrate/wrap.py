@@ -40,6 +40,9 @@ class Substrate:
         if not base_url:
             from .engine import VagusEngine
             self._engine = VagusEngine()
+            if user_id.startswith("demo-"):
+                from .seed import seed
+                seed(self._engine.store)   # in-process demo: make the demo genomes available
 
     def advise(self, message: str, thread: list[dict] | None = None) -> dict:
         body = {"user_id": self.user_id, "message": message, "thread": thread or [], "temperament": self.temperament}

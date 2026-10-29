@@ -26,6 +26,8 @@ from substrate.brains import active_brain, catalogue as model_catalogue, council
 from substrate.engine import VagusEngine
 from substrate.evals import run as run_evals
 from substrate.export import export_sub, verify_sub
+from substrate import harness
+from substrate.progress import progress as progress_of
 from substrate.inherit import InheritanceError, inherit, revoke
 from substrate.markets_api import BetMath, analyze as bet_analyze, polymarket_price
 from substrate.graph import build_graph, to_graphiti_episodes
@@ -292,6 +294,115 @@ def export(user_id: str, c: Ctx = Depends(ctx)):
 @app.post("/v1/export/verify")
 def verify(doc: dict):
     return verify_sub(doc)
+
+
+# ---------------------------------------------------------------- invites, progress, harness
+
+class InviteCreate(BaseModel):
+    tissue: Literal["wealth", "venture", "founder", "wellbeing", "markets"] = "wealth"
+    label: str = Field("Substrate private preview", max_length=80)
+    max_uses: int = Field(25, ge=1, le=10_000)
+    days: int = Field(14, ge=1, le=365)
+
+
+def can_invite(c: Ctx) -> bool:
+    return c.role in ("admin", "master") or not locked_down()
+
+
+@app.post("/v1/invites")
+def create_invite(req: InviteCreate, c: Ctx = Depends(ctx)):
+    """Create a shareable test link. Admin/master key once the deployment is locked down."""
+    if not can_invite(c):
+        raise HTTPException(403, "Invites need the admin or master key.")
+    from datetime import datetime, timedelta, timezone
+    exp = (datetime.now(timezone.utc) + timedelta(days=req.days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    code = store.create_invite(req.tissue, req.label, req.max_uses, exp)
+    return {**store.invite(code), "path": f"/?invite={code}"}
+
+
+@app.get("/v1/invites")
+def list_invites(c: Ctx = Depends(ctx)):
+    if not can_invite(c):
+        raise HTTPException(403, "Invites need the admin or master key.")
+    return store.invites()
+
+
+@app.get("/v1/invite/{code}")
+def invite_info(code: str):
+    inv = store.invite(code)
+    if not inv:
+        raise HTTPException(404, "Unknown invite.")
+    return {k: inv[k] for k in ("code", "tissue", "label", "remaining", "valid", "expires")}
+
+
+class Redeem(BaseModel):
+    name: str = Field("Guest", max_length=40)
+
+
+@app.post("/v1/invite/{code}/redeem")
+def redeem_invite(code: str, r: Redeem):
+    """Each invitee gets a private sandboxed genome in the invite's tissue, seeded from the demo profile."""
+    inv = store.invite(code)
+    if not inv or not inv["valid"] or not store.use_invite(code):
+        raise HTTPException(410, "This invite has expired or is used up.")
+    base = store.get_person(DEMO_USERS[inv["tissue"]])
+    uid = f"guest-{secrets.token_hex(4)}"
+    p = base.model_copy(deep=True) if base else Person(domain=inv["tissue"])
+    p.user_id, p.name, p.lessons, p.adherence, p.ancestry = uid, (r.name.strip() or "Guest")[:40], [], {}, []
+    p.biases = [b.model_copy(update={"evidence": []}) for b in p.biases]
+    p.consent.allow_training, p.consent.inheritance.heirs = False, []
+    if "support_contacts" in p.profile:
+        p.profile["support_contacts"] = []
+    store.put_person(p)
+    return {"user_id": uid, "tissue": inv["tissue"], "label": inv["label"], "person": p}
+
+
+@app.get("/v1/progress/{user_id}")
+def get_progress(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    try:
+        return progress_of(store, user_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/v1/harness/layers")
+def harness_layers():
+    return [{"layer": k, "what": v} for k, v in harness.LAYERS]
+
+
+@app.post("/v1/chat/completions")
+def chat_completions(body: dict, c: Ctx = Depends(ctx),
+                     x_substrate_user: Optional[str] = Header(None), x_substrate_mode: Optional[str] = Header(None)):
+    """OpenAI-compatible harness. Point any OpenAI SDK's base_url at Substrate."""
+    uid = x_substrate_user or body.get("user")
+    if not uid or not store.get_person(uid):
+        if uid and not uid.startswith("guest-"):
+            authorize(uid, c)   # named but unknown genome: refuse rather than invent
+        uid = harness.ensure_user(store, uid, harness.tissue_from_model(body.get("model")))
+    policy = authorize(uid, c)
+    mode = (x_substrate_mode or body.get("substrate_mode") or "substrate").lower()
+    try:
+        out = harness.chat(engine, body, uid, mode, policy)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if body.get("stream"):
+        import json as _json
+        from fastapi.responses import StreamingResponse
+        chunk = {"id": out["id"], "object": "chat.completion.chunk", "created": out["created"], "model": out["model"],
+                 "choices": [{"index": 0, "delta": {"role": "assistant", "content": out["choices"][0]["message"]["content"]},
+                              "finish_reason": "stop"}], "substrate": out["substrate"]}
+        return StreamingResponse(iter([f"data: {_json.dumps(chunk)}\n\n", "data: [DONE]\n\n"]),
+                                 media_type="text/event-stream")
+    return out
+
+
+@app.get("/v1/models/openai")
+def openai_models():
+    """OpenAI-style model list so SDKs and tools can discover the harness."""
+    return {"object": "list", "data": [{"id": m, "object": "model", "owned_by": "substrate"} for m in
+                                      ["substrate", "substrate-wealth", "substrate-venture", "substrate-founder",
+                                       "substrate-wellbeing", "substrate-markets"]]}
 
 
 class InheritRequest(BaseModel):

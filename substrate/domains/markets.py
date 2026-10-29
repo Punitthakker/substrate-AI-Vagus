@@ -85,6 +85,28 @@ def parse_market(text: str) -> dict:
     return out
 
 
+_STAKE_CUE = re.compile(r"\b(on it|on this|on that|on the|on yes|on no|on a|bet|stake|wager|put|putting|risk|punt|"
+                       r"each|per bet|a pop)\b")
+_LOSS_CUE = re.compile(r"\b(down|lost|losing|loss|up|won|bankroll|have|got|borrowed)\b")
+
+
+def stake_amount(text: str) -> float | None:
+    """The amount being bet: prefer an amount next to a stake cue, skip amounts described as losses or balances."""
+    from ..analysis import _AMOUNT
+    best, best_score = None, -9
+    low = text.lower()
+    for m in _AMOUNT.finditer(text):
+        val = parse_amount(m.group(0))
+        if not val:
+            continue
+        before, after = low[max(0, m.start() - 18):m.start()], low[m.end():m.end() + 14]
+        score = (2 if _STAKE_CUE.search(after) or _STAKE_CUE.search(before) else 0) - \
+                (3 if _LOSS_CUE.search(before[-10:]) else 0)
+        if score >= best_score:
+            best, best_score = val, score
+    return best
+
+
 def kelly_binary(p: float, price: float) -> float:
     """Kelly fraction for a contract that costs `price` and pays 1."""
     if not 0 < price < 1:
@@ -130,7 +152,7 @@ class Markets(Tissue):
         fee = float(prof.get("fee", 0.02))
         f = Facts(domain=self.key)
         mk = parse_market(message) if re.search(r"\d", message) else parse_market(text)
-        f.amount = parse_amount(message) or parse_amount(thread_text)
+        f.amount = stake_amount(message) or stake_amount(thread_text)
         flags, sev, m = [], 0, f.metrics
 
         # ---- price, probability, edge
