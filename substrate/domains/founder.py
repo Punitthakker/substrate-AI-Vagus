@@ -15,6 +15,7 @@ from .base import Tissue, any_in, floor_from, prior_ignored
 VANITY = ["office", "rebrand", "sponsorship", "sponsor", "party", "offsite", "booth", "billboard", "launch event",
           "fancy", "headquarters", "hq", "swag", "yacht", "super bowl"]
 FOMO = ["competitor just raised", "everyone is hiring", "before it's too late", "land grab", "blitzscale", "hypergrowth"]
+UNPRICED = ["hire", "hiring", "headcount", "recruit", "new hires", "engineers", "salespeople", "office", "lease", "sign the", "campaign", "expand", "open a", "launch in"]
 CUT = ["cut burn", "reduce burn", "cut costs", "extend runway", "lay off", "freeze hiring", "hiring freeze", "renegotiate"]
 MONTHLY = ["/month", "/mo", "per month", "a month", "monthly", "each month"]
 
@@ -99,6 +100,9 @@ class Founder(Tissue):
                 if pc:
                     cut_burn = burn * (1 - float(pc.group(1)) / 100)
                     f.metrics.update(new_burn=cut_burn, runway_after=round(cash / cut_burn, 1))
+        if burn > 0 and not add_m and not oneoff and not any_in(low, CUT) and any_in(low, UNPRICED):
+            flags.append("unpriced-spend"); sev = max(sev, 1)
+            f.metrics["unpriced"] = True
         if any_in(low, VANITY):
             flags.append("vanity-spend"); sev = max(sev, 1)
         f.fomo = bool(any_in(low, FOMO))
@@ -118,6 +122,10 @@ class Founder(Tissue):
                            f"Fundraises take six months on a good day.")
         if m.get("monthly_added"):
             reasons.append(f"That adds {fmt_money(m['monthly_added'], cur)} a month, taking burn to {fmt_money(m['new_burn'], cur)}.")
+        if "unpriced-spend" in f.flags:
+            reasons.append(f"You haven't priced it yet. Burn is {fmt_money(m.get('new_burn') or 0, cur)} a month with "
+                           f"{m.get('runway_before', 0):.1f} months of runway: every {fmt_money(10000, cur)} a month you add costs about "
+                           f"{(m.get('runway_before', 0) - (m.get('runway_before', 0) * (m.get('new_burn') or 1)) / ((m.get('new_burn') or 1) + 10000)):.1f} months. Put a number on it first.")
         if "vanity-spend" in f.flags:
             reasons.append("Offices, rebrands and sponsorships feel like progress. Customers don't see any of them.")
         if f.fomo:

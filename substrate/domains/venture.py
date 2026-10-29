@@ -100,6 +100,13 @@ class Venture(Tissue):
                 flags.append("valuation"); sev = max(sev, 2)
             elif mult >= policy.arr_multiple_caution:
                 flags.append("valuation"); sev = max(sev, 1)
+        elif (mx := re.search(r"(\d+(?:\.\d+)?)\s*(?:x|times)\s*(?:the\s+)?(?:arr|revenue|run[- ]?rate|sales)", low)):
+            mult = float(mx.group(1))
+            f.metrics["arr_multiple"] = round(mult, 1)
+            if mult >= policy.arr_multiple_stop:
+                flags.append("valuation"); sev = max(sev, 2)
+            elif mult >= policy.arr_multiple_caution:
+                flags.append("valuation"); sev = max(sev, 1)
         elif val and ("pre-revenue" in low or "no revenue" in low) and val >= 20e6:
             flags.append("valuation"); sev = max(sev, 1)
             f.metrics["arr_multiple"] = "pre-revenue"
