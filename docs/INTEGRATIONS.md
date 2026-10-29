@@ -65,6 +65,19 @@ const r = await s.advise("Polymarket YES at 62c, I think 80%. $5k on it.");   //
 const m = await s.betMath({ legs: [{ price: .7 }, { price: .7 }, { price: .7 }], stake: 100, bankroll: 5000 });
 ```
 
+## WhatsApp
+
+Set `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` (and optionally
+`WHATSAPP_TISSUE`, `WHATSAPP_GRAPH_VERSION`). Webhook: `https://YOUR-HOST/v1/channels/whatsapp/webhook`.
+Every delivery's `X-Hub-Signature-256` is verified. Without a token the channel runs dry; try it in the console
+(**WhatsApp** button) or `POST /v1/channels/whatsapp/simulate {"phone": "+9715...", "text": "tissue markets"}`.
+
+## Voice
+
+The console and the embed widget accept speech (browser speech recognition) and can read answers aloud.
+Substrate analyses the transcribed words only. It never analyses the sound of a voice: no pitch, tremor or
+other acoustic emotion inference.
+
 ## Legacy Vault
 
 ```bash

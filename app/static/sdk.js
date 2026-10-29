@@ -43,6 +43,7 @@
     position: attr("position", "right"),
     timeout: +attr("timeout", "4000"),
     title: attr("title", "Substrate"),
+    voice: attr("voice", "on"),             // mic in the widget; emotion is read from words only, never the voice
   };
   if (!cfg.user) {
     try { cfg.user = localStorage.getItem("substrate-anon") || ("anon-" + Math.random().toString(36).slice(2, 12)); localStorage.setItem("substrate-anon", cfg.user); }
@@ -209,9 +210,17 @@
     mount();
     var fab = document.createElement("button"); fab.className = "fab"; fab.setAttribute("aria-label", "Open " + cfg.title); fab.innerHTML = '<span class="beat">' + HEART.replace('width="20" height="20"', 'width="26" height="26"') + "</span>";
     var chat = document.createElement("div"); chat.className = "chat"; chat.setAttribute("role", "dialog");
-    chat.innerHTML = '<div class="top"><span class="brand">' + esc(cfg.title.toUpperCase()) + '</span><span class="pill proceed" style="margin-left:auto">HONEST</span></div><div class="log"></div><form><input placeholder="Ask something you want to hear yes to..." aria-label="Message"><button class="pri" type="submit">Ask</button></form>';
+    chat.innerHTML = '<div class="top"><span class="brand">' + esc(cfg.title.toUpperCase()) + '</span><span class="pill proceed" style="margin-left:auto">HONEST</span></div><div class="log"></div><form><input placeholder="Ask something you want to hear yes to..." aria-label="Message">' + ((cfg.voice !== "off" && (window.SpeechRecognition || window.webkitSpeechRecognition)) ? '<button type="button" class="mic" aria-label="Speak">\uD83C\uDF99</button>' : '') + '<button class="pri" type="submit">Ask</button></form>';
     wrap.appendChild(fab); wrap.appendChild(chat);
     var log = chat.querySelector(".log"), thread = [];
+    var micB = chat.querySelector(".mic");
+    if (micB) micB.onclick = function () {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = new SR(), inp = chat.querySelector("input");
+      rec.lang = /[\u0600-\u06FF]/.test(inp.value) || (navigator.language || "").indexOf("ar") === 0 ? "ar-AE" : "en-US";
+      rec.onresult = function (e) { inp.value = e.results[0][0].transcript; };
+      rec.onend = function () { micB.style.color = ""; if (inp.value.trim()) chat.querySelector("form").requestSubmit(); };
+      micB.style.color = cfg.accent; rec.start();
+    };
     fab.onclick = function () { chat.classList.toggle("on"); if (chat.classList.contains("on")) chat.querySelector("input").focus(); };
     chat.querySelector("form").onsubmit = function (e) {
       e.preventDefault(); var inp = chat.querySelector("input"), q = inp.value.trim(); if (!q) return; inp.value = "";

@@ -28,6 +28,9 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
  LEGACY VAULT     substrate/legacy.py        sealed letters across generations, opened by date, age or moment
  VOLATILITY       substrate/volatility.py    GARCH(1,1), EWMA, ranges, stop-out odds, event combinatorics (FX, gold)
  TRADER MIND      substrate/behavior.py      gambler's fallacy, anchoring, disposition, revenge, herding, crowd extremes
+ CHECK-INS        substrate/checkins.py      the morning after, what did you decide, you kept your word
+ ADVISOR DESK     substrate/desk.py          human-in-the-loop tickets on escalation, harm and safety
+ WHATSAPP         substrate/channels/        Meta Cloud API channel with signed webhooks and hashed numbers
  ANALYTICS        substrate/analytics.py     impact per platform: honest-choice rate, money protected, risky hours
  AUDIT            substrate/audit.py         printable regulator-ready record with live hash-chain verification
  ARABIC           substrate/i18n.py          Arabic understanding, Arabic verdicts, Arabic Safety Protocol

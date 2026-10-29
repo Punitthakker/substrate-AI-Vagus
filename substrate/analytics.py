@@ -56,6 +56,7 @@ def impact(store: Store, user_ids: list[str], utc_offset: float = 4, days: int =
 
     off = timedelta(hours=utc_offset)
     heat = [[0] * 24 for _ in range(7)]
+    pols, firm = Counter(), []
     flags, labels, by_t = Counter(), Counter(), defaultdict(lambda: {"advice": 0, "hard": 0, "followed": 0, "ignored": 0})
     daily = Counter()
     protected = cost = 0.0
@@ -69,6 +70,9 @@ def impact(store: Store, user_ids: list[str], utc_offset: float = 4, days: int =
             continue
         by_t[t]["advice"] += 1
         labels[p.get("label") or p.get("polarity")] += 1
+        pols[p.get("polarity") or "proceed"] += 1
+        if p.get("firmness"):
+            firm.append(p["firmness"])
         for f in p.get("flags") or []:
             if f not in NOISE:
                 flags[f] += 1
@@ -114,7 +118,8 @@ def impact(store: Store, user_ids: list[str], utc_offset: float = 4, days: int =
         "honest_rate": round(honest / decided, 2) if decided else None,
         "money_protected": round(protected, 2), "cost_of_ignoring": round(cost, 2),
         "net_value_of_honesty": round(protected + cost, 2),
-        "by_tissue": dict(by_t), "labels": dict(labels.most_common()),
+        "by_tissue": dict(by_t), "labels": dict(labels.most_common()), "by_polarity": dict(pols),
+        "avg_firmness": round(sum(firm) / len(firm), 2) if firm else None,
         "top_patterns": [{"pattern": k, "count": v} for k, v in flags.most_common(10)],
         "heatmap": {"weekday_hour": heat, "utc_offset": utc_offset,
                     "peak": {"weekday": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][peak[1]], "hour": peak[0],

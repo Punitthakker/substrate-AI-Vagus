@@ -22,6 +22,15 @@ Confidential. Patent pending. Do not distribute.
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
 
+## New in v1.0: the follow-up, the human, the channel, the body
+
+- **Check-ins**: the morning after a heated hard stop, "what did you decide?" on open decisions, "you kept your word" when a pact ends; every answer closes the loop (`/v1/inbox`, console FOLLOW-UPS, `/v1/embed/inbox`)
+- **Advisor Desk**: tickets for the platform's human advisers on escalation, harm and (urgent) every Safety Protocol event; claim, note, resolve; never the crisis words (`/v1/desk`)
+- **WhatsApp** (Meta Cloud API): verified webhook, signed deliveries, hashed per-number genomes, pact buttons bound to the sender, Safety Protocol, and a dry-run simulator in the console
+- **Voice**: speak in English or Arabic and hear the answer read aloud, in the console and the embed widget. Emotion is read from the words only, never from the voice
+- **The Living Body**: analytics as anatomy; the heart beats at the vagal tone, the vagus nerve fires on each verdict, red neurons are caught patterns, every decision flows as a cell (red stop, amber caution, green proceed), white cells patrol for attacks; organs heal as people choose honestly
+- Tests 60, evals 126/126
+
 ## New in v0.9: proof and compliance
 
 - **Impact analytics** (`/v1/analytics`, console "Impact dashboard"): honest-choice rate, money protected vs cost of ignoring, top patterns, risky-hours heatmap, pacts, safety, override attempts, honest rate by tissue, 30-day trend

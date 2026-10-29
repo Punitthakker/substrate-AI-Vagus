@@ -3,7 +3,7 @@
  "info": {
   "title": "Substrate AI - Vagus Engine",
   "description": "The emotional chromosome of AI. Vagal tone changes how truth is delivered. Never whether.",
-  "version": "0.9.0"
+  "version": "1.0.0"
  },
  "paths": {
   "/v1/health": {
@@ -2077,6 +2077,419 @@
     }
    }
   },
+  "/v1/inbox/{user_id}": {
+   "get": {
+    "tags": [
+     "follow-up"
+    ],
+    "summary": "Inbox",
+    "description": "Follow-ups Substrate owes this person: the morning after, what did you decide, you kept your word.",
+    "operationId": "inbox_v1_inbox__user_id__get",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/inbox/{user_id}/{checkin_id}": {
+   "post": {
+    "tags": [
+     "follow-up"
+    ],
+    "summary": "Answer Checkin",
+    "operationId": "answer_checkin_v1_inbox__user_id___checkin_id__post",
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "checkin_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Checkin Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CheckinAnswer"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/desk": {
+   "get": {
+    "tags": [
+     "enterprise"
+    ],
+    "summary": "Desk List",
+    "description": "The Advisor Desk: people who need a human, most urgent first. Crisis words are never included.",
+    "operationId": "desk_list_v1_desk_get",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/desk/{ticket_id}": {
+   "post": {
+    "tags": [
+     "enterprise"
+    ],
+    "summary": "Desk Update",
+    "operationId": "desk_update_v1_desk__ticket_id__post",
+    "parameters": [
+     {
+      "name": "ticket_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Ticket Id"
+      }
+     },
+     {
+      "name": "x-substrate-key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DeskUpdate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/embed/inbox": {
+   "get": {
+    "tags": [
+     "embed"
+    ],
+    "summary": "Embed Inbox",
+    "operationId": "embed_inbox_v1_embed_inbox_get",
+    "parameters": [
+     {
+      "name": "user",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "User"
+      }
+     },
+     {
+      "name": "tissue",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tissue"
+      }
+     },
+     {
+      "name": "x-substrate-pk",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Substrate-Pk"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/channels/whatsapp/webhook": {
+   "get": {
+    "tags": [
+     "channels"
+    ],
+    "summary": "Wa Verify",
+    "operationId": "wa_verify_v1_channels_whatsapp_webhook_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "text/plain": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "channels"
+    ],
+    "summary": "Wa Inbound",
+    "description": "Meta delivers messages here. Signature-verified; each sender gets a private hashed genome.",
+    "operationId": "wa_inbound_v1_channels_whatsapp_webhook_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/channels/whatsapp/simulate": {
+   "post": {
+    "tags": [
+     "channels"
+    ],
+    "summary": "Wa Simulate",
+    "description": "Dry-run the WhatsApp channel without Meta: returns exactly what would be sent.",
+    "operationId": "wa_simulate_v1_channels_whatsapp_simulate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WaSim"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/v1/admin/tenants": {
    "post": {
     "summary": "Create Tenant",
@@ -2917,6 +3330,25 @@
     ],
     "title": "Bias"
    },
+   "CheckinAnswer": {
+    "properties": {
+     "answer": {
+      "type": "string",
+      "enum": [
+       "followed",
+       "ignored",
+       "later",
+       "ack"
+      ],
+      "title": "Answer"
+     }
+    },
+    "type": "object",
+    "required": [
+     "answer"
+    ],
+    "title": "CheckinAnswer"
+   },
    "Consent": {
     "properties": {
      "candor_level": {
@@ -2939,6 +3371,36 @@
     },
     "type": "object",
     "title": "Consent"
+   },
+   "DeskUpdate": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "open",
+       "claimed",
+       "resolved"
+      ],
+      "title": "Status"
+     },
+     "advisor": {
+      "type": "string",
+      "maxLength": 80,
+      "title": "Advisor",
+      "default": ""
+     },
+     "note": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Note",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "status"
+    ],
+    "title": "DeskUpdate"
    },
    "EmbedAdvise": {
     "properties": {
@@ -4017,6 +4479,42 @@
     },
     "type": "object",
     "title": "VolRequest"
+   },
+   "WaSim": {
+    "properties": {
+     "phone": {
+      "type": "string",
+      "maxLength": 20,
+      "title": "Phone",
+      "default": "+971500000001"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "button_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Button Id"
+     }
+    },
+    "type": "object",
+    "title": "WaSim"
    },
    "WebhookRequest": {
     "properties": {
