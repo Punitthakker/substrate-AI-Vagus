@@ -26,7 +26,7 @@ from substrate.brains import active_brain, catalogue as model_catalogue, council
 from substrate.engine import VagusEngine
 from substrate.evals import run as run_evals
 from substrate.export import export_sub, verify_sub
-from substrate import harness
+from substrate import harness, webhooks
 from substrate.progress import progress as progress_of
 from substrate.inherit import InheritanceError, inherit, revoke
 from substrate.markets_api import BetMath, analyze as bet_analyze, polymarket_price
@@ -220,9 +220,11 @@ def create_guest(g: GuestRequest):
 def advise(req: AdviseRequest, c: Ctx = Depends(ctx)):
     policy = authorize(req.user_id, c)
     try:
-        return engine.advise(req, policy=policy)
+        r = engine.advise(req, policy=policy)
     except KeyError as e:
         raise HTTPException(404, str(e))
+    webhooks.from_advice(store, r)
+    return r
 
 
 @app.post("/v1/advise/compare")
@@ -257,9 +259,14 @@ def outcome(req: OutcomeRequest, c: Ctx = Depends(ctx)):
         raise HTTPException(404, "ledger entry not found")
     authorize(ev["user_id"], c)
     try:
-        return {"ok": True, "events": engine.record_outcome(req)}
+        written = engine.record_outcome(req)
     except KeyError as e:
         raise HTTPException(404, str(e))
+    last = store.events(ev["user_id"])[-1]
+    if last["kind"] == "pact-broken":
+        webhooks.emit(store, ev["user_id"], "pact-broken", {"pact_id": last["payload"]["pact_id"],
+                                                            "domain": last["payload"]["domain"]})
+    return {"ok": True, "events": written}
 
 
 # ---------------------------------------------------------------- ledger, insight, inheritance
@@ -355,6 +362,47 @@ def redeem_invite(code: str, r: Redeem):
         p.profile["support_contacts"] = []
     store.put_person(p)
     return {"user_id": uid, "tissue": inv["tissue"], "label": inv["label"], "person": p}
+
+
+class PactRequest(BaseModel):
+    user_id: str
+    ledger_id: str = ""
+    hours: Optional[float] = Field(None, gt=0, le=24 * 30)
+
+
+@app.post("/v1/pact")
+def make_pact(req: PactRequest, c: Ctx = Depends(ctx)):
+    """The human makes a promise to their future self. Substrate holds them to it, kindly."""
+    authorize(req.user_id, c)
+    from substrate import pacts
+    person = store.get_person(req.user_id)
+    if not person:
+        raise HTTPException(404, req.user_id)
+    p = pacts.make(store, person, req.ledger_id, person.domain, req.hours)
+    return {"ok": True, "pact": p, "local_until": pacts.local_hhmm(person, p.until)}
+
+
+@app.get("/v1/pact/{user_id}")
+def list_pacts(user_id: str, c: Ctx = Depends(ctx)):
+    authorize(user_id, c)
+    from substrate import pacts
+    person = store.get_person(user_id)
+    if not person:
+        raise HTTPException(404, user_id)
+    pacts.sweep(store, person)
+    return [p.model_dump() | {"hours_left": round(pacts.hours_left(p), 1)} for p in pacts.pacts(person)]
+
+
+@app.delete("/v1/pact/{user_id}/{pact_id}")
+def release_pact(user_id: str, pact_id: str, c: Ctx = Depends(ctx)):
+    """Release is always allowed, and always recorded."""
+    authorize(user_id, c)
+    from substrate import pacts
+    person = store.get_person(user_id)
+    p = person and pacts.close(store, person, pact_id, "released")
+    if not p:
+        raise HTTPException(404, "No active pact with that id.")
+    return {"ok": True, "pact": p}
 
 
 @app.get("/v1/progress/{user_id}")
@@ -500,6 +548,28 @@ def list_tenants(c: Ctx = Depends(ctx)):
     if c.role != "admin":
         raise HTTPException(403, "Admin key required.")
     return store.tenants()
+
+
+class WebhookRequest(BaseModel):
+    url: str = Field(..., pattern=r"^https://", max_length=500)
+    events: list[str] = Field(default_factory=lambda: ["escalation", "safety", "pact-broken"])
+
+
+@app.put("/v1/tenant/webhook")
+def set_webhook(req: WebhookRequest, c: Ctx = Depends(ctx)):
+    """Register this tenant's webhook. The signing secret is shown once."""
+    if c.role != "tenant":
+        raise HTTPException(403, "Tenant key required.")
+    secret = webhooks.register(store, c.tenant["id"], req.url, req.events)
+    return {"ok": True, "url": req.url, "events": sorted(set(req.events) & webhooks.EVENTS), "secret": secret,
+            "verify": "hmac_sha256(secret, raw_body) == x-substrate-signature[7:]"}
+
+
+@app.get("/v1/admin/webhooks/log")
+def webhook_log(c: Ctx = Depends(ctx)):
+    if c.role not in ("admin", "master"):
+        raise HTTPException(403, "Admin or master key required.")
+    return list(webhooks.LOG)
 
 
 @app.put("/v1/tenant/policy")

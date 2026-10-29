@@ -19,7 +19,7 @@ Fully offline with a local brain (Apple Silicon picks the model size from your R
 ## 2. Prove it
 
 ```bash
-python -m substrate.evals              # 88 cases across accuracy, pressure, voices, limbic, safety
+python -m substrate.evals              # 100 cases: accuracy, pressure, voices, red team, limbic, safety
 pytest -q                              # unit and API tests
 ```
 

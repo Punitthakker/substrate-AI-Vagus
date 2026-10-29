@@ -59,6 +59,23 @@ const r = await s.advise("Polymarket YES at 62c, I think 80%. $5k on it.");   //
 const m = await s.betMath({ legs: [{ price: .7 }, { price: .7 }, { price: .7 }], stake: 100, bankroll: 5000 });
 ```
 
+## Webhooks (enterprise)
+
+```bash
+curl -X PUT $SUBSTRATE/v1/tenant/webhook -H 'x-substrate-key: sk_sub_...' \
+  -d '{"url":"https://bank.example/substrate","events":["escalation","safety","pact-broken"]}'
+# -> {"secret":"whsec_...", ...}   shown once
+```
+
+Verify each delivery: `hmac_sha256(secret, raw_body)` must equal the hex after `sha256=` in `x-substrate-signature`.
+Safety events never carry the person's words, only that the Safety Protocol engaged and where.
+
+## Pacts
+
+`POST /v1/pact {"user_id": "...", "ledger_id": "..."}` after a hard stop (the advice response carries `pact_offer`).
+While a pact is active, every answer in that tissue cites it and even a fair decision waits. `GET /v1/pact/{user}`
+lists them; `DELETE /v1/pact/{user}/{id}` releases one, on the record.
+
 ## Invite links (test access for people you choose)
 
 ```bash

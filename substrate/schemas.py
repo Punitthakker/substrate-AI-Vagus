@@ -100,6 +100,8 @@ class Person(BaseModel):
     lessons: list[str] = Field(default_factory=list)
     # inherited: genomes passed down, revocable by the elder
     ancestry: list[Ancestor] = Field(default_factory=list)
+    # voluntary precommitments ("no bets until 9am"), see substrate/pacts.py
+    pacts: list[dict[str, Any]] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------- engine wire types
@@ -189,6 +191,8 @@ class AdviseResponse(BaseModel):
     prediction: Optional[Prediction] = None
     limbic: Optional[Limbic] = None
     ancestry: Optional[str] = None     # the elder's lesson cited, if the heir is repeating their pattern
+    pact_offer: Optional[dict] = None  # "hold me to it until 9am", offered on a hard stop
+    pact_active: Optional[dict] = None # the human's own promise, in force right now
     message: str
     hash: str
     prev_hash: str

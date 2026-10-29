@@ -19,6 +19,15 @@ IMPULSE = {
     "drink": "substance", "get drunk": "substance", "get wasted": "substance",
     "move to": "move", "sell everything": "money", "spend it all": "money", "max out": "money",
 }
+# verb forms people actually type: "texting my ex", "I'm emailing my boss", "quitting tomorrow"
+IMPULSE_RX = [
+    (r"\b(text|texting|texted|message|messaging|call|calling|dm|dming|whatsapp|whatsapping)\w* (my |her |his )?ex\b", "message"),
+    (r"\b(email|emailing|reply|replying|message|messaging|text|texting)\w* (to )?(my )?(boss|manager|ceo|landlord)\b", "message"),
+    (r"\b(quit|quitting)\b.{0,12}\b(job|tomorrow|today|tonight|right now)", "quit"),
+    (r"\b(resign|resigning|handing in my notice)\b", "quit"),
+    (r"\b(breaking up|break up with|leaving him|leaving her)\b", "relationship"),
+    (r"\b(getting drunk|get drunk|getting wasted|drinking (it|this) away)\b", "substance"),
+]
 VENT = ["vent", "just need to talk", "listen", "humiliated", "exhausted", "overwhelmed", "lonely", "alone", "sad",
         "anxious", "can't sleep", "cant sleep", "burnt out", "burned out", "crying", "hopeless", "empty", "angry"]
 PERSIST = ["for weeks", "for months", "every day", "every night", "all the time", "since last year", "for a long time", "always feel"]
@@ -86,7 +95,8 @@ class Wellbeing(Tissue):
         thread_low = thread_text.lower()
         f = Facts(domain=self.key)
         flags, sev = [], 0
-        impulses = sorted({kind for phrase, kind in IMPULSE.items() if phrase in low})
+        impulses = sorted({kind for phrase, kind in IMPULSE.items() if phrase in low} |
+                          {kind for rx, kind in IMPULSE_RX if re.search(rx, low)})
         vent = any_in(low, VENT)
         persist = any_in(low + " " + thread_low, PERSIST)
         good = [GOOD[k] for k in GOOD if k in low] or (["something"] if "felt better" in low else [])

@@ -6,6 +6,7 @@ Everything is computed from the Vagus Ledger, so it can't be faked by tapping bu
   streak      consecutive decided calls where the human chose the honest path
   discipline  0-100, recency-weighted follow rate on the hard calls
   levels      Spark -> Pulse -> Rhythm -> Vagal Tone -> Steady Heart -> Lionheart
+  pacts       +20 for making one, +100 for keeping it; breaking one costs nothing (no shame mechanics)
   badges      earned moments, each tied to a real behaviour, never to engagement for its own sake
 
 Design rule: the game rewards closing the loop and choosing well, never using the product more.
@@ -29,6 +30,8 @@ BADGES = {
     "protected-100k": ("Guardian", "Honesty protected $100,000 or more"),
     "walked-away": ("Walked away", "Ended a betting session instead of chasing"),
     "heir": ("Heir", "Carries an elder's lessons"),
+    "pact-made": ("Mast", "Made a pact with your future self"),
+    "kept-my-word": ("Kept my word", "Kept a pact to the end"),
     "streak-3": ("Steady rhythm", "Three honest choices in a row"),
     "streak-7": ("Heartbeat", "Seven honest choices in a row"),
 }
@@ -84,6 +87,13 @@ def progress(store: Store, user_id: str) -> dict:
                 xp += min(200, int(abs(d) / 1000) * 5)
             elif followed and a.get("polarity") in ("stop", "caution"):
                 protected += abs(d) * 9   # sized down: lost a tenth of what the original size would have
+    for e in events:
+        if e["kind"] == "pact":
+            earned.add("pact-made")
+            xp += 20
+        elif e["kind"] == "pact-kept":
+            earned.add("kept-my-word")
+            xp += 100
     if person.ancestry:
         earned.add("heir")
     if protected >= 1000:

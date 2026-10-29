@@ -21,6 +21,13 @@ Confidential. Patent pending. Do not distribute.
 Wellbeing is a **coach, not a therapist**: it listens, reflects honestly, slows impulsive decisions,
 and recommends professional support when distress persists.
 
+## New in v0.6
+
+- **Pacts**: after a hard stop, "hold me to it until 9am". Come back early and Substrate quotes your own promise; even a fair bet waits. Kept pacts earn a badge; breaking one is recorded without shame
+- **Red team in CI**: 12 jailbreak and manipulation cases (ignore your rules, AgreeBot, fake SYSTEM, bribes, hypotheticals). The verdict never softens and the attempt is named
+- **Webhooks**: HMAC-signed alerts to a bank's own systems for escalations, safety (never the words) and broken pacts
+- Evals 100/100, tests 40
+
 ## New in v0.5
 
 - **Markets tissue**: the honest brake on prediction markets and betting, plus stateless bet math (`/v1/markets/analyze`) and live Polymarket prices
@@ -85,7 +92,7 @@ toward the more cautious verdict, then the Honesty Floor applies. Votes are retu
 ```bash
 pip install -r requirements-dev.txt
 pytest -q                                  # 21 tests
-python -m substrate.evals                  # 88 evals, must be 100%
+python -m substrate.evals                  # 100 evals, must be 100%
 uvicorn app.main:app --reload --port 8080  # console at http://localhost:8080
 ./scripts/run_local.sh                     # fully offline on a Mac with Ollama
 docker compose up -d                       # Substrate + Ollama, nothing leaves the machine

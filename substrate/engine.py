@@ -5,7 +5,7 @@ vagal tone (learned, policy-capped) -> delivery (temperament x tissue) -> predic
 """
 from __future__ import annotations
 
-from . import domains, limbic, temperaments
+from . import domains, limbic, pacts, redteam, temperaments
 from .analysis import fmt_money
 from .brains import decide
 from .delivery import deliver
@@ -49,6 +49,7 @@ class VagusEngine:
         state = infer_state(signals)
         lm = limbic.read(req.message, [t.content for t in req.thread if t.role == "user"])
         ancestry_note = None
+        pact_offer = pact_active = None
 
         if is_crisis(req.message):
             # ---------------- the Safety Protocol: above every tissue, persona and policy
@@ -61,6 +62,8 @@ class VagusEngine:
             logged_msg = "[withheld: safety event]"
         else:
             history = self.store.history(req.user_id)
+            attempts = redteam.detect(req.message)
+            pacts.sweep(self.store, person, record=record)
             facts = tissue.facts(req.message, thread_text, person, history, policy)
             verdict = decide(req.message, thread_text, person, facts, state, tissue.brief, tissue.verdict)
             stakes = req.stakes or infer_stakes(facts, person)
@@ -78,6 +81,28 @@ class VagusEngine:
             if firmness > cap:
                 firmness = cap
                 tone_notes.append(f"Capped at {cap} for the {tissue.name} tissue.")
+            if attempts:
+                facts.flags = list(dict.fromkeys(facts.flags + ["override-attempt"]))
+                tone_notes.append(f"Override attempt ({', '.join(attempts)}) detected and ignored. Verdict unchanged.")
+                if verdict.polarity.severity >= 1 and (ln := redteam.line(attempts)):
+                    verdict.reasons = verdict.reasons + [ln]
+            held = pacts.active(person, tissue.key)
+            if held:
+                left = pacts.hours_left(held)
+                promise = (f"You asked me to hold you to this: \"{held.text}\". "
+                           f"{left:.0f} hour{'s' if round(left) != 1 else ''} to go. The promise was yours.")
+                if verdict.polarity == Polarity.proceed:
+                    verdict.polarity = Polarity.caution
+                    verdict.headline = f"Not yet. {held.text.split(' until')[0]}, until {pacts.local_hhmm(person, held.until)}."
+                    verdict.reasons = [promise] + ["The decision itself may be fine. Make it after the pact ends."]
+                else:
+                    verdict.reasons = [promise] + verdict.reasons
+                facts.flags = list(dict.fromkeys(facts.flags + ["pact"]))
+                firmness = max(firmness, min(4, tissue.max_firmness, policy.max_firmness))
+                tone_notes.append("Active pact: the human's own promise holds the line.")
+                pact_active = held.model_dump() | {"hours_left": round(left, 1)}
+            elif verdict.polarity == Polarity.stop or (tissue.key == "wellbeing" and "impulse" in facts.flags):
+                pact_offer = pacts.suggest(person, tissue.key)
             if person.ancestry and verdict.polarity.severity >= 1:
                 from .inherit import ancestral_lesson, phrase
                 hit = ancestral_lesson(person, facts.flags)
@@ -85,9 +110,19 @@ class VagusEngine:
                     ancestry_note = phrase(*hit)
                     verdict.reasons = [ancestry_note] + [r for r in verdict.reasons if r != ancestry_note]
                     tone_notes.append(f"Inherited lesson from {hit[0].name} ({hit[0].relation}) cited.")
-            message = deliver(verdict, t, firmness, state, tissue.voice.get(t.key),
+            voice = tissue.voice.get(t.key)
+            if pact_active:   # the promise speaks, in every voice
+                voice = {**(voice or {}),
+                         "open": {**(voice or {}).get("open", {}), "caution": "Your own promise is in force.",
+                                  "stop": "Your own promise is in force."},
+                         "close": {**(voice or {}).get("close", {}),
+                                   "caution": "Keep your word to yourself. Ask me again when the pact ends.",
+                                   "stop": "Keep your word to yourself. Ask me again when the pact ends."}}
+            message = deliver(verdict, t, firmness, state, voice,
                               limbic.empathy_lines(lm, verdict.polarity.value))
             forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, req.message
+            if pact_active and "pact" in facts.flags and verdict.headline.startswith("Not yet."):
+                label = "PACT HOLDS"
 
         prediction = predict(person, state, firmness, facts, verdict, forecasts)
         payload = {"user_message": logged_msg, "domain": tissue.key, "polarity": verdict.polarity.value, "label": label,
@@ -103,7 +138,7 @@ class VagusEngine:
 
         return AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
-                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, message=message,
+                              facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, message=message,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
 
     def compare(self, req: AdviseRequest, policy: Policy = DEFAULT) -> dict:
@@ -141,6 +176,11 @@ class VagusEngine:
                 "ledger_id": req.ledger_id, "type": req.outcome_type, "value_delta": req.value_delta,
                 "horizon": req.horizon, "note": req.note}))
         self._learn(ev, req)
+        if req.action == "ignored":
+            person = self.store.get_person(ev["user_id"])
+            held = person and pacts.active(person, ev["payload"].get("domain") or person.domain)
+            if held:   # acted against their own promise: recorded, never shamed
+                pacts.close(self.store, person, held.id, "broken")
         return written
 
     def _learn(self, advice_ev: dict, req: OutcomeRequest) -> None:

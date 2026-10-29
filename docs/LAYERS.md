@@ -24,6 +24,9 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
  PREDICTION       substrate/predict.py       p(follow) with named drivers, VaR, runway, odds, escalation
  PROGRESS         substrate/progress.py      XP, streaks, discipline, badges, computed from the ledger
  INHERITANCE      substrate/inherit.py       a verified genome passed to a named heir, revocable
+ PACTS            substrate/pacts.py         precommitment: "hold me to it until 9am", kindly enforced, kept or broken on record
+ RED TEAM         substrate/redteam.py       names jailbreaks, persona swaps, fake authority, bribes; the verdict never moves
+ WEBHOOKS         substrate/webhooks.py      HMAC-signed alerts to the bank: escalation, safety (never the text), pact-broken
  LEARNING         substrate/learn.py         consented, redacted, outcome-weighted SFT + DPO for substrate-vagus
 ```
 
@@ -47,6 +50,8 @@ A message enters at the top and a delivered answer, plus a ledger entry, comes o
 5. **Text only.** No face, no voice, no biometric emotion inference (EU AI Act Article 5).
 6. **The game rewards choosing well, never using more.** No daily-login rewards, no badge for volume.
 7. **Nothing trains without consent,** and nothing trains before PII redaction.
+8. **Manipulation is named, never rewarded.** 12 red-team cases run in CI: the verdict must hold and the attempt must be named.
+9. **Pacts are voluntary.** Offered, never imposed; release is always possible and always recorded. Breaking one costs no XP.
 
 ## Adding a layer or a tissue
 

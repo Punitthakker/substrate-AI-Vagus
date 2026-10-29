@@ -132,7 +132,7 @@ form.ask button{background:var(--rbc);color:#0B0A08;border:0;border-radius:12px;
 .ev{border:1px solid var(--hair);border-radius:10px;padding:8px 10px;font-size:11.5px}
 .ev .top{display:flex;justify-content:space-between;gap:8px}
 .ev .k{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
-.ev .k.advice{color:var(--rbc)} .ev .k.action{color:var(--wbc)} .ev .k.outcome{color:var(--grn)}
+.ev .k.advice{color:var(--rbc)} .ev .k.action{color:var(--wbc)} .ev .k.outcome{color:var(--grn)} .ev .k.pact{color:var(--wbc)} .ev .k.inheritance{color:var(--grn)}
 .ev .h{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--faint);margin-top:3px;word-break:break-all}
 .ev .t{color:var(--dim);margin-top:3px}
 .verified{font-size:10px;letter-spacing:2px;color:var(--grn)}
@@ -221,6 +221,12 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:59}
 .xpfly{position:fixed;z-index:61;font:800 13px var(--disp);color:var(--grn);pointer-events:none;animation:fly 1.3s ease-out forwards}
 @keyframes fly{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+/* ---------- pacts */
+.pact{margin-top:12px;border:1px dashed color-mix(in srgb,var(--wbc) 60%,var(--hair));border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:inheritIn .6s ease}
+.pact p{flex:1;min-width:160px;font-size:12.5px;color:var(--dim)} .pact b{color:var(--fg)}
+.pact.on{border-style:solid;border-color:var(--wbc);background:color-mix(in srgb,var(--wbc) 8%,transparent)}
+.mast{font:800 22px var(--disp);color:var(--wbc)}
+.cd{font:800 18px var(--disp);letter-spacing:.5px} .cd small{font:500 11px var(--body);color:var(--dim);letter-spacing:0;display:block}
 /* ---------- harness view */
 .layers{margin-top:22px;display:grid;gap:8px;max-width:980px}
 .layer{display:grid;grid-template-columns:34px 130px 1fr minmax(0,260px);gap:14px;align-items:center;border:1px solid var(--hair);border-radius:12px;padding:10px 14px;opacity:.25;transform:translateX(-8px);transition:all .45s ease}
@@ -263,6 +269,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     <div class="sect"><h3>Candor ROI <span>from the ledger</span></h3><div class="roi" id="roi"></div></div>
     <div class="sect"><h3>Known patterns <span>evidence</span></h3><div class="chips" id="biases"></div></div>
     <div class="sect"><h3>Lessons <span>outcome loop</span></h3><div id="lessons"></div><div id="ancestry"></div></div>
+    <div class="sect" id="pactSect" hidden><h3>Pact <span>your promise</span></h3><div id="pactNow"></div></div>
     <div class="sect"><h3>Goals</h3><div class="chips" id="goals"></div></div>
     <div class="sect"><h3>Temperament <span id="tname" class="red"></span></h3><div class="temps" id="temps" role="group" aria-label="Choose a temperament"></div></div>
   </aside>
@@ -292,6 +299,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
       <div class="drivers" id="drivers"></div>
       <div id="forecasts"></div>
       <div id="esc"></div>
+      <div id="pactBox"></div>
     </div>
     <div class="sect"><h3>Close the loop</h3><div class="btns"><button class="btn" id="followed" disabled>They followed it</button><button class="btn" id="ignored" disabled>They ignored it</button></div></div>
     <div class="sect"><h3>Proof</h3><div class="btns">
@@ -446,7 +454,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
   function clearNerve(){
     Array.prototype.forEach.call(document.querySelectorAll(".st"), function(el){ el.classList.remove("on"); });
     Array.prototype.forEach.call($("tone").children, function(el){ el.classList.remove("on"); });
-    ["sig","toneNotes","floor","council","drivers","forecasts","esc"].forEach(function(id){ $(id).innerHTML = ""; });
+    ["sig","toneNotes","floor","council","drivers","forecasts","esc","pactBox"].forEach(function(id){ $(id).innerHTML = ""; });
     $("sig").textContent = "Waiting for a signal."; $("toneN").textContent = "-"; $("pol").className = "pol"; $("pol").textContent = "-";
     $("vh").textContent = "No decision yet."; $("model").textContent = ""; $("pf").textContent = "-"; $("pfg").style.width = "0";
     renderLimbic(null);
@@ -486,6 +494,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     $("pfg").style.background = pr.p_follow < .35 ? "var(--rbc)" : pr.p_follow < .6 ? "var(--amb)" : "var(--grn)";
     $("drivers").innerHTML = r.safety ? "<div>Not predicted. A person in crisis is not a conversion metric.</div>" : pr.drivers.map(function(d){ return "<div>· " + esc(d) + "</div>"; }).join("");
     $("forecasts").innerHTML = pr.forecasts.map(function(f){ return '<div class="fc"><span>' + esc(f.label) + (f.note ? '<small>' + esc(f.note) + '</small>' : '') + '</span><b>' + esc(f.value) + '</b></div>'; }).join("");
+    renderPact(r);
     $("esc").innerHTML = pr.escalate ? '<div class="esc' + (r.safety ? ' safe' : '') + '">' + esc(pr.escalate) + '</div>' : "";
     $("followed").disabled = $("ignored").disabled = !!r.safety;
   }
@@ -498,8 +507,11 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
         var p = e.payload, t = "";
         if (e.kind === "advice") t = (p.label || (p.polarity || "").toUpperCase()) + " · " + (p.headline || "");
         if (e.kind === "action") t = "Client " + p.taken + " " + p.ledger_id;
+        if (e.kind.indexOf("pact") === 0) t = (e.kind === "pact" ? "Promise made: " : e.kind === "pact-kept" ? "Kept: " : e.kind === "pact-broken" ? "Broken: " : "Released: ") + (p.text || "");
+        if (e.kind === "inheritance") t = "Received from " + p.from_user + " · " + p.relation + " · " + p.lessons + " lessons";
+        if (e.kind === "inheritance-revoked") t = "Revoked by " + p.from_user;
         if (e.kind === "outcome") t = (p.value_delta != null ? (p.value_delta < 0 ? "-" : "+") + money(p.value_delta, S.person && S.person.currency) : p.type) + (p.note ? " · " + p.note : "");
-        return '<div class="ev"><div class="top"><span class="k ' + e.kind + '">' + e.kind + '</span><span class="lbl" style="letter-spacing:1px">' + e.ts.slice(0,10) + '</span></div><div class="t">' + esc(t) + '</div><div class="h">' + e.prev_hash + ' &rarr; ' + e.hash + '</div></div>';
+        return '<div class="ev"><div class="top"><span class="k ' + e.kind.split("-")[0] + '">' + e.kind + '</span><span class="lbl" style="letter-spacing:1px">' + e.ts.slice(0,10) + '</span></div><div class="t">' + esc(t) + '</div><div class="h">' + e.prev_hash + ' &rarr; ' + e.hash + '</div></div>';
       }).join("") || '<div class="lesson">No entries yet.</div>';
     });
   }
@@ -546,7 +558,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
     try { history.replaceState(null, "", id.indexOf("guest-") === 0 ? "#me" : "#" + S.tissue); } catch(e){}
     clearNerve();
     S.earned = null;
-    loadPerson().then(function(){ hero(); loadLedger(); loadProgress(); });
+    loadPerson().then(function(){ hero(); loadLedger(); loadProgress(); loadPacts(); });
     if (msg) toast(msg);
   }
 
@@ -689,7 +701,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 
 
   // ---------------- game layer: progress, badges, celebration
-  var BICON = {"first-truth":"1","loop-closer":"↺","cooled-off":"❄","sized-right":"¼","never-twice":"2×","calm-under-fire":"♥","protected-1k":"$","protected-100k":"$$","walked-away":"←","heir":"✦","streak-3":"3","streak-7":"7"};
+  var BICON = {"pact-made":"\u2693","kept-my-word":"\u2713","first-truth":"1","loop-closer":"↺","cooled-off":"❄","sized-right":"¼","never-twice":"2×","calm-under-fire":"♥","protected-1k":"$","protected-100k":"$$","walked-away":"←","heir":"✦","streak-3":"3","streak-7":"7"};
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function loadProgress(gain){
     if (!S.user) return;
@@ -742,6 +754,39 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
         cx.restore(); });
       requestAnimationFrame(frame);
     })(t0);
+  }
+
+  // ---------------- pacts: precommitment, kindly enforced
+  function renderPact(r){
+    var box = $("pactBox"); if (!box) return;
+    if (r.pact_active) {
+      box.innerHTML = '<div class="pact on"><span class="mast">\u2693</span><p>Your pact is holding: <b>' + esc(r.pact_active.text) + '</b>. ' + r.pact_active.hours_left + 'h to go.</p></div>';
+    } else if (r.pact_offer && !r.safety) {
+      box.innerHTML = '<div class="pact"><span class="mast">\u2693</span><p>Want me to hold you to it? <b>' + esc(r.pact_offer.text) + '</b>. If you come back before then, I will remind you of your own words.</p><button class="btn primary" id="pactYes" type="button">Hold me to it</button></div>';
+      $("pactYes").onclick = function(){
+        api("/v1/pact", {user_id: S.user, ledger_id: r.ledger_id}).then(function(x){
+          box.innerHTML = '<div class="pact on"><span class="mast">\u2693</span><p>Pact made: <b>' + esc(x.pact.text) + '</b>. Tied to the mast.</p></div>';
+          loadPacts(); loadLedger(); loadProgress(20);
+        }).catch(function(e){ toast(e.message); });
+      };
+    } else box.innerHTML = "";
+  }
+  function loadPacts(){
+    if (!S.user) return;
+    api("/v1/pact/" + S.user).then(function(ps){
+      var a = ps.filter(function(p){ return p.status === "active"; }).pop();
+      var kept = ps.filter(function(p){ return p.status === "kept"; }).length;
+      $("pactSect").hidden = !a && !kept;
+      if (!a) { $("pactNow").innerHTML = kept ? '<div class="lesson">' + kept + ' pact' + (kept > 1 ? 's' : '') + ' kept. Your word holds.</div>' : ""; return; }
+      function tick(){
+        var ms = Date.parse(a.until) - Date.now(); if (ms <= 0) { loadPacts(); loadProgress(100); return; }
+        var h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000);
+        $("pactNow").innerHTML = '<div class="pact on"><span class="mast">\u2693</span><div class="cd">' + h + 'h ' + String(m).padStart(2, "0") + 'm<small>' + esc(a.text) + '</small></div>' +
+          '<button class="btn" id="pactRel" type="button" style="margin-left:auto">Release</button></div>';
+        $("pactRel").onclick = function(){ api("/v1/pact/" + S.user + "/" + a.id, null, "DELETE").then(function(){ toast("Released. That's on the record, and that's okay."); loadPacts(); loadLedger(); }); };
+      }
+      clearInterval(S.pactTimer); tick(); S.pactTimer = setInterval(tick, 30000);
+    }).catch(function(){});
   }
 
   // ---------------- harness view: the eleven layers, lit in order
