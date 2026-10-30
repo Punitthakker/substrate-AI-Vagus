@@ -16,9 +16,7 @@
   --disp:'Big Shoulders Display',sans-serif; --body:'Archivo',ui-sans-serif,system-ui,sans-serif; --serif:'Caveat',cursive; --mono:'Share Tech Mono',monospace;
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
-  --bg:#F6F1E4; --panel:#FBF8F0; --fg:#1F2A26; --dim:rgba(31,42,38,.72); --faint:rgba(31,42,38,.45);
-  --hair:rgba(29,74,56,.22); --soft:rgba(29,74,56,.05); --rbc:#A8271C; --wbc:#2B3F8C; --grn:#1D4A38; --amb:#B07818; --safe:#2B3F8C; color-scheme:light; } }
+/* dark Lightbox is the default everywhere; THEME switches to the Bearer paper deliberately */
 :root[data-theme="light"]{
   --bg:#F6F1E4; --panel:#FBF8F0; --fg:#1F2A26; --dim:rgba(31,42,38,.72); --faint:rgba(31,42,38,.45);
   --hair:rgba(29,74,56,.22); --soft:rgba(29,74,56,.05); --rbc:#A8271C; --wbc:#2B3F8C; --grn:#1D4A38; --amb:#B07818; --safe:#2B3F8C; color-scheme:light; }
@@ -192,7 +190,7 @@ canvas.graph{width:100%;max-width:1100px;height:min(68vh,640px);display:block;ma
 @media (max-width:1150px){ .grid{grid-template-columns:260px minmax(0,1fr)} .right{grid-column:1/-1;border-left:0;border-top:1px solid var(--hair)} .grid{height:auto} .center{min-height:72vh} }
 @media (max-width:1560px){ .badge{display:none} .tab{padding-left:11px;padding-right:11px;letter-spacing:1.5px} header{gap:10px} .iconbtn{padding:6px 10px;letter-spacing:1.5px} }
 @media (max-width:1240px){ .tabs{order:5;width:100%;justify-content:space-between;overflow-x:auto} }
-@media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:82vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
+@media (max-width:760px){ .grid{grid-template-columns:1fr} .left{border-right:0;border-bottom:1px solid var(--hair)} .badge{display:none} .center{order:-1;min-height:58vh} .tabs{order:5;width:100%;justify-content:space-between} .tab{padding:6px 8px;letter-spacing:1px} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .lesson.inherited{border-left:2px solid var(--grn);background:color-mix(in srgb, var(--grn) 7%, transparent);animation:inheritIn .9s ease}
 @keyframes inheritIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -428,7 +426,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 
   try { var th = localStorage.getItem("sub-theme"); if (th) document.documentElement.dataset.theme = th; } catch(e){}
   $("themeBtn").onclick = function(){
-    var cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    var cur = document.documentElement.dataset.theme || "dark";
     var nx = cur === "light" ? "dark" : "light"; document.documentElement.dataset.theme = nx;
     try { localStorage.setItem("sub-theme", nx); } catch(e){}
   };
