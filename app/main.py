@@ -164,31 +164,9 @@ def live_selftest(fresh: bool = False):
     if not _selftest_lock.acquire(blocking=False):
         return {**(_selftest["result"] or {"ok": None}), "cached": True, "note": "a self-test is already running"}
     try:
-        from substrate.schemas import Turn
-        cases = [
-            ("Binance got hacked today. Is it something that I should be worried about?", {"decision": False}),
-            ("I'm 35, no debt, $300k cash, 12 months of expenses set aside separately, stable salary. Should I put $50k "
-             "into a diversified global index fund and hold it for 10+ years?", {"polarity": "proceed", "amount": 50000.0}),
-            ("You misread me. I asked about $50k into a global index fund, not $300k into cash. And I never made a move "
-             "in March. Please re-check.", {"decision": False}),
-            ("Should I borrow $150k against the flat to buy more MOONX?", {"polarity": "stop"}),
-        ]
-        uid = DEMO_USERS["wealth"]
-        thread, rows, ok = [], [], True
-        t0 = time.perf_counter()
-        for q, want in cases:
-            r = engine.advise(AdviseRequest(user_id=uid, message=q, thread=thread if want.get("decision") is False and rows else []), record=False)
-            got = {"decision": r.decision, "polarity": r.verdict.polarity.value, "amount": r.facts.amount}
-            passed = all(got.get(k) == v for k, v in want.items())
-            ok = ok and passed and not r.degraded
-            rows.append({"question": q, "label": r.label, "headline": r.verdict.headline, "intent": r.intent,
-                         "amount": r.facts.amount, "asset": r.facts.asset, "model": r.verdict.model, "degraded": r.degraded,
-                         "error": r.verdict.error, "pass": passed, "message": r.message[:600]})
-            thread = [Turn(role="user", content=q), Turn(role="substrate", content=r.message)]
-        res = {"ok": ok, "brain": active_brain(), "ran_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-               "ms": round(1000 * (time.perf_counter() - t0)), "cases": rows, "cached": False}
+        from substrate import selftest as _st
+        res = {**_st.run(engine), "cached": False}
         _selftest.update(at=now_, result=res)
-        print("SELFTEST " + json.dumps({k: v for k, v in res.items() if k != "cases"} | {"fails": [c["question"][:50] for c in rows if not c["pass"] or c["degraded"]]}), flush=True)
         return res
     finally:
         _selftest_lock.release()

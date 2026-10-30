@@ -91,6 +91,13 @@ def run(store) -> dict:
     if not res["checks"]["brain_roundtrip"]["ok"]:
         print("SELFCHECK WARNING: the brain round trip failed; verdicts are coming from the rule core only -> "
               + res["checks"]["brain_roundtrip"]["detail"], flush=True)
+    elif os.environ.get("SUBSTRATE_SELFTEST_ON_BOOT", "1") == "1":
+        try:   # the tester's questions through the live engine: the deployment proves itself in its own logs
+            from .engine import VagusEngine
+            from . import selftest
+            res["selftest"] = {k: v for k, v in selftest.run(VagusEngine(store)).items() if k != "cases"}
+        except Exception as e:  # report, never raise
+            print(f"SELFTEST FAILED TO RUN: {type(e).__name__}: {str(e)[:200]}", flush=True)
     LAST = res
     print("SELFCHECK " + json.dumps(res), flush=True)
     return res
