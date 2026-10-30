@@ -6,7 +6,7 @@ predicts whether you'll act on it, and records what happened.
 
 > Vagal tone changes how truth is delivered. Never whether.
 
-Confidential. Patent pending. Do not distribute.
+Proprietary. All rights reserved. Confidential: do not distribute.
 
 ## Tissues: one engine, six verticals
 
@@ -132,3 +132,16 @@ docker compose up -d                       # Substrate + Ollama, nothing leaves 
 ```
 
 Deploy: `railway.json` (Railway), `render.yaml` (Render), or the `Dockerfile` anywhere.
+
+## Operating it honestly
+
+- **The brain must be proven, not assumed.** On startup the self-check makes a real round trip to the configured model
+  (`SELFCHECK ... brain_roundtrip`). `GET /v1/health` reports it; `GET /v1/selftest` runs a real tester's four questions
+  through the live engine (cached 10 minutes) and reports pass/fail per case.
+- **Failure is loud.** If the model call fails, the verdict is marked `degraded`, the console shows an amber badge, the
+  message says so, and `substrate.brains` logs the reason and latency. The rule core still answers, but nobody is fooled.
+- **Questions are not decisions.** "Is this news something to worry about?" gets an answer (`label: ANSWER`,
+  `decision: false`), not a verdict. Objections ("you misread me") are re-read, not repeated.
+- **Guests are real people.** An invite creates a blank genome and asks for their numbers; it never clones a demo client's
+  portfolio, patterns or history onto them.
+- Substrate is decision-support software, not a licensed financial adviser.

@@ -119,9 +119,16 @@ class Facts(BaseModel):
     """Hard numbers computed before any model is consulted. The basis of the Honesty Floor."""
     domain: str = "wealth"
     amount: Optional[float] = None
+    candidates: list[float] = Field(default_factory=list, description="Every amount the message contains, in order")
     asset: Optional[str] = None
+    asset_kind: Optional[str] = None
+    source: Optional[str] = None
     existing_exposure: Optional[float] = None
     concentration_pct: Optional[float] = None
+    diversified: bool = False
+    intent: str = "decision"          # decision | question | objection | pressure | other
+    inherited: bool = False           # facts carried over from the thread (a follow-up inside a decision)
+    extraction: str = "rule"          # rule | brain
     leverage: bool = False
     loss_chasing: bool = False
     fomo: bool = False
@@ -147,6 +154,10 @@ class Verdict(BaseModel):
     model: str = "rule-core"
     floor_applied: bool = False
     council: list[CouncilVote] = Field(default_factory=list)
+    decision: bool = True              # False: the message was a question or an objection, not a move to judge
+    answer: Optional[str] = None       # the direct reply for a non-decision
+    degraded: bool = False             # True: the configured brain failed and the rule core answered instead
+    error: Optional[str] = None        # why the brain failed, for the logs and the console
 
 
 class Forecast(BaseModel):
@@ -195,6 +206,9 @@ class AdviseResponse(BaseModel):
     pact_active: Optional[dict] = None # the human's own promise, in force right now
     letter: Optional[dict] = None      # a Legacy Vault letter delivered at this moment
     language: str = "en"
+    decision: bool = True
+    degraded: bool = False
+    intent: str = "decision"
     message: str
     hash: str
     prev_hash: str

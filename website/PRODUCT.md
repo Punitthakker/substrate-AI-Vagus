@@ -35,7 +35,7 @@ Constraints: no fundraising terms, raise amount or investment ask on the site (r
 
 ## Brand Commitments
 
-Name: Substrate (Substrate AI). Engine: the Vagus Engine. Line: "Vagal tone changes how truth is delivered. Never whether." Colour meaning established in the deck: red is the heart (EQ), blue is the brain (IQ), green is life and outcome (red cells, white cells, growth). Body, nervous system, DNA and blood are the brand's governing metaphor (the user asked for brain-heart connection, X-ray views, blood flow, neurons, DNA). Founder: Punit Thakker, Dubai, punitthakker@gmail.com, punitthakker.com. The user requires the design not to look AI-made.
+Name: Substrate (Substrate AI). Engine: the Vagus Engine. Line: "Vagal tone changes how truth is delivered. Never whether." Colour meaning established in the deck: red is the heart (EQ), blue is the brain (IQ), green is life and outcome (red cells, white cells, growth). Body, nervous system, DNA and blood are the brand's governing metaphor (the user asked for brain-heart connection, X-ray views, blood flow, neurons, DNA). Founder: Punit Thakker, Dubai, punit@fracxn.com, punitthakker.com. The user requires the design not to look AI-made.
 
 ## Evidence on Hand
 

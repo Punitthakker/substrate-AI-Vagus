@@ -404,13 +404,20 @@ window.addEventListener('hashchange',function(){route(location.hash.replace('#',
 // ---------------- consult ----------------
 var POLC={stop:'var(--red)',caution:'var(--amber)',proceed:'var(--green)'};
 function vcard(r){
-  var pol=(r.verdict&&r.verdict.polarity)||'proceed', col=POLC[pol]||'var(--green)';
+  var answer=(r.decision===false), pol=(r.verdict&&r.verdict.polarity)||'proceed', col=answer?'var(--blue, #5aa9ff)':(POLC[pol]||'var(--green)');
   var h='<div class="vcard" style="--vc:'+col+'">';
   h+='<span class="stamp" style="color:'+col+'">'+esc(r.label||pol).toUpperCase()+(r.verdict&&r.verdict.floor_applied?' &middot; FLOOR':'')+'</span>';
   if(r.safety){ h+='<p class="headline">'+esc(r.verdict.headline)+'</p><p class="msg">'+esc(r.message)+'</p></div>'; return h; }
+  if(answer){
+    h+='<p class="msg">'+md(r.message)+'</p>';
+    h+='<div class="metarow meta"><span>NOT A DECISION: no verdict, nothing to follow or ignore</span><span>MODEL: '+esc(r.verdict.model)+'</span></div>';
+    if(r.degraded){ h+='<p class="meta" style="margin-top:10px;color:var(--amber)">REASONING ENGINE UNAVAILABLE &middot; RULE CORE ONLY</p>' }
+    h+='</div>'; return h;
+  }
   h+='<p class="headline">'+esc(r.verdict.headline)+'</p>';
   if(r.verdict.reasons&&r.verdict.reasons.length){ h+='<ul>'+r.verdict.reasons.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>' }
   h+='<p class="msg">'+md(r.message)+'</p>';
+  if(r.degraded){ h+='<p class="meta" style="margin-top:10px;color:var(--amber)">REASONING ENGINE UNAVAILABLE &middot; this verdict came from the rule core alone</p>' }
   if(r.ancestry){ h+='<p class="hand" style="font-size:21px;margin-top:12px">'+esc(r.ancestry)+'</p>' }
   if(r.letter){ h+='<div class="letter"><span class="meta">A SEALED LETTER OPENED &middot; '+esc(r.letter.from_name||'family')+'</span><p style="margin-top:8px;white-space:pre-wrap">'+esc(r.letter.body||r.letter.title||'')+'</p></div>' }
   h+='<div class="metarow meta"><span>VOICE: '+esc(r.temperament)+'</span><span>STATE: '+esc(r.state)+'</span><span>FIRMNESS: '+esc(r.firmness)+'/5</span><span>STAKES: '+esc(r.stakes)+'</span><span>MODEL: '+esc(r.verdict.model)+'</span></div>';
@@ -646,5 +653,6 @@ async function deleteAccount(){
   if(t){ S.token=t; S.uid=lsGet('sub_uid'); S.email=lsGet('sub_email')||''; enterShell(); }
 })();
 </script>
+<p class="meta" style="max-width:70ch;margin:18px auto 24px;padding:0 16px;text-align:center;opacity:.7;line-height:1.6">Substrate is decision-support software, not a licensed financial adviser. Nothing here is a personal recommendation to buy, sell or hold any investment.</p>
 </body>
 </html>

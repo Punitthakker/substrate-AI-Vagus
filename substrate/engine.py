@@ -68,7 +68,9 @@ class VagusEngine:
             attempts = redteam.detect(req.message)
             pacts.sweep(self.store, person, record=record)
             facts = tissue.facts(req.message, thread_text, person, history, policy)
-            verdict = decide(req.message, thread_text, person, facts, state, tissue.brief, tissue.verdict)
+            rec = (lambda f, ext: tissue.reconcile(f, ext, person, history, policy)) if hasattr(tissue, "reconcile") else None
+            verdict, facts = decide(req.message, thread_text, person, facts, state, tissue.brief, tissue.verdict,
+                                    history=history, reconcile=rec)
             stakes = req.stakes or infer_stakes(facts, person)
             t = self._temperament(req.temperament, person, tissue, policy)
             if facts.metrics.get("harm"):
@@ -94,7 +96,7 @@ class VagusEngine:
                 left = pacts.hours_left(held)
                 promise = (f"You asked me to hold you to this: \"{held.text}\". "
                            f"{left:.0f} hour{'s' if round(left) != 1 else ''} to go. The promise was yours.")
-                if verdict.polarity == Polarity.proceed:
+                if verdict.polarity == Polarity.proceed and verdict.decision:
                     verdict.polarity = Polarity.caution
                     verdict.headline = f"Not yet. {held.text.split(' until')[0]}, until {pacts.local_hhmm(person, held.until)}."
                     verdict.reasons = [promise] + ["The decision itself may be fine. Make it after the pact ends."]
@@ -104,7 +106,7 @@ class VagusEngine:
                 firmness = max(firmness, min(4, tissue.max_firmness, policy.max_firmness))
                 tone_notes.append("Active pact: the human's own promise holds the line.")
                 pact_active = held.model_dump() | {"hours_left": round(left, 1)}
-            elif verdict.polarity == Polarity.stop or (tissue.key == "wellbeing" and "impulse" in facts.flags):
+            elif verdict.decision and (verdict.polarity == Polarity.stop or (tissue.key == "wellbeing" and "impulse" in facts.flags)):
                 pact_offer = pacts.suggest(person, tissue.key)
             if person.ancestry and verdict.polarity.severity >= 1:
                 from .inherit import ancestral_lesson, phrase
@@ -131,8 +133,13 @@ class VagusEngine:
                 ack = [mirror] + [x for x in ack if x in limbic.NEED_LINE.values()]
                 if firmness <= 3 and (aff := reflect.affirmation(tissue.key, sev)):
                     ack.append(aff)
-            message = deliver(verdict, t, firmness, state, voice, ack)
-            question = None if pact_active else reflect.open_question(tissue.key, sev, firmness, t.key)
+            if verdict.decision:
+                message = deliver(verdict, t, firmness, state, voice, ack)
+            else:
+                message = verdict.answer or verdict.headline
+                if verdict.degraded:
+                    message += "\n\n_Reasoning engine unavailable right now, so this is the rule core speaking. It can read your record, not the news._"
+            question = None if (pact_active or not verdict.decision) else reflect.open_question(tissue.key, sev, firmness, t.key)
             if question:
                 note = "_This advice is recorded in your Vagus Ledger._"
                 message = message.replace(note, f"_{question}_\n\n{note}") if note in message else f"{message}\n\n_{question}_"
@@ -146,20 +153,26 @@ class VagusEngine:
                 message = message.replace(note, block + "\n\n" + note) if note in message else message + "\n\n" + block
                 tone_notes.append(f"Legacy Vault: a sealed letter from {lt.from_name} delivered for this moment.")
             forecasts, label, tkey, logged_msg = tissue.forecasts(facts, person), tissue.labels[verdict.polarity.value], t.key, original
+            if not verdict.decision:
+                forecasts, label = [], "ANSWER"
             if facts.metrics.get("label_override"):
                 label = facts.metrics["label_override"]
+            if verdict.degraded and verdict.decision:
+                message += "\n\n_Reasoning engine unavailable right now: this verdict came from the rule core alone._"
             if pact_active and "pact" in facts.flags and verdict.headline.startswith("Not yet."):
                 label = "PACT HOLDS"
 
-        if lang == "ar":
+        if lang == "ar" and (verdict.decision or verdict.degraded):
             message = i18n.deliver_ar(label, verdict.polarity.value, message, facts.safety, verdict.headline,
                                       verdict.reasons, legacy.render(legacy.Letter(**letter_out)) if letter_out else "")
-        prediction = predict(person, state, firmness, facts, verdict, forecasts)
+        prediction = predict(person, state, firmness, facts, verdict, forecasts) if (verdict.decision or facts.safety) else None
         payload = {"user_message": logged_msg, "domain": tissue.key, "polarity": verdict.polarity.value, "label": label,
                    "headline": verdict.headline, "reasons": [] if facts.safety else verdict.reasons,
                    "model": verdict.model, "floor_applied": verdict.floor_applied, "state": state.value,
                    "firmness": firmness, "temperament": tkey, "stakes": stakes, "flags": facts.flags,
-                   "p_follow": prediction.p_follow, "safety": facts.safety,
+                   "p_follow": prediction.p_follow if prediction else None, "safety": facts.safety,
+                   "intent": facts.intent, "decision": verdict.decision, "degraded": verdict.degraded,
+                   "brain_error": verdict.error, "extraction": facts.extraction,
                    "limbic": None if facts.safety else {"dominant": lm.dominant, "valence": lm.valence,
                                                         "arousal": lm.arousal, "needs": lm.needs},
                    "delivered": None if facts.safety else message, "ancestry": ancestry_note}
@@ -169,6 +182,7 @@ class VagusEngine:
         resp = AdviseResponse(ledger_id=ev["id"], domain=tissue.key, label=label, safety=facts.safety, state=state,
                               signals=signals, stakes=stakes, firmness=firmness, tone_notes=tone_notes, temperament=tkey,
                               facts=facts, verdict=verdict, prediction=prediction, limbic=lm, ancestry=ancestry_note, pact_offer=pact_offer, pact_active=pact_active, letter=letter_out, language=lang, message=message,
+                              decision=verdict.decision, degraded=verdict.degraded, intent=facts.intent,
                               hash=ev["hash"], prev_hash=ev["prev_hash"])
         if record:
             try:

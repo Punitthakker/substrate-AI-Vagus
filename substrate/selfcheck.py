@@ -61,6 +61,15 @@ def brains():
     return True, f"active {active_brain()}; configured: {', '.join(on) or 'none (rule-core)'}"
 
 
+def brain_roundtrip():
+    """A real call to the active brain with a canned decision. Configured is not the same as working."""
+    from .brains import active_brain, ping
+    if active_brain() == "rule-core":
+        return False, "no brain configured: every verdict will come from the rule core"
+    r = ping()
+    return r["ok"], r["detail"]
+
+
 def database(store):
     t0 = time.perf_counter()
     store.db.execute("select count(*) from persons").fetchone()
@@ -77,8 +86,11 @@ def run(store) -> dict:
     global LAST
     res = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "checks": {
         "database": _timed(lambda: database(store)), "polymarket": _timed(polymarket), "ecb_fx": _timed(ecb_fx),
-        "mem0": _timed(mem0), "brains": _timed(brains), "whatsapp": _timed(whatsapp)}}
-    res["ok"] = all(v["ok"] for k, v in res["checks"].items() if k in ("database", "polymarket", "ecb_fx"))
+        "mem0": _timed(mem0), "brains": _timed(brains), "brain_roundtrip": _timed(brain_roundtrip), "whatsapp": _timed(whatsapp)}}
+    res["ok"] = all(v["ok"] for k, v in res["checks"].items() if k in ("database", "polymarket", "ecb_fx", "brain_roundtrip"))
+    if not res["checks"]["brain_roundtrip"]["ok"]:
+        print("SELFCHECK WARNING: the brain round trip failed; verdicts are coming from the rule core only -> "
+              + res["checks"]["brain_roundtrip"]["detail"], flush=True)
     LAST = res
     print("SELFCHECK " + json.dumps(res), flush=True)
     return res

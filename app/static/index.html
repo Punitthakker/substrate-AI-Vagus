@@ -242,6 +242,15 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 .vbtn{background:none;border:1px solid var(--hair);color:var(--dim);border-radius:12px;width:44px;flex:none;display:grid;place-items:center;cursor:pointer}
 .vbtn.on,.vbtn[aria-pressed="true"]{color:var(--rbc);border-color:var(--rbc)}
 .vbtn.on{animation:listen 1.2s ease-in-out infinite}
+.who{margin:0 max(20px,4%);padding:10px 14px;border:1px solid var(--hair);border-radius:12px;font-size:12px;color:var(--dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--rbc) 4%,transparent)}
+.who b{color:var(--fg);font-weight:600} .who a{color:var(--rbc);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.who.me{background:color-mix(in srgb,var(--grn) 6%,transparent)}
+.degraded{margin-top:10px;padding:8px 10px;border:1px solid var(--amb);border-radius:8px;color:var(--amb);font-size:11px;letter-spacing:.5px}
+.b.answer{border-left-color:var(--wbc)} .b.answer .who-tag b{color:var(--wbc)}
+.micstat{margin:0 max(20px,4%);font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--rbc);text-transform:uppercase;min-height:14px;display:flex;gap:8px;align-items:center}
+.micstat:empty{display:none} .micstat i{width:7px;height:7px;border-radius:50%;background:var(--rbc);display:inline-block;animation:blink 1s infinite}
+.legal{margin:0 max(20px,4%) 10px;font-size:11px;color:var(--faint);line-height:1.5}
+.legal a{color:var(--dim)}
 @keyframes listen{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--rbc) 18%,transparent)}}
 #bellN{color:var(--rbc)}
 .fu{border:1px solid var(--hair);border-radius:14px;padding:14px;margin-top:12px;animation:inheritIn .5s ease both}
@@ -358,6 +367,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
   </aside>
 
   <main class="col center">
+    <div class="who" id="who" hidden></div>
     <div class="log" id="log" aria-live="polite"></div>
     <div class="scen" id="scen"></div>
     <form class="ask" id="ask">
@@ -367,6 +377,8 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
       <button type="button" class="vbtn" id="spkBtn" aria-pressed="false" aria-label="Read answers aloud" title="Read answers aloud" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></button>
       <button type="submit">ASK</button>
     </form>
+    <div class="micstat" id="micStat" aria-live="polite"></div>
+    <div class="legal">Substrate is decision-support software, not a licensed financial adviser. Nothing here is a personal recommendation to buy, sell or hold any investment. Demo genomes are fictional.</div>
   </main>
 
   <aside class="col right" aria-label="Nerve center">
@@ -535,7 +547,8 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
       var allowed = tissue().allowed_temperaments;
       if (!S.temperament || (allowed && allowed.indexOf(S.temperament) < 0)) S.temperament = (allowed && allowed.indexOf(p.temperament) < 0) ? tissue().default_temperament : p.temperament;
       renderTemps();
-      $("resetBtn").textContent = S.user.indexOf("guest-") === 0 ? "Back to demo" : "Reset demo";
+      $("resetBtn").textContent = S.user.indexOf("guest-") === 0 ? "Forget me" : "Reset demo";
+      renderWho(p);
       return api("/v1/insights/" + S.user);
     }).then(function(i){
       $("roi").innerHTML = '<div><small>Cost of ignoring</small><b class="red">' + (i.cost_of_ignoring ? "-" + money(i.cost_of_ignoring, S.person.currency) : "$0") + '</b></div>' +
@@ -605,7 +618,24 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
     $("forecasts").innerHTML = pr.forecasts.map(function(f){ return '<div class="fc"><span>' + esc(f.label) + (f.note ? '<small>' + esc(f.note) + '</small>' : '') + '</span><b>' + esc(f.value) + '</b></div>'; }).join("");
     renderPact(r);
     $("esc").innerHTML = pr.escalate ? '<div class="esc' + (r.safety ? ' safe' : '') + '">' + esc(pr.escalate) + '</div>' : "";
-    $("followed").disabled = $("ignored").disabled = !!r.safety;
+    $("followed").disabled = $("ignored").disabled = !!r.safety || r.decision === false;
+    if (r.decision === false) { $("pf").textContent = "n/a"; $("pfg").style.width = "0"; $("drivers").innerHTML = "<div>Not predicted: that was a question, not a decision.</div>"; }
+  }
+
+  function renderWho(p){
+    var w = $("who"), guest = S.user.indexOf("guest-") === 0, pending = guest && (!p.liquid_net_worth && !(p.positions || []).length);
+    w.hidden = false; w.className = "who" + (guest ? " me" : "");
+    if (!guest) {
+      var nw = p.domain === "wealth" && p.liquid_net_worth ? " · " + money(p.liquid_net_worth, p.currency) : "";
+      w.innerHTML = 'You are reading <b>' + esc(p.name) + '</b>, a <b>fictional demo client</b>' + nw + '. The portfolio, patterns and history on the left are theirs, not yours. <a id="whoMe">Try it on yourself</a>';
+      $("whoMe").onclick = function(){ $("userBtn").click(); };
+    } else if (pending) {
+      w.innerHTML = 'This is <b>your</b> private genome, ' + esc(p.name) + '. I have <b>no numbers for you yet</b>, so I can only answer in general terms. <a id="whoFill">Add your numbers</a> (30 seconds, sandboxed, deletable).';
+      $("whoFill").onclick = function(){ intakeOverlay({update: true, person: p}); };
+    } else {
+      w.innerHTML = 'Advising <b>you</b>, ' + esc(p.name) + ', on the numbers you entered' + (p.liquid_net_worth ? ' (' + money(p.liquid_net_worth, p.currency) + ' liquid)' : '') + '. <a id="whoEdit">Edit my numbers</a>';
+      $("whoEdit").onclick = function(){ intakeOverlay({update: true, person: p}); };
+    }
   }
 
   function loadLedger(){
@@ -640,9 +670,10 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
     var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span>');
     api("/v1/advise", {user_id: S.user, message: msg, thread: S.thread, temperament: S.temperament}).then(function(r){
       S.last = r;
-      pending.classList.add(r.safety ? "safety" : r.verdict.polarity);
+      pending.classList.add(r.safety ? "safety" : (r.decision === false ? "answer" : r.verdict.polarity));
       var t = S.temps.filter(function(x){ return x.key === r.temperament; })[0];
-      pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message);
+      pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety || r.decision === false ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message) +
+        (r.degraded ? '<div class="degraded">REASONING ENGINE UNAVAILABLE · rule core only' + (r.verdict && r.verdict.error ? ' · ' + esc(String(r.verdict.error).slice(0, 120)) : '') + '</div>' : '');
       S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
       renderNerve(r); loadLedger(); loadProgress(r.safety ? 0 : 10); speak(r);
       if (r.letter) { loadVault(); setTimeout(function(){ celebrate({key: "letter", name: "A letter from " + r.letter.from_name, why: "Sealed in " + r.letter.written.slice(0,4) + ", for this moment."}); }, 900); }
@@ -783,34 +814,57 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
   };
 
   $("resetBtn").onclick = function(){
-    if (S.user.indexOf("guest-") === 0) { switchUser(S.demos[S.tissue] || S.demos.wealth, null, "Back to the demo genome."); return; }
+    if (S.user.indexOf("guest-") === 0) {
+      if (!confirm("Forget me: delete your private genome and its ledger from Substrate, then return to the demo?")) return;
+      var gone = S.user;
+      api("/v1/person/" + gone, null, "DELETE").catch(function(){}).then(function(){
+        try { Object.keys(localStorage).forEach(function(k){ if (k.indexOf("sub-inv-") === 0 && localStorage.getItem(k) === gone) localStorage.removeItem(k); }); } catch(e){}
+        switchUser(S.demos[S.tissue] || S.demos.wealth, null, "Forgotten. Your genome and ledger are deleted.");
+      });
+      return;
+    }
     api("/v1/demo/reset", {}).then(function(){ switchUser(S.user, null, "Demo reset. Genomes and ledgers restored."); });
   };
 
-  $("userBtn").onclick = function(){
-    var opts = S.temps.map(function(t){ return '<option value="' + t.key + '">' + esc(t.name) + '</option>'; }).join("");
+  function intakeOverlay(o){
+    o = o || {}; var p = o.person || {}, upd = !!o.update;
+    var opts = S.temps.map(function(t){ return '<option value="' + t.key + '"' + (p.temperament === t.key ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join("");
     var kinds = ["token","stock","fund","property","cash","bond","other"];
-    function row(a, v, k){ return '<div class="hold"><input aria-label="Holding" placeholder="Holding" value="' + a + '"><input aria-label="Value" type="number" min="0" value="' + v + '"><select aria-label="Kind">' + kinds.map(function(x){ return '<option' + (x === k ? ' selected' : '') + '>' + x + '</option>'; }).join("") + '</select></div>'; }
-    overlay('<div class="lbl">Sandboxed guest genome · never mixed with client data</div><h2>Try it on <span class="si red">yourself.</span></h2>' +
-      '<p class="sub">Give Substrate a rough picture of your money. It builds your genome in seconds, then tells you the truth about your next decision.</p>' +
+    function row(a, v, k){ return '<div class="hold"><input aria-label="Holding" placeholder="e.g. Index fund, MOONX, Cash" value="' + esc(a) + '"><input aria-label="Value" type="number" min="0" placeholder="value" value="' + (v || "") + '"><select aria-label="Kind">' + kinds.map(function(x){ return '<option' + (x === k ? ' selected' : '') + '>' + x + '</option>'; }).join("") + '</select></div>'; }
+    var holds = (p.positions && p.positions.length) ? p.positions.map(function(x){ return row(x.asset, x.value, x.kind); }).join("")
+              : upd ? row("", "", "fund") + row("", "", "token") + row("", "", "cash") : row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash");
+    var rp = (p.risk_profile && p.risk_profile.stated) || "moderate", cur = p.currency || "USD", candor = (p.consent && p.consent.candor_level) || 4;
+    overlay('<div class="lbl">' + (upd ? 'Your private genome · sandboxed, deletable, never mixed with client data' : 'Sandboxed guest genome · never mixed with client data') + '</div><h2>' + (upd ? 'Your <span class="si red">numbers.</span>' : 'Try it on <span class="si red">yourself.</span>') + '</h2>' +
+      '<p class="sub">' + (upd ? 'Rough is fine. Substrate judges a decision against the shape of your money, so without this it can only speak in general terms.' : 'Give Substrate a rough picture of your money. It builds your genome in seconds, then tells you the truth about your next decision.') + '</p>' +
       '<form id="gf"><div class="gform">' +
-        '<label for="g-name">First name<input id="g-name" placeholder="e.g. Omar" maxlength="60"></label>' +
-        '<label for="g-nw">Liquid net worth<input id="g-nw" type="number" min="1" value="500000" required></label>' +
-        '<label for="g-cur">Currency<select id="g-cur"><option>USD</option><option>AED</option><option>INR</option></select></label>' +
-        '<label for="g-risk">Risk appetite<select id="g-risk"><option>conservative</option><option selected>moderate</option><option>aggressive</option></select></label>' +
-        '<label for="g-candor">Honesty you can take (1-5)<input id="g-candor" type="number" min="1" max="5" value="4"></label>' +
+        '<label for="g-name">First name<input id="g-name" placeholder="e.g. Omar" maxlength="60" value="' + esc(p.name && p.name !== "Guest" ? p.name : "") + '"></label>' +
+        '<label for="g-nw">Liquid net worth<input id="g-nw" type="number" min="1" value="' + (p.liquid_net_worth || (upd ? "" : 500000)) + '" required></label>' +
+        '<label for="g-cur">Currency<select id="g-cur">' + ["USD","AED","INR"].map(function(c){ return '<option' + (c === cur ? ' selected' : '') + '>' + c + '</option>'; }).join("") + '</select></label>' +
+        '<label for="g-risk">Risk appetite<select id="g-risk">' + ["conservative","moderate","aggressive"].map(function(c){ return '<option' + (c === rp ? ' selected' : '') + '>' + c + '</option>'; }).join("") + '</select></label>' +
+        '<label for="g-candor">Honesty you can take (1-5)<input id="g-candor" type="number" min="1" max="5" value="' + candor + '"></label>' +
         '<label for="g-temp">Voice<select id="g-temp">' + opts + '</select></label>' +
-      '</div><div class="lbl" style="margin-top:22px">Holdings</div><div id="g-holds">' + row("Global index fund", 200000, "fund") + row("Crypto token", 80000, "token") + row("Cash", 60000, "cash") + '</div>' +
-      '<div class="gactions"><button class="btn primary" type="submit">Build my genome</button></div></form>');
+      '</div><div class="lbl" style="margin-top:22px">Holdings <span style="letter-spacing:0;text-transform:none;color:var(--dim)">· what you own, roughly</span></div><div id="g-holds">' + holds + '</div>' +
+      '<div class="gactions"><button class="btn" type="button" id="g-more">+ holding</button><button class="btn primary" type="submit">' + (upd ? 'Save my numbers' : 'Build my genome') + '</button></div>' +
+      '<p class="sub" style="margin-top:14px;font-size:12px">Decision-support software, not a licensed adviser. Your numbers stay in your sandboxed genome and can be deleted with "Forget me" at any time.</p></form>');
+    $("g-more").onclick = function(){ $("g-holds").insertAdjacentHTML("beforeend", row("", "", "other")); };
     $("gf").onsubmit = function(e){
       e.preventDefault();
-      var holds = Array.prototype.map.call(document.querySelectorAll("#g-holds .hold"), function(h){ var f = h.querySelectorAll("input,select"); return {asset: f[0].value.trim(), value: +f[1].value || 0, kind: f[2].value}; }).filter(function(h){ return h.asset && h.value > 0; });
-      api("/v1/guest", {name: $("g-name").value.trim() || "Guest", domain: "wealth", liquid_net_worth: +$("g-nw").value, currency: $("g-cur").value,
-        risk: $("g-risk").value, candor: +$("g-candor").value || 3, temperament: $("g-temp").value, holdings: holds}).then(function(r){
+      var hs = Array.prototype.map.call(document.querySelectorAll("#g-holds .hold"), function(h){ var f = h.querySelectorAll("input,select"); return {asset: f[0].value.trim(), value: +f[1].value || 0, kind: f[2].value}; }).filter(function(h){ return h.asset && h.value > 0; });
+      var body = {name: $("g-name").value.trim() || (upd ? null : "Guest"), liquid_net_worth: +$("g-nw").value, currency: $("g-cur").value,
+        risk: $("g-risk").value, candor: +$("g-candor").value || 3, temperament: $("g-temp").value, holdings: hs};
+      if (upd) {
+        api("/v1/guest/" + S.user + "/intake", body).then(function(){
+          $("ov").hidden = true; toast("Saved. Now I can judge your decisions against your own numbers."); loadPerson();
+        }).catch(function(err){ toast("Could not save: " + err.message); });
+      } else {
+        body.domain = "wealth"; body.name = body.name || "Guest";
+        api("/v1/guest", body).then(function(r){
           $("ov").hidden = true; switchUser(r.user_id, "wealth", "Your genome is live. Ask it something you want to hear yes to.");
         }).catch(function(err){ toast("Could not build the genome: " + err.message); });
+      }
     };
-  };
+  }
+  $("userBtn").onclick = function(){ intakeOverlay({}); };
 
 
   // ---------------- game layer: progress, badges, celebration
@@ -910,22 +964,51 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 
   // ---------------- voice: words in, words out. Emotion is read from the words, never the voice.
   (function(){
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, live = false, final = "", restarts = 0, timer = null;
     S.speak = false; try { S.speak = localStorage.getItem("sub-speak") === "1"; } catch(e){}
     if ("speechSynthesis" in window) { $("spkBtn").hidden = false; $("spkBtn").setAttribute("aria-pressed", S.speak); }
-    $("spkBtn").onclick = function(){ S.speak = !S.speak; this.setAttribute("aria-pressed", S.speak); try { localStorage.setItem("sub-speak", S.speak ? "1" : "0"); } catch(e){} if (!S.speak) speechSynthesis.cancel(); toast(S.speak ? "Answers will be read aloud." : "Voice off."); };
-    if (!SR) return;
+    $("spkBtn").onclick = function(){ S.speak = !S.speak; this.setAttribute("aria-pressed", S.speak); try { localStorage.setItem("sub-speak", S.speak ? "1" : "0"); } catch(e){} if (!S.speak) speechSynthesis.cancel(); toast(S.speak ? "Answers will be read aloud. This button is read-aloud, not playback." : "Read-aloud off."); };
     $("micBtn").hidden = false;
-    $("micBtn").onclick = function(){
-      if (rec) { rec.stop(); return; }
-      rec = new SR(); rec.interimResults = true; rec.continuous = false;
+    if (!SR) { $("micBtn").title = "Voice input needs Chrome, Edge or Safari."; $("micBtn").onclick = function(){ toast("Voice input isn't available in this browser. Chrome, Edge or Safari support it; or just type."); }; return; }
+    var btn = $("micBtn"), stat = $("micStat");
+    function status(html){ stat.innerHTML = html || ""; }
+    function stop(send){
+      live = false; clearTimeout(timer);
+      try { rec && rec.stop(); } catch(e){}
+      btn.classList.remove("on"); btn.setAttribute("aria-label", "Speak your message");
+      var text = ($("q").value || final || "").trim();
+      status("");
+      if (send && text) { $("q").value = ""; ask(text); }
+      else if (send) toast("I didn't catch any words. Check that the right microphone is selected in the browser, then try again.");
+      rec = null; final = "";
+    }
+    function start(){
+      rec = new SR(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
       rec.lang = (S.last && S.last.language === "ar") || /[\u0600-\u06FF]/.test($("q").value) || (navigator.language || "").indexOf("ar") === 0 ? "ar-AE" : "en-US";
-      var btn = this; btn.classList.add("on"); var final = "";
-      rec.onresult = function(e){ var t = ""; for (var i = 0; i < e.results.length; i++) { t += e.results[i][0].transcript; if (e.results[i].isFinal) final = t; } $("q").value = t; };
-      rec.onerror = function(e){ toast("Microphone: " + e.error); };
-      rec.onend = function(){ btn.classList.remove("on"); rec = null; if (final.trim()) { $("q").value = ""; ask(final.trim()); } };
-      rec.start();
-    };
+      rec.onstart = function(){ status('<i></i> Listening · speak naturally · tap the mic again to send'); };
+      rec.onresult = function(e){
+        var done = "", interim = "";
+        for (var i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) done += e.results[i][0].transcript + " "; else interim += e.results[i][0].transcript; }
+        final = (final + " " + done).replace(/\s+/g, " ").trim();
+        $("q").value = (final + " " + interim).trim();
+        clearTimeout(timer); timer = setTimeout(function(){ if (live && $("q").value.trim()) stop(true); }, 6000);   // 6s of silence after speech = send
+      };
+      rec.onerror = function(e){
+        if (e.error === "no-speech") { status('<i></i> Still listening · I have not heard words yet · tap the mic to cancel'); return; }
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") { stop(false); toast("Microphone blocked. Allow the microphone for this site in the browser's address bar, then try again."); return; }
+        if (e.error === "aborted") return;
+        status('<i></i> Microphone: ' + esc(e.error) + ' · retrying');
+      };
+      rec.onend = function(){
+        if (!live) return;
+        if (restarts++ < 20) { try { rec.start(); return; } catch(e){} }   // browsers end continuous sessions; keep the floor
+        stop(true);
+      };
+      try { rec.start(); live = true; restarts = 0; btn.classList.add("on"); btn.setAttribute("aria-label", "Stop and send"); }
+      catch(e){ status(""); toast("Could not start the microphone: " + e.message); }
+    }
+    btn.onclick = function(){ if (live) stop(true); else start(); };
+    $("q").addEventListener("keydown", function(e){ if (live && e.key === "Enter") { e.preventDefault(); stop(true); } });
   })();
   function speak(r){
     if (!S.speak || !("speechSynthesis" in window) || !r) return;
@@ -1132,8 +1215,9 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
         e.preventDefault();
         api("/v1/invite/" + code + "/redeem", {name: $("w-name").value.trim() || "Guest"}).then(function(r){
           try { localStorage.setItem(key, r.user_id); } catch(err){}
-          $("ov").hidden = true; switchUser(r.user_id, r.tissue, "Your genome is live, " + r.person.name + ". Ask it something you want to hear yes to.");
+          $("ov").hidden = true; switchUser(r.user_id, r.tissue, "Your genome is live, " + r.person.name + ".");
           setTimeout(function(){ celebrate({key: "first", name: "Welcome, " + r.person.name, why: "Your genome is born. Every honest choice from here levels it up."}); }, 600);
+          if (r.tissue === "wealth") setTimeout(function(){ intakeOverlay({update: true, person: r.person}); }, 1800);
         }).catch(function(err){ toast(err.message); });
       };
     }).catch(function(){ toast("Unknown invite link."); });

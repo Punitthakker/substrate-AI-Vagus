@@ -8,8 +8,10 @@ Auth model (header x-substrate-key):
 """
 from __future__ import annotations
 
+import json
 import os
 import secrets
+import threading
 import time
 from collections import defaultdict, deque
 from pathlib import Path
@@ -39,6 +41,10 @@ from substrate.schemas import AdviseRequest, Consent, Goal, OutcomeRequest, Pers
 from substrate.seed import DEMO_HEIRS, DEMO_USER, DEMO_USERS, seed
 
 STATIC = Path(__file__).parent / "static"
+import logging
+if not logging.getLogger().handlers:   # make substrate.* log lines visible in the platform logs (uvicorn only configures its own)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)
 store = Store()
 seed(store)
 engine = VagusEngine(store)
@@ -140,10 +146,63 @@ async def rate_limit(request: Request, call_next):
 
 # ---------------------------------------------------------------- system
 
+_selftest: dict = {"at": 0.0, "result": None}
+_selftest_lock = threading.Lock()
+SELFTEST_TTL = int(os.environ.get("SUBSTRATE_SELFTEST_TTL", "600"))
+
+
+@app.get("/v1/selftest")
+def live_selftest(fresh: bool = False):
+    """Runs the questions a real tester asked through the live engine on a scratch copy of the demo genome.
+
+    Nothing is recorded. Cached for SELFTEST_TTL seconds so it cannot be used to burn model calls. This is how we prove,
+    from outside, that the configured brain is answering and that the verdicts are the ones a human would expect.
+    """
+    now_ = time.monotonic()
+    if _selftest["result"] and not fresh and now_ - _selftest["at"] < SELFTEST_TTL:
+        return {**_selftest["result"], "cached": True}
+    if not _selftest_lock.acquire(blocking=False):
+        return {**(_selftest["result"] or {"ok": None}), "cached": True, "note": "a self-test is already running"}
+    try:
+        from substrate.schemas import Turn
+        cases = [
+            ("Binance got hacked today. Is it something that I should be worried about?", {"decision": False}),
+            ("I'm 35, no debt, $300k cash, 12 months of expenses set aside separately, stable salary. Should I put $50k "
+             "into a diversified global index fund and hold it for 10+ years?", {"polarity": "proceed", "amount": 50000.0}),
+            ("You misread me. I asked about $50k into a global index fund, not $300k into cash. And I never made a move "
+             "in March. Please re-check.", {"decision": False}),
+            ("Should I borrow $150k against the flat to buy more MOONX?", {"polarity": "stop"}),
+        ]
+        uid = DEMO_USERS["wealth"]
+        thread, rows, ok = [], [], True
+        t0 = time.perf_counter()
+        for q, want in cases:
+            r = engine.advise(AdviseRequest(user_id=uid, message=q, thread=thread if want.get("decision") is False and rows else []), record=False)
+            got = {"decision": r.decision, "polarity": r.verdict.polarity.value, "amount": r.facts.amount}
+            passed = all(got.get(k) == v for k, v in want.items())
+            ok = ok and passed and not r.degraded
+            rows.append({"question": q, "label": r.label, "headline": r.verdict.headline, "intent": r.intent,
+                         "amount": r.facts.amount, "asset": r.facts.asset, "model": r.verdict.model, "degraded": r.degraded,
+                         "error": r.verdict.error, "pass": passed, "message": r.message[:600]})
+            thread = [Turn(role="user", content=q), Turn(role="substrate", content=r.message)]
+        res = {"ok": ok, "brain": active_brain(), "ran_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               "ms": round(1000 * (time.perf_counter() - t0)), "cases": rows, "cached": False}
+        _selftest.update(at=now_, result=res)
+        print("SELFTEST " + json.dumps({k: v for k, v in res.items() if k != "cases"} | {"fails": [c["question"][:50] for c in rows if not c["pass"] or c["degraded"]]}), flush=True)
+        return res
+    finally:
+        _selftest_lock.release()
+
+
 @app.get("/v1/health")
 def health():
     models = model_catalogue()
+    from substrate import selfcheck as _sc_mod
+    brain_check = (_sc_mod.LAST.get("checks") or {}).get("brain_roundtrip") if _sc_mod.LAST else None
     return {"ok": True, "engine": "vagus", "version": __version__, "brain": active_brain(),
+            "brain_roundtrip": brain_check,
+            "disclaimer": "Substrate is decision-support software, not a licensed financial adviser. Nothing it says is a "
+                          "personal recommendation to buy, sell or hold any investment.",
             "council": council_members(), "models_configured": sum(m["configured"] for m in models),
             "models_available": len(models), "tissues": list(domains.TISSUES), "temperaments": len(temperaments.TEMPERAMENTS),
             "demo_users": DEMO_USERS, "demo_heirs": {k: v[0] for k, v in DEMO_HEIRS.items()}}
@@ -458,14 +517,50 @@ def redeem_invite(code: str, r: Redeem):
         raise HTTPException(410, "This invite has expired or is used up.")
     base = store.get_person(DEMO_USERS[inv["tissue"]])
     uid = f"guest-{secrets.token_hex(4)}"
-    p = base.model_copy(deep=True) if base else Person(domain=inv["tissue"])
-    p.user_id, p.name, p.lessons, p.adherence, p.ancestry = uid, (r.name.strip() or "Guest")[:40], [], {}, []
-    p.biases = [b.model_copy(update={"evidence": []}) for b in p.biases]
-    p.consent.allow_training, p.consent.inheritance.heirs = False, []
-    if "support_contacts" in p.profile:
-        p.profile["support_contacts"] = []
+    # A real person gets a BLANK genome: no demo portfolio, no demo biases, no demo history. They enter their own
+    # numbers in the intake step; until then the engine says plainly that it does not know them.
+    p = Person(user_id=uid, name=(r.name.strip() or "Guest")[:40], domain=inv["tissue"],
+               temperament=(base.temperament if base else "mentor"), currency=(base.currency if base else "USD"),
+               consent=Consent(candor_level=base.consent.candor_level if base else 3),
+               profile={"intake_pending": True, **({k: v for k, v in (base.profile or {}).items()
+                                                   if k in ("fund_name", "venues", "platforms", "default_pair")} if base else {})})
     store.put_person(p)
-    return {"user_id": uid, "tissue": inv["tissue"], "label": inv["label"], "person": p}
+    return {"user_id": uid, "tissue": inv["tissue"], "label": inv["label"], "person": p, "intake_pending": True}
+
+
+class GuestIntake(BaseModel):
+    name: Optional[str] = Field(None, max_length=60)
+    risk: Literal["conservative", "moderate", "aggressive"] = "moderate"
+    candor: int = Field(3, ge=1, le=5)
+    liquid_net_worth: Optional[float] = Field(None, ge=0, le=1e12)
+    currency: Literal["USD", "AED", "INR"] = "USD"
+    temperament: Optional[str] = None
+    holdings: list[Holding] = Field(default_factory=list, max_length=12)
+    goals: list[str] = Field(default_factory=list, max_length=4)
+
+
+@app.post("/v1/guest/{user_id}/intake")
+def guest_intake(user_id: str, g: GuestIntake):
+    """The invitee's own numbers. Only a guest genome can be written this way; demo and client genomes are untouched."""
+    if not user_id.startswith("guest-"):
+        raise HTTPException(403, "Only a guest genome accepts intake.")
+    p = store.get_person(user_id)
+    if not p:
+        raise HTTPException(404, "No such guest.")
+    if g.name and g.name.strip():
+        p.name = g.name.strip()[:40]
+    p.risk_profile = RiskProfile(stated=g.risk, observed=None)
+    p.consent.candor_level = g.candor
+    p.liquid_net_worth = g.liquid_net_worth or None
+    p.currency = g.currency
+    if g.temperament:
+        p.temperament = temperaments.get(g.temperament).key
+    p.positions = [Position(**h.model_dump()) for h in g.holdings if h.asset.strip() and h.value > 0]
+    if g.goals:
+        p.goals = [Goal(name=x[:80], priority=i + 1) for i, x in enumerate(g.goals) if x.strip()]
+    p.profile = {k: v for k, v in (p.profile or {}).items() if k != "intake_pending"}
+    store.put_person(p)
+    return {"user_id": user_id, "person": p}
 
 
 # ---------------------------------------------------------------- legacy vault

@@ -272,9 +272,10 @@ class Store:
         for e in self.events(user_id):
             p = e["payload"]
             if e["kind"] == "advice":
-                pairs[e["id"]] = {"id": e["id"], "ts": e["ts"], "polarity": p.get("polarity"),
+                pairs[e["id"]] = {"id": e["id"], "ts": e["ts"], "polarity": p.get("polarity") if p.get("decision", True) else None,
                                   "headline": p.get("headline"), "message": p.get("user_message"),
-                                  "flags": p.get("flags") or [], "domain": p.get("domain")}
+                                  "flags": p.get("flags") or [], "domain": p.get("domain"),
+                                  "decision": p.get("decision", True)}
             elif p.get("ledger_id") in pairs:
                 tgt = pairs[p["ledger_id"]]
                 if e["kind"] == "action":

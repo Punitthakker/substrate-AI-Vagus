@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from ..analysis import extract_facts, fmt_money, rule_core_verdict
+from ..analysis import extract_facts, fmt_money, reconcile, rule_core_verdict
 from ..schemas import Facts, Forecast, Person
 from .base import Tissue
 
@@ -34,6 +34,10 @@ class Wealth(Tissue):
 
     def verdict(self, f, person):
         return rule_core_verdict(f, person)
+
+    def reconcile(self, f, ext, person, history, policy) -> Facts:
+        """Merge the brain's reading of the message into the rule core's facts and recompute the floor."""
+        return reconcile(f, ext, person, history, policy)
 
     def forecasts(self, f: Facts, person: Person) -> list[Forecast]:
         out = []
