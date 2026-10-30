@@ -269,24 +269,53 @@ def _headers_anthropic(b: Brain) -> dict:
     return {"x-api-key": os.environ[b.key_env], "anthropic-version": "2023-06-01", "content-type": "application/json"}
 
 
+# How each Anthropic model accepts the structured reply, learned at runtime:
+#   forced -> tools + tool_choice {"type": "tool"}   (most models)
+#   auto   -> tools + tool_choice {"type": "auto"}   (models that refuse a forced tool_choice)
+#   text   -> no tools, strict JSON in the text        (last resort)
+_ANTHROPIC_MODE: dict[str, str] = {}
+_MODES = ("forced", "auto", "text")
+
+
+def _anthropic_payload(model: str, system: str, user: str, mode: str) -> dict:
+    body = {"model": model, "max_tokens": MAX_TOKENS, "system": system, "messages": [{"role": "user", "content": user}]}
+    if mode == "forced":
+        body["tools"], body["tool_choice"] = [TOOL], {"type": "tool", "name": TOOL["name"]}
+    elif mode == "auto":
+        body["tools"], body["tool_choice"] = [TOOL], {"type": "auto"}
+        body["system"] = system + "\nYou MUST answer by calling the substrate_verdict tool; never answer in prose."
+    else:
+        body["system"] = system + "\nTools are unavailable: answer with the substrate_verdict fields as one strict JSON object and nothing else."
+    return body
+
+
 def _call_structured(b: Brain, system: str, user: str) -> tuple[dict, str]:
     """Ask a brain for the structured verdict. Returns (verdict dict, model label)."""
     model = b.model()
     if b.kind == "anthropic":
-        r = httpx.post(f"{b.url()}/messages", timeout=TIMEOUT, headers=_headers_anthropic(b),
-                       json={"model": model, "max_tokens": MAX_TOKENS, "system": system,
-                             "tools": [TOOL], "tool_choice": {"type": "tool", "name": TOOL["name"]},
-                             "messages": [{"role": "user", "content": user}]})
-        if r.status_code >= 400:
-            raise BrainError(f"HTTP {r.status_code} from Anthropic: {r.text[:300]}")
-        body = r.json()
-        if body.get("stop_reason") == "max_tokens":
-            raise BrainError(f"reply truncated at max_tokens={MAX_TOKENS}")
-        for block in body.get("content", []):
-            if block.get("type") == "tool_use" and isinstance(block.get("input"), dict):
-                return _normalise(block["input"]), model
-        text = "".join(x.get("text", "") for x in body.get("content", []) if x.get("type") == "text")
-        return _parse(text), model
+        start = _ANTHROPIC_MODE.get(model, "forced")
+        last = None
+        for mode in _MODES[_MODES.index(start):]:
+            r = httpx.post(f"{b.url()}/messages", timeout=TIMEOUT, headers=_headers_anthropic(b),
+                           json=_anthropic_payload(model, system, user, mode))
+            if r.status_code == 400 and mode != "text" and ("tool" in r.text.lower()):
+                last = r.text[:300]
+                log.warning("brain anthropic model=%s rejects %s tool mode (%s); trying the next mode", model, mode, last)
+                continue                                   # this model wants a softer tool mode
+            if r.status_code >= 400:
+                raise BrainError(f"HTTP {r.status_code} from Anthropic: {r.text[:300]}")
+            body = r.json()
+            if body.get("stop_reason") == "max_tokens":
+                raise BrainError(f"reply truncated at max_tokens={MAX_TOKENS}")
+            if mode != start:
+                log.info("brain anthropic model=%s settled on %s tool mode", model, mode)
+            _ANTHROPIC_MODE[model] = mode
+            for block in body.get("content", []):
+                if block.get("type") == "tool_use" and isinstance(block.get("input"), dict):
+                    return _normalise(block["input"]), model
+            text = "".join(x.get("text", "") for x in body.get("content", []) if x.get("type") == "text")
+            return _parse(text), model
+        raise BrainError(f"HTTP 400 from Anthropic in every tool mode: {last}")
     text, label = _call(b, system, user, json_mode=True)
     return _parse(text), label
 

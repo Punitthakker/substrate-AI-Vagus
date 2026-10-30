@@ -225,6 +225,32 @@ def test_anthropic_request_uses_tool_choice_and_detects_truncation(monkeypatch):
         brains._call_structured(brains.REGISTRY["anthropic"], "sys", "user")
 
 
+def test_anthropic_models_that_refuse_forced_tool_choice_still_work(monkeypatch):
+    seen = []
+
+    class R:
+        def __init__(self, code, body=None, text=""):
+            self.status_code, self._b, self.text = code, body or {}, text
+
+        def json(self):
+            return self._b
+
+    def post(url, timeout, headers, json):
+        seen.append(json.get("tool_choice", {}).get("type") if "tools" in json else "text")
+        if json.get("tool_choice", {}).get("type") == "tool":
+            return R(400, text='{"type":"error","error":{"type":"invalid_request_error","message":"tool_choice: type \\"tool\\" and \\"any\\" are not supported for this model."}}')
+        return R(200, {"stop_reason": "tool_use", "content": [{"type": "tool_use", "name": "substrate_verdict",
+                                                                 "input": {"intent": "decision", "polarity": "proceed", "headline": "Yes.", "reasons": []}}]})
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    monkeypatch.setenv("ANTHROPIC_MODEL", "claude-test-noforce")
+    monkeypatch.setattr(brains.httpx, "post", post)
+    brains._ANTHROPIC_MODE.pop("claude-test-noforce", None)
+    v, _ = brains._call_structured(brains.REGISTRY["anthropic"], "sys", "user")
+    assert v["polarity"] == Polarity.proceed and seen == ["tool", "auto"]
+    v, _ = brains._call_structured(brains.REGISTRY["anthropic"], "sys", "user")
+    assert seen[-1] == "auto" and len(seen) == 3            # the working mode is remembered, no second 400
+
+
 # ---------------------------------------------------------------- guests are real people, not renamed demos
 
 def test_invite_creates_a_blank_genome_and_intake_fills_it():
