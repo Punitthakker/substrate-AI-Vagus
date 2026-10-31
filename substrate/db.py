@@ -96,8 +96,33 @@ class PG:
         self.conn.close()
 
 
+class SQLite:
+    """sqlite3 with one lock: FastAPI runs sync endpoints on a thread pool, and the console fires many requests
+    at once. Without this, a laptop demo answers some of them with 'bad parameter or other API misuse'."""
+    kind = "sqlite"
+
+    def __init__(self, path: str):
+        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self._lock = threading.RLock()
+
+    def execute(self, sql: str, params=()):
+        with self._lock:
+            return self.conn.execute(sql, params)
+
+    def executescript(self, script: str):
+        with self._lock:
+            return self.conn.executescript(script)
+
+    def commit(self):
+        with self._lock:
+            self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
 def connect(path: str | None):
     url = os.environ.get("DATABASE_URL")
     if path is None and is_postgres_url(url):
         return PG(url)
-    return sqlite3.connect(path or os.environ.get("SUBSTRATE_DB", "substrate.db"), check_same_thread=False)
+    return SQLite(path or os.environ.get("SUBSTRATE_DB", "substrate.db"))

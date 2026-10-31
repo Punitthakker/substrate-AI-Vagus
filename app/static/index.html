@@ -242,11 +242,28 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
 .vbtn{background:none;border:1px solid var(--hair);color:var(--dim);border-radius:12px;width:44px;flex:none;display:grid;place-items:center;cursor:pointer}
 .vbtn.on,.vbtn[aria-pressed="true"]{color:var(--rbc);border-color:var(--rbc)}
 .vbtn.on{animation:listen 1.2s ease-in-out infinite}
+/* ---------- simple / advanced */
+.mode{display:flex;border:1px solid var(--hair);border-radius:3px;padding:2px;gap:2px;background:var(--soft)}
+.mode button{font-family:var(--mono);border:0;background:none;color:var(--dim);border-radius:2px;padding:5px 10px;font-size:10px;letter-spacing:2px;cursor:pointer}
+.mode button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+body.simple .left,body.simple .right,body.simple #brain,body.simple #bellBtn,body.simple #harnessBtn,body.simple #entBtn,body.simple .tabs{display:none!important}
+body.simple .grid{grid-template-columns:minmax(0,1fr)}
+body.simple .center{max-width:880px;width:100%;margin:0 auto}
+body.simple .who-tag span:nth-child(n+3){display:none}
+.next{margin-top:14px;padding-top:12px;border-top:1px dashed var(--hair);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.next .lbl{width:100%;margin-bottom:2px}
+.next button,.next select{border:1px solid var(--hair);background:var(--soft);color:var(--fg);border-radius:8px;padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.next button.go{border-color:var(--grn);color:var(--grn)} .next button.no{border-color:var(--rbc);color:var(--rbc)}
+.next button:hover{border-color:var(--fg)}
+.how{margin:14px 0 0;display:grid;gap:10px;max-width:560px}
+.how div{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;color:var(--dim);line-height:1.5}
+.how b{font:800 13px var(--disp);color:var(--rbc);min-width:18px} .how strong{color:var(--fg);font-weight:600}
+body:not(.simple) .how{display:none}
 .who{margin:0 max(20px,4%);padding:10px 14px;border:1px solid var(--hair);border-radius:12px;font-size:12px;color:var(--dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--rbc) 4%,transparent)}
 .who b{color:var(--fg);font-weight:600} .who a{color:var(--rbc);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .who.me{background:color-mix(in srgb,var(--grn) 6%,transparent)}
 .degraded{margin-top:10px;padding:8px 10px;border:1px solid var(--amb);border-radius:8px;color:var(--amb);font-size:11px;letter-spacing:.5px}
-.b.answer{border-left-color:var(--wbc)} .b.answer .who-tag b{color:var(--wbc)}
+.msg.sub.answer{border-left-color:var(--wbc)} .msg.answer .who-tag b{color:var(--wbc)}
 .micstat{margin:0 max(20px,4%);font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--rbc);text-transform:uppercase;min-height:14px;display:flex;gap:8px;align-items:center}
 .micstat:empty{display:none} .micstat i{width:7px;height:7px;border-radius:50%;background:var(--rbc);display:inline-block;animation:blink 1s infinite}
 .legal{margin:0 max(20px,4%) 10px;font-size:11px;color:var(--faint);line-height:1.5}
@@ -343,6 +360,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
   <button class="iconbtn" id="bellBtn" type="button" aria-label="Follow-ups">FOLLOW-UPS <b id="bellN"></b></button>
   <button class="iconbtn" id="harnessBtn" type="button">HARNESS</button>
   <button class="iconbtn ent" id="entBtn" type="button">ENTERPRISE</button>
+  <div class="mode" id="modeSw" role="group" aria-label="Interface mode"><button type="button" data-m="simple" aria-pressed="true">SIMPLE</button><button type="button" data-m="advanced" aria-pressed="false">ADVANCED</button></div>
   <button class="iconbtn" id="userBtn" type="button">TRY IT ON YOURSELF</button>
   <a class="iconbtn" href="/app" style="text-decoration:none">SIGN IN</a>
   <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">THEME</button>
@@ -474,7 +492,10 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
   }
   function hero(){
     var h = HERO[S.tissue] || HERO.wealth;
-    $("log").innerHTML = '<div class="hero" id="hero"><div class="lbl" style="margin-bottom:14px">' + esc(tissue().tagline || "") + '</div><h1>' + h[0] + '</h1><p>' + esc(h[1]) + '</p></div>';
+    $("log").innerHTML = '<div class="hero" id="hero"><div class="lbl" style="margin-bottom:14px">' + esc(tissue().tagline || "") + '</div><h1>' + h[0] + '</h1><p>' + esc(h[1]) + '</p>' +
+      '<div class="how"><div><b>1</b><span><strong>Ask about a money move</strong> you are considering, in your own words, or tap a suggestion below.</span></div>' +
+      '<div><b>2</b><span>You get <strong>Yes, Not yet or No</strong>, with the reasons, judged against your own numbers. A plain question gets a plain answer.</span></div>' +
+      '<div><b>3</b><span><strong>Tell it what you did.</strong> It remembers, and the next verdict knows you better.</span></div></div></div>';
     var sc = tissue().scenarios || [];
     $("scen").innerHTML = sc.map(function(s, i){ return '<button type="button" data-i="' + i + '" title="' + esc(s) + '">' + esc(s.length > 54 ? s.slice(0,52) + "..." : s) + '</button>'; }).join("");
     Array.prototype.forEach.call($("scen").children, function(b){ b.onclick = function(){ ask(sc[+b.dataset.i]); }; });
@@ -627,7 +648,7 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
     w.hidden = false; w.className = "who" + (guest ? " me" : "");
     if (!guest) {
       var nw = p.domain === "wealth" && p.liquid_net_worth ? " · " + money(p.liquid_net_worth, p.currency) : "";
-      w.innerHTML = 'You are reading <b>' + esc(p.name) + '</b>, a <b>fictional demo client</b>' + nw + '. The portfolio, patterns and history on the left are theirs, not yours. <a id="whoMe">Try it on yourself</a>';
+      w.innerHTML = 'You are reading <b>' + esc(p.name) + '</b>, a <b>fictional demo client</b>' + nw + '. The money, patterns and history belong to the demo, not to you. <a id="whoMe">Try it on yourself</a>';
       $("whoMe").onclick = function(){ $("userBtn").click(); };
     } else if (pending) {
       w.innerHTML = 'This is <b>your</b> private genome, ' + esc(p.name) + '. I have <b>no numbers for you yet</b>, so I can only answer in general terms. <a id="whoFill">Add your numbers</a> (30 seconds, sandboxed, deletable).';
@@ -675,11 +696,47 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
       pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety || r.decision === false ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message) +
         (r.degraded ? '<div class="degraded">REASONING ENGINE UNAVAILABLE · rule core only' + (r.verdict && r.verdict.error ? ' · ' + esc(String(r.verdict.error).slice(0, 120)) : '') + '</div>' : '');
       S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
+      nextStrip(pending, r);
       renderNerve(r); loadLedger(); loadProgress(r.safety ? 0 : 10); speak(r);
       if (r.letter) { loadVault(); setTimeout(function(){ celebrate({key: "letter", name: "A letter from " + r.letter.from_name, why: "Sealed in " + r.letter.written.slice(0,4) + ", for this moment."}); }, 900); }
     }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
   }
   $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
+
+  // ---------------- what next? (simple mode): the loop, spelled out under every answer
+  function nextStrip(card, r){
+    if (document.body.className.indexOf("simple") < 0 || r.safety) return;
+    var d = document.createElement("div"); d.className = "next";
+    var voices = S.temps.filter(function(t){ var a = tissue().allowed_temperaments; return !a || a.indexOf(t.key) >= 0; });
+    var sel = '<select aria-label="Voice">' + voices.map(function(t){ return '<option value="' + t.key + '"' + (t.key === S.temperament ? ' selected' : '') + '>Voice: ' + esc(t.name.replace("The ", "")) + '</option>'; }).join("") + '</select>';
+    var pending = S.user.indexOf("guest-") === 0 && S.person && !S.person.liquid_net_worth && !(S.person.positions || []).length;
+    if (r.decision === false) {
+      d.innerHTML = '<span class="lbl">What next</span><button type="button" data-a="follow">Ask a follow-up</button><button type="button" data-a="decide">Ask about a real move</button>' + (pending ? '<button type="button" data-a="numbers">Add my numbers</button>' : '') + sel;
+    } else {
+      d.innerHTML = '<span class="lbl">Close the loop · it learns from what you actually do</span><button type="button" class="go" data-a="followed">I\'ll follow it</button><button type="button" class="no" data-a="ignored">I\'ll ignore it</button><button type="button" data-a="follow">Ask a follow-up</button>' + (pending ? '<button type="button" data-a="numbers">Add my numbers</button>' : '') + sel;
+    }
+    card.appendChild(d);
+    d.querySelector("select").onchange = function(){ S.temperament = this.value; renderTemps(); toast("Voice changed. The truth stays the same; only the delivery moves."); };
+    Array.prototype.forEach.call(d.querySelectorAll("button"), function(b){
+      b.onclick = function(){
+        var a = b.dataset.a;
+        if (a === "followed" || a === "ignored") { S.last = r; outcome(a); d.innerHTML = '<span class="lbl">' + (a === "followed" ? "Recorded: you followed it. The next verdict starts from here." : "Recorded: you ignored it. No judgement, just memory.") + '</span>'; }
+        else if (a === "follow") { $("q").placeholder = "Follow up on that..."; $("q").focus(); }
+        else if (a === "decide") { $("q").value = "Should I put $20k into "; $("q").focus(); }
+        else if (a === "numbers") { intakeOverlay({update: true, person: S.person}); }
+      };
+    });
+  }
+
+  // ---------------- simple / advanced
+  function setMode(m, quiet){
+    document.body.classList.toggle("simple", m === "simple");
+    Array.prototype.forEach.call($("modeSw").children, function(b){ b.setAttribute("aria-pressed", b.dataset.m === m); });
+    try { localStorage.setItem("sub-mode", m); } catch(e){}
+    if (!quiet) toast(m === "simple" ? "Simple: just the conversation." : "Advanced: genome, nerve centre, ledger and the rest.");
+  }
+  Array.prototype.forEach.call($("modeSw").children, function(b){ b.onclick = function(){ setMode(b.dataset.m); }; });
+  (function(){ var m = "simple"; try { m = localStorage.getItem("sub-mode") || "simple"; } catch(e){} setMode(m, true); })();
 
   function outcome(action){
     if (!S.last || S.last.safety) return;
@@ -1010,14 +1067,30 @@ blockquote.letter{margin:6px 0 4px;padding:14px 18px;border-left:3px solid var(-
     btn.onclick = function(){ if (live) stop(true); else start(); };
     $("q").addEventListener("keydown", function(e){ if (live && e.key === "Enter") { e.preventDefault(); stop(true); } });
   })();
+  var PREFERRED = {en: ["Google UK English Female", "Google UK English Male", "Google US English", "Samantha", "Daniel", "Karen", "Moira", "Natural", "Neural", "Premium", "Enhanced", "Siri", "Aria", "Libby", "Sonia", "Ryan"],
+                   ar: ["Majed", "Google", "Natural", "Neural", "Laila", "Maged", "Tarik", "Hamed"]};
+  function pickVoice(lang){
+    var vs = speechSynthesis.getVoices().filter(function(x){ return (x.lang || "").toLowerCase().indexOf(lang) === 0; });
+    if (!vs.length) return null;
+    for (var i = 0; i < PREFERRED[lang].length; i++) { var want = PREFERRED[lang][i].toLowerCase(); var hit = vs.filter(function(v){ return v.name.toLowerCase().indexOf(want) >= 0; })[0]; if (hit) return hit; }
+    return vs.filter(function(v){ return !v.localService; })[0] || vs[0];
+  }
+  if ("speechSynthesis" in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); }; }
   function speak(r){
     if (!S.speak || !("speechSynthesis" in window) || !r) return;
-    var t = r.message.replace(/\*\*|__|_/g, "").replace(/^[->]\s?/gm, "").replace(/This advice is recorded in your Vagus Ledger\./, "").replace(/\n+/g, ". ");
+    var t = r.message.replace(/\*\*|__|_/g, "").replace(/^[->]\s?/gm, "").replace(/This advice is recorded in your Vagus Ledger\./, "")
+      .replace(/Reasoning engine unavailable[^\n]*/g, "").replace(/\n+/g, ". ").replace(/\.\s*\./g, ".").replace(/\$(\d+(?:\.\d+)?)k\b/g, "$1 thousand dollars").replace(/\$(\d+(?:\.\d+)?)M\b/g, "$1 million dollars").replace(/\$(\d[\d,]*)\b/g, "$1 dollars");
+    var lang = r.language === "ar" ? "ar" : "en", voice = pickVoice(lang);
     speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(t.slice(0, 1200)), lang = r.language === "ar" ? "ar" : "en";
-    u.lang = lang === "ar" ? "ar-SA" : "en-GB"; u.rate = 0.97; u.pitch = 1;
-    var v = speechSynthesis.getVoices().filter(function(x){ return x.lang.indexOf(lang) === 0; })[0]; if (v) u.voice = v;
-    speechSynthesis.speak(u);
+    // one utterance per sentence: the engine breathes between them instead of reading a wall of text flat
+    var sentences = t.slice(0, 1400).match(/[^.!?؟]+[.!?؟]+|[^.!?؟]+$/g) || [t];
+    sentences.forEach(function(sn, i){
+      var u = new SpeechSynthesisUtterance(sn.trim());
+      u.lang = lang === "ar" ? "ar-SA" : (voice && voice.lang) || "en-GB"; u.rate = 1.0; u.pitch = 1.0; u.volume = 1;
+      if (voice) u.voice = voice;
+      if (i === 0) u.rate = 0.96;      // the headline lands a touch slower
+      speechSynthesis.speak(u);
+    });
   }
 
   // ---------------- follow-ups (check-ins)
