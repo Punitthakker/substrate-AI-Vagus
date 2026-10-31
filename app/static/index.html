@@ -689,17 +689,24 @@ body:not(.simple) .how{display:none}
     if (!msg) return;
     add("user", esc(msg));
     var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span>');
+    var rendered = false;
     api("/v1/advise", {user_id: S.user, message: msg, thread: S.thread, temperament: S.temperament}).then(function(r){
       S.last = r;
       pending.classList.add(r.safety ? "safety" : (r.decision === false ? "answer" : r.verdict.polarity));
       var t = S.temps.filter(function(x){ return x.key === r.temperament; })[0];
       pending.innerHTML = '<div class="who-tag"><b>' + (r.safety ? "SAFETY PROTOCOL" : esc(t ? t.name.toUpperCase() : r.temperament)) + '</b><span>' + esc(r.label) + '</span><span>' + r.state.toUpperCase() + '</span>' + (r.safety || r.decision === false ? '' : '<span>TONE ' + r.firmness + '/5</span>') + '<span>' + r.ledger_id + '</span></div>' + md(r.message) +
         (r.degraded ? '<div class="degraded">REASONING ENGINE UNAVAILABLE · rule core only' + (r.verdict && r.verdict.error ? ' · ' + esc(String(r.verdict.error).slice(0, 120)) : '') + '</div>' : '');
+      rendered = true;
       S.thread.push({role:"user", content: msg}, {role:"substrate", content: r.message});
-      nextStrip(pending, r);
-      renderNerve(r); loadLedger(); loadProgress(r.safety ? 0 : 10); speak(r);
+      // everything after this point is decoration: it must never be able to take the answer away
+      [function(){ nextStrip(pending, r); }, function(){ renderNerve(r); }, loadLedger, function(){ loadProgress(r.safety ? 0 : 10); }, function(){ speak(r); }]
+        .forEach(function(f){ try { f(); } catch(err){ console.warn("after-answer step failed", err); } });
       if (r.letter) { loadVault(); setTimeout(function(){ celebrate({key: "letter", name: "A letter from " + r.letter.from_name, why: "Sealed in " + r.letter.written.slice(0,4) + ", for this moment."}); }, 900); }
-    }).catch(function(e){ pending.innerHTML = "Substrate could not answer: " + esc(e.message); });
+    }).catch(function(e){
+      if (rendered) { console.warn(e); return; }
+      pending.innerHTML = "Substrate could not answer: " + esc(e.message) + ' <button type="button" class="retry">Try again</button>';
+      var rb = pending.querySelector(".retry"); if (rb) rb.onclick = function(){ pending.remove(); ask(msg); };
+    });
   }
   $("ask").onsubmit = function(e){ e.preventDefault(); var v = $("q").value.trim(); $("q").value = ""; ask(v); };
 
@@ -1089,7 +1096,7 @@ body:not(.simple) .how{display:none}
       u.lang = lang === "ar" ? "ar-SA" : (voice && voice.lang) || "en-GB"; u.rate = 1.0; u.pitch = 1.0; u.volume = 1;
       if (voice) u.voice = voice;
       if (i === 0) u.rate = 0.96;      // the headline lands a touch slower
-      speechSynthesis.speak(u);
+      try { speechSynthesis.speak(u); } catch(err){ console.warn("read-aloud", err); }
     });
   }
 
