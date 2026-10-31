@@ -172,13 +172,33 @@ def live_selftest(fresh: bool = False):
         _selftest_lock.release()
 
 
+class SpeakRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+    lang: Literal["en", "ar"] = "en"
+
+
+@app.post("/v1/speak", include_in_schema=False)
+def speak(req: SpeakRequest):
+    """Cloud voice for an answer, when a TTS provider is configured. The console falls back to device voices on any error."""
+    from substrate import tts
+    if not tts.provider():
+        raise HTTPException(404, "No cloud voice configured. The console uses the device's own voices.")
+    try:
+        audio, mime = tts.synthesize(req.text, req.lang)
+    except Exception as e:
+        raise HTTPException(502, f"Voice unavailable: {type(e).__name__}")
+    from fastapi.responses import Response
+    return Response(content=audio, media_type=mime, headers={"cache-control": "private, max-age=600"})
+
+
 @app.get("/v1/health")
 def health():
     models = model_catalogue()
     from substrate import selfcheck as _sc_mod
+    from substrate import tts as _tts
     brain_check = (_sc_mod.LAST.get("checks") or {}).get("brain_roundtrip") if _sc_mod.LAST else None
     return {"ok": True, "engine": "vagus", "version": __version__, "brain": active_brain(),
-            "brain_roundtrip": brain_check,
+            "brain_roundtrip": brain_check, "tts": _tts.status(),
             "disclaimer": "Substrate is decision-support software, not a licensed financial adviser. Nothing it says is a "
                           "personal recommendation to buy, sell or hold any investment.",
             "council": council_members(), "models_configured": sum(m["configured"] for m in models),

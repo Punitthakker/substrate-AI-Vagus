@@ -145,3 +145,18 @@ Deploy: `railway.json` (Railway), `render.yaml` (Render), or the `Dockerfile` an
 - **Guests are real people.** An invite creates a blank genome and asks for their numbers; it never clones a demo client's
   portfolio, patterns or history onto them.
 - Substrate is decision-support software, not a licensed financial adviser.
+
+## Voice
+
+- Microphone: Web Speech recognition in Chrome, Edge and Safari (not Firefox). Continuous, live transcript,
+  tap to send or 6 seconds of silence.
+- Read-aloud: the device's own voices by default. For a natural voice on every device set
+  `TTS_PROVIDER=openai` with `OPENAI_API_KEY` (voice `nova`, model `gpt-4o-mini-tts`) or
+  `TTS_PROVIDER=elevenlabs` with `ELEVENLABS_API_KEY`. `GET /v1/health` reports `tts`; the console
+  falls back to device voices if the cloud voice fails. Answers are capped at `TTS_MAX_CHARS` (900).
+
+## Browser tests
+
+`bash tests/ui/run.sh` drives the console in headless Chromium (needs `npm i playwright` and
+`npx playwright install chromium`): Simple and Advanced modes, an answer and its loop, a question,
+invite + intake, the microphone with simulated speech, read-aloud voice choice and money wording. CI runs it.

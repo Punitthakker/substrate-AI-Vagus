@@ -283,3 +283,28 @@ def test_health_and_selftest_endpoints_exist():
     s = c.get("/v1/selftest").json()
     assert s["brain"] == "rule-core" and len(s["cases"]) == 4 and all(case["pass"] for case in s["cases"])
     assert c.get("/v1/selftest").json()["cached"] is True
+
+
+def test_cloud_voice_is_optional_and_reads_cleanly(monkeypatch):
+    from substrate import tts
+    monkeypatch.delenv("TTS_PROVIDER", raising=False)
+    assert tts.provider() is None and tts.status() is None
+    cleaned = tts.clean("**No. Do not put $150k into MOONX.**\n\n- This would put 41% in MOONX on top of the $340k you hold.\n\n_This advice is recorded in your Vagus Ledger._")
+    assert "150 thousand dollars" in cleaned and "340 thousand dollars" in cleaned
+    assert "**" not in cleaned and "Vagus Ledger" not in cleaned and "- " not in cleaned
+    from app.main import app
+    c = TestClient(app)
+    assert c.post("/v1/speak", json={"text": "hello"}).status_code == 404        # no provider: console uses device voices
+    assert c.get("/v1/health").json()["tts"] is None
+    monkeypatch.setenv("TTS_PROVIDER", "openai"); monkeypatch.setenv("OPENAI_API_KEY", "k")
+    sent = {}
+
+    class R:
+        status_code, content = 200, b"ID3fake-mp3"
+
+        def raise_for_status(self): pass
+    monkeypatch.setattr(tts.httpx, "post", lambda url, timeout, headers, json: (sent.update(json), R())[1])
+    r = c.post("/v1/speak", json={"text": "**Yes.** Put $5k in.", "lang": "en"})
+    assert r.status_code == 200 and r.headers["content-type"].startswith("audio/mpeg") and r.content == b"ID3fake-mp3"
+    assert sent["input"] == "Yes. Put 5 thousand dollars in." and sent["voice"] == "nova"
+    assert c.get("/v1/health").json()["tts"]["provider"] == "openai"

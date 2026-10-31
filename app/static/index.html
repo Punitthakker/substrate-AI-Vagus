@@ -91,6 +91,7 @@ header{display:flex;align-items:center;gap:14px;padding:12px max(20px,env(safe-a
 .who-tag b{color:var(--rbc);font-weight:600} .safety .who-tag b{color:var(--safe)}
 .typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rbc);margin-right:4px;animation:blink 1s infinite}
 .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+.thinking{display:block;margin-top:8px;font-size:12px;color:var(--dim);min-height:16px}
 @keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
 .scen{display:flex;gap:7px;flex-wrap:wrap;padding:0 max(20px,4%) 10px}
 .scen button{border:1px solid var(--hair);background:none;border-radius:3px;padding:6px 12px;font-size:12px;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -688,9 +689,11 @@ body:not(.simple) .how{display:none}
   function ask(msg){
     if (!msg) return;
     add("user", esc(msg));
-    var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span>');
-    var rendered = false;
+    var pending = add("sub", '<span class="typing"><span></span><span></span><span></span></span><span class="thinking"></span>');
+    var rendered = false, stages = ["Reading what you actually asked", "Checking it against your numbers and your record", "Deciding, then choosing the words"], si = 0;
+    var ticker = setInterval(function(){ var t = pending.querySelector(".thinking"); if (!t) { clearInterval(ticker); return; } t.textContent = stages[Math.min(si++, stages.length - 1)]; }, 1800);
     api("/v1/advise", {user_id: S.user, message: msg, thread: S.thread, temperament: S.temperament}).then(function(r){
+      clearInterval(ticker);
       S.last = r;
       pending.classList.add(r.safety ? "safety" : (r.decision === false ? "answer" : r.verdict.polarity));
       var t = S.temps.filter(function(x){ return x.key === r.temperament; })[0];
@@ -703,6 +706,7 @@ body:not(.simple) .how{display:none}
         .forEach(function(f){ try { f(); } catch(err){ console.warn("after-answer step failed", err); } });
       if (r.letter) { loadVault(); setTimeout(function(){ celebrate({key: "letter", name: "A letter from " + r.letter.from_name, why: "Sealed in " + r.letter.written.slice(0,4) + ", for this moment."}); }, 900); }
     }).catch(function(e){
+      clearInterval(ticker);
       if (rendered) { console.warn(e); return; }
       pending.innerHTML = "Substrate could not answer: " + esc(e.message) + ' <button type="button" class="retry">Try again</button>';
       var rb = pending.querySelector(".retry"); if (rb) rb.onclick = function(){ pending.remove(); ask(msg); };
@@ -1031,7 +1035,7 @@ body:not(.simple) .how{display:none}
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, live = false, final = "", restarts = 0, timer = null;
     S.speak = false; try { S.speak = localStorage.getItem("sub-speak") === "1"; } catch(e){}
     if ("speechSynthesis" in window) { $("spkBtn").hidden = false; $("spkBtn").setAttribute("aria-pressed", S.speak); }
-    $("spkBtn").onclick = function(){ S.speak = !S.speak; this.setAttribute("aria-pressed", S.speak); try { localStorage.setItem("sub-speak", S.speak ? "1" : "0"); } catch(e){} if (!S.speak) speechSynthesis.cancel(); toast(S.speak ? "Answers will be read aloud. This button is read-aloud, not playback." : "Read-aloud off."); };
+    $("spkBtn").onclick = function(){ S.speak = !S.speak; this.setAttribute("aria-pressed", S.speak); try { localStorage.setItem("sub-speak", S.speak ? "1" : "0"); } catch(e){} if (!S.speak) stopSpeaking(); toast(S.speak ? "Answers will be read aloud. This button is read-aloud, not playback." : "Read-aloud off."); };
     $("micBtn").hidden = false;
     if (!SR) { $("micBtn").title = "Voice input needs Chrome, Edge or Safari."; $("micBtn").onclick = function(){ toast("Voice input isn't available in this browser. Chrome, Edge or Safari support it; or just type."); }; return; }
     var btn = $("micBtn"), stat = $("micStat");
@@ -1083,7 +1087,21 @@ body:not(.simple) .how{display:none}
     return vs.filter(function(v){ return !v.localService; })[0] || vs[0];
   }
   if ("speechSynthesis" in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); }; }
+  var player = null;
+  function stopSpeaking(){ if (player) { try { player.pause(); } catch(e){} player = null; } if ("speechSynthesis" in window) speechSynthesis.cancel(); }
   function speak(r){
+    if (!S.speak || !r) return;
+    if (S.tts) {   // a cloud voice is configured on the server: natural, same on every device
+      stopSpeaking();
+      fetch("/v1/speak", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({text: r.message, lang: r.language === "ar" ? "ar" : "en"})})
+        .then(function(x){ if (!x.ok) throw new Error("voice " + x.status); return x.blob(); })
+        .then(function(b){ player = new Audio(URL.createObjectURL(b)); player.play().catch(function(){ speakLocal(r); }); })
+        .catch(function(){ speakLocal(r); });
+      return;
+    }
+    speakLocal(r);
+  }
+  function speakLocal(r){
     if (!S.speak || !("speechSynthesis" in window) || !r) return;
     var t = r.message.replace(/\*\*|__|_/g, "").replace(/^[->]\s?/gm, "").replace(/This advice is recorded in your Vagus Ledger\./, "")
       .replace(/Reasoning engine unavailable[^\n]*/g, "").replace(/\n+/g, ". ").replace(/\.\s*\./g, ".").replace(/\$(\d+(?:\.\d+)?)k\b/g, "$1 thousand dollars").replace(/\$(\d+(?:\.\d+)?)M\b/g, "$1 million dollars").replace(/\$(\d[\d,]*)\b/g, "$1 dollars");
@@ -1307,6 +1325,7 @@ body:not(.simple) .how{display:none}
   Promise.all([api("/v1/health"), api("/v1/tissues"), api("/v1/temperaments")]).then(function(x){
     var h = x[0]; S.tissues = x[1]; S.temps = x[2]; S.demos = h.demo_users; S.heirs = h.demo_heirs || {};
     $("brain").innerHTML = "BRAIN <b>" + esc(h.brain.toUpperCase()) + "</b>";
+    S.tts = h.tts || null;
     var start = (location.hash || "").replace("#", "");
     if (!S.demos[start]) start = "wealth";
     var inv = new URLSearchParams(location.search).get("invite");
